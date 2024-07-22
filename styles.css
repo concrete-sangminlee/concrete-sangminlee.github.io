@@ -34,14 +34,14 @@ header nav ul li a:hover {
 }
 
 .hero {
-    background: #0073e6;
-    color: #000; /* 변경된 부분 */
+    background: #fff; /* 배경을 흰색으로 설정 */
+    color: #000; /* 텍스트 색상을 검정색으로 설정 */
     padding: 50px 0;
     text-align: center;
 }
 
 .hero-content {
-    color: #000; /* 추가된 부분 */
+    color: #000; /* 텍스트 색상을 검정색으로 설정 */
 }
 
 .hero h1 {
