@@ -61,6 +61,7 @@ header nav ul li a:hover {
 .section .container {
     width: 80%;
     margin: 0 auto;
+    text-align: left;
 }
 
 .section h2 {
