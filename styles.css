@@ -55,13 +55,13 @@ header nav ul li a:hover {
 
 .section {
     padding: 50px 0;
-    text-align: center;
+    text-align: left; /* 좌측 정렬 */
 }
 
 .section .container {
     width: 80%;
-    margin: 0 auto;
-    text-align: left;
+    margin: 0 auto; /* 가운데 정렬 */
+    text-align: left; /* 좌측 정렬 */
 }
 
 .section h2 {
@@ -71,6 +71,15 @@ header nav ul li a:hover {
 
 .section p {
     font-size: 1.2em;
+}
+
+.section ul {
+    list-style-type: disc; /* 불릿 스타일 설정 */
+    padding-left: 20px; /* 리스트 항목의 들여쓰기 */
+}
+
+.section ul li {
+    margin-bottom: 10px; /* 리스트 항목 사이의 여백 설정 */
 }
 
 footer {
