@@ -1,24 +1,22 @@
-/* Reset CSS */
-* {
+/* styles.css */
+
+body {
+    font-family: 'Roboto', sans-serif;
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
 
-body {
-    font-family: 'Roboto', sans-serif;
-    line-height: 1.6;
-}
-
 header {
     background: #333;
     color: #fff;
-    padding: 1rem 0;
+    padding: 10px 0;
     text-align: center;
 }
 
 header nav ul {
-    list-style: none;
+    list-style-type: none;
+    padding: 0;
 }
 
 header nav ul li {
@@ -29,31 +27,55 @@ header nav ul li {
 header nav ul li a {
     color: #fff;
     text-decoration: none;
-    font-weight: bold;
+}
+
+header nav ul li a:hover {
+    text-decoration: underline;
 }
 
 .hero {
-    background: url('path/to/your/image.jpg') no-repeat center center/cover;
-    height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    background: #0073e6;
     color: #fff;
+    padding: 50px 0;
     text-align: center;
 }
 
-.section {
-    padding: 4rem 0;
+.hero h1 {
+    margin: 0;
+    font-size: 2.5em;
 }
 
-.container {
+.hero p {
+    font-size: 1.2em;
+}
+
+.section {
+    padding: 50px 0;
+    text-align: center;
+}
+
+.section .container {
     width: 80%;
     margin: 0 auto;
+}
+
+.section h2 {
+    margin-bottom: 20px;
+    font-size: 2em;
+}
+
+.section p {
+    font-size: 1.2em;
 }
 
 footer {
     background: #333;
     color: #fff;
     text-align: center;
-    padding: 1rem 0;
+    padding: 10px 0;
+}
+
+footer .container {
+    width: 80%;
+    margin: 0 auto;
 }
