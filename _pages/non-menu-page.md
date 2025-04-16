@@ -1,5 +1,5 @@
 ---
-permalink: /non-menu-page/
+permalink: /non-menu-page-disabled/
 title: "Page not in menu"
 author_profile: true
 redirect_from: 

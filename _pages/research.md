@@ -1,6 +1,6 @@
 ---
 title: "Research"
-permalink: /research/
+permalink: /research-disabled/
 author_profile: true
 ---
 
