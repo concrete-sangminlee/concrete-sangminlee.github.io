@@ -22,22 +22,21 @@ repository               : "concrete-sangminlee/concrete-sangminlee.github.io"
 #               Additional customization can be done by editing /_includes/author-profile.html
 author:
   # Biographic information
-  avatar           : "profile.jpg"
+  avatar           : "profile.png"
   name             : "Sang Min Lee"
   pronouns         : "he/him"
   bio              : "Ph.D. Candidate in AI at Seoul National University"
   location         : "Seoul, South Korea"
   employer         : "Seoul National University"
   uri              : "https://concrete-sangminlee.github.io"
-  email            : "snu.ac.kr"
+  email            : "201612445@snu.ac.kr"
 
   # Academic websites
-  googlescholar    : "https://scholar.google.com/citations?user=PS_CX0AAAAAJ"
-  orcid            : "http://orcid.org/yourorcidurl"
-  researchgate     : "https://www.researchgate.net/profile/Sang-Min-Lee-123"
+  googlescholar    : "https://scholar.google.com/citations?user=ogvd_LsAAAAJ&hl=en"
+  orcid            : "http://orcid.org/0000-0002-6822-5252"
 
   # Repositories and software development
-  github           : "sangminlee"
+  github           : "concrete-sangminlee"
 
   # Social media
   linkedin         : "sang-min-lee-3a2568174"
