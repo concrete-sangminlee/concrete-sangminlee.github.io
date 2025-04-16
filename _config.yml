@@ -12,7 +12,7 @@ site_theme               : "default"
 title                    : "Sang Min Lee"
 title_separator          : "-"
 name                     : &name "Sang Min Lee"
-description              : &description "Ph.D. Candidate in AI at Seoul National University"
+description              : &description "PhD Candidate in AI at Seoul National University"
 url                      : https://concrete-sangminlee.github.io
 baseurl                  : ""
 repository               : "concrete-sangminlee/concrete-sangminlee.github.io"
@@ -22,7 +22,7 @@ repository               : "concrete-sangminlee/concrete-sangminlee.github.io"
 #               Additional customization can be done by editing /_includes/author-profile.html
 author:
   # Biographic information
-  avatar           : "profile.png"
+  avatar           : "profile.jpg"
   name             : "Sang Min Lee"
   pronouns         : "he/him"
   bio              : "Ph.D. Candidate in AI at Seoul National University"
