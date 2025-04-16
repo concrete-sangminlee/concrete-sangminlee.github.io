@@ -1,11 +1,52 @@
 ---
 permalink: /
-title: "Academic Pages is a ready-to-fork GitHub Pages template for academic personal websites"
+title: "Sang Min Lee - Ph.D. Candidate in AI"
 author_profile: true
 redirect_from: 
   - /about/
   - /about.html
 ---
+
+안녕하세요, Sang Min Lee입니다. 서울대학교 인공지능학과 박사과정에 재학 중이며, 콘크리트 구조물과 재료, 풍공학, 비파괴검사 및 구조건강모니터링 분야에서 머신러닝을 적용한 연구를 진행하고 있습니다.
+
+주요 연구 관심사
+======
+- 콘크리트 구조물의 균열 이미지 분류를 위한 경량화된 머신러닝 모델
+- 멀티클래스 심층 SVDD를 활용한 콘크리트 건축물 모니터링
+- 건축구조기준 특화 대규모 언어모델 프레임워크
+- 인공신경망 기반 위성사진 기반 기대풍속 예측
+- 머신러닝 응용 임팩트 에코 검사 자동화
+- 콘크리트 압축강도 예측을 위한 머신러닝 모델
+- LSTM RNN을 활용한 고층건물 벽면 풍압계수 예측
+
+기술 스택
+======
+- 프로그래밍 언어: Python, JavaScript, Java
+- 머신러닝/딥러닝: TensorFlow, PyTorch, Scikit-learn
+- 웹 프레임워크: Django, React
+- 데이터베이스: MySQL, PostgreSQL
+- 클라우드: AWS
+- 기타: Docker, Git, Linux
+
+학력
+======
+- 서울대학교 인공지능학과 박사과정 (현재)
+- 서울대학교 건축학과 공학사
+- 서울대학교 전기정보공학부 공학사
+
+주요 논문 및 특허
+======
+- "Lightweight Alternative Machine Learning Model for Automating Concrete Crack Image Classification" (Structural Journal, 2025)
+- "멀티클래스 심층 SVDD를 활용한 콘크리트 건축물 모니터링 연구" (한국콘크리트학회, 2024)
+- "전문가 혼합 아키텍처를 활용한 건축구조기준 특화 대규모 언어모델 프레임워크" (한국콘크리트학회, 2024)
+- "AI-based defect detection system inside concrete members" (특허, 2023)
+- "Wind load estimation system based on artificial intelligence" (특허, 2022)
+
+연락처
+======
+- 이메일: snu.ac.kr
+- LinkedIn: [Sang Min Lee](https://www.linkedin.com/in/sang-min-lee-3a2568174/)
+- GitHub: [sangminlee](https://github.com/sangminlee)
 
 This is the front page of a website that is powered by the [Academic Pages template](https://github.com/academicpages/academicpages.github.io) and hosted on GitHub pages. [GitHub pages](https://pages.github.com) is a free service in which websites are built and hosted from code and data stored in a GitHub repository, automatically updating when a new commit is made to the repository. This template was forked from the [Minimal Mistakes Jekyll Theme](https://mmistakes.github.io/minimal-mistakes/) created by Michael Rose, and then extended to support the kinds of content that academics have: publications, talks, teaching, a portfolio, blog posts, and a dynamically-generated CV. You can fork [this template](https://github.com/academicpages/academicpages.github.io) right now, modify the configuration and markdown files, add your own PDFs and other content, and have your own site for free, with no ads!
 
