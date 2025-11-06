@@ -7,14 +7,19 @@ redirect_from:
   - /about.html
 ---
 
-I am a Ph.D. Candidate in Artificial Intelligence at Seoul National University. My research interests encompass machine learning application to structural engineering and materials.
+I am a Ph.D. Candidate in Artificial Intelligence at Seoul National University. My research interests encompass AI for Resilient Infrastructure and Wind Engineering, with a focus on machine learning applications to structural engineering and materials.
 
 Education
 ======
 **Ph.D.** [2023.03.-2027.02.(expected)]
 - Interdisciplinary Program in Artificial Intelligence, Seoul National University
-- Field of Study: AI for Resilient Infrastructure
+- Research Interests: AI for Resilient Infrastructure and Wind Engineering
 - Advisor: Prof. Thomas H.-K. Kang
+
+**Visiting Student** [2025.10.-2025.11.]
+- School of Civil Engineering and Environmental Sciences, Gallogly College of Engineering, University of Oklahoma
+- Hydrometeorology and Remote Sensing Lab, National Weather Center
+- Advisor: Prof. Yang Hong
 
 **M.S.** [2021.03.-2023.02.]
 - Department of Architecture and Architectural Engineering, Seoul National University
@@ -27,8 +32,11 @@ Education
 - Double Major in Department of Electrical and Computer Engineering, Seoul National University
 
 **High School Diploma** [2013.03.-2016.02.]
-- Korea Science Academy of KAIST
-- Science High School for the Gifted
+- Korea Science Academy of KAIST (KAIST 부설 한국과학영재학교)
+- Science High School for Gifted Students
+- Computer Programming Club EOS (Senior Vice President)
+- 24th Students Council (Senior Vice President)
+- 23rd Students Council (Deputy Head, Department of International Affairs)
 
 Contact
 ======

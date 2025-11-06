@@ -1,152 +1,235 @@
 {
   "basics": {
-    "name": "Your Sidebar Name",
-    "email": "none@example.org",
+    "name": "Sang Min Lee",
+    "email": "201612445@snu.ac.kr",
     "phone": "",
-    "website": "https://academicpages.github.io",
-    "summary": "Currently employed at Red Brick University. Short biography for the left-hand sidebar",
+    "website": "https://concrete-sangminlee.github.io",
+    "summary": "Ph.D. Candidate in AI at Seoul National University. Research Interests: AI for Resilient Infrastructure and Wind Engineering.",
     "location": {
       "address": "",
       "postalCode": "",
-      "city": "Earth",
-      "countryCode": "US",
-      "region": ""
+      "city": "Seoul",
+      "countryCode": "KR",
+      "region": "South Korea"
     },
     "profiles": [
       {
         "network": "Google Scholar",
-        "username": "",
-        "url": "https://scholar.google.com/citations?user=PS_CX0AAAAAJ"
+        "username": "ogvd_LsAAAAJ",
+        "url": "https://scholar.google.com/citations?user=ogvd_LsAAAAJ&hl=en"
       },
       {
         "network": "ORCID",
-        "username": "",
-        "url": "http://orcid.org/yourorcidurl"
+        "username": "0000-0002-6822-5252",
+        "url": "http://orcid.org/0000-0002-6822-5252"
       },
       {
         "network": "GitHub",
-        "username": "academicpages",
-        "url": "https://github.com/academicpages"
+        "username": "concrete-sangminlee",
+        "url": "https://github.com/concrete-sangminlee"
+      },
+      {
+        "network": "LinkedIn",
+        "username": "sang-min-lee-3a2568174",
+        "url": "https://www.linkedin.com/in/sang-min-lee-3a2568174/"
       }
     ]
   },
-  "work": [],
+  "work": [
+    {
+      "company": "Seoul National University",
+      "position": "Graduate Research Assistant",
+      "website": "",
+      "startDate": "2021-03",
+      "endDate": "",
+      "summary": "Hi-performance Structural Engineering Lab",
+      "highlights": [
+        "Hyper-converged Forensic Research Center for Infrastructure (2021-2027) supported by NRF Korea and funded by MSIT",
+        "Smart City Innovative Technology Demonstration Project (2024-2025) supported by KAIA and funded by MOLIT",
+        "Outstanding Patent Prototype Development Project (2023) supported and funded by SNU",
+        "AI for Construction Research Project (2024) supported by SNU and funded by Sejong Construction",
+        "National Service as a Researcher - Alternative military service for 3 years"
+      ]
+    },
+    {
+      "company": "National Weather Center",
+      "position": "Visiting Researcher",
+      "website": "",
+      "startDate": "2025-10",
+      "endDate": "2025-11",
+      "summary": "Hydrometeorology and Remote Sensing Lab",
+      "highlights": [
+        "Collaborated on research activities about machine learning application to remote sensing and wind engineering",
+        "Affiliated with the University of Oklahoma (OU) and the National Weather Center (NWC) under the guidance of Prof. Yang Hong"
+      ]
+    },
+    {
+      "company": "Gentoo (Waddle Corporation)",
+      "position": "Machine Learning Engineer",
+      "website": "",
+      "startDate": "2024-09",
+      "endDate": "2025-02",
+      "summary": "Internship",
+      "highlights": [
+        "Developed LLM as a Judge system including user simulator and LLM evaluator",
+        "Alignment of LLM evaluator with human"
+      ]
+    },
+    {
+      "company": "Seoul National University",
+      "position": "Graduate Teaching Assistant",
+      "website": "",
+      "startDate": "2021-03",
+      "endDate": "2024-06",
+      "summary": "Multiple courses including Architecture and AI, Introduction to IoT/AI/Big Data, Creative Engineering Design, Structural Experiment and Material, etc.",
+      "highlights": [
+        "Architecture and AI (22S, 23S, 24S) - Lecturer for hands-on experience about deep neural networks",
+        "Introduction to IoT, AI, and Big Data (21S, 21F, 22S, 22F) - IoT project evaluator, head TA during 22F",
+        "Multiple other courses in structural engineering, IoT, and computation"
+      ]
+    },
+    {
+      "company": "Seoul National University",
+      "position": "Undergraduate Research Assistant",
+      "website": "",
+      "startDate": "2018-12",
+      "endDate": "2021-02",
+      "summary": "Research in wind engineering, AHP analysis, and IoT device design",
+      "highlights": [
+        "Wind pressure coefficient prediction for wind-resistant building design (HpSE)",
+        "AHP analysis for improvement of military dining facilities (SNUCEM)",
+        "IoT device design (HW and SW) for surface condensation detection (AEPRL)"
+      ]
+    },
+    {
+      "company": "친환경계획그룹 청연건축사사무소",
+      "position": "Research Engineer",
+      "website": "",
+      "startDate": "2018-07",
+      "endDate": "2018-08",
+      "summary": "Internship",
+      "highlights": [
+        "Data analysis of building energy performance evaluation",
+        "ECO2, AutoCAD, and Python"
+      ]
+    }
+  ],
   "education": [
     {
-      "institution": "GitHub University",
-      "area": "Ph.D in Version Control Theory",
-      "studyType": "",
-      "startDate": "",
-      "endDate": "2018",
+      "institution": "Seoul National University",
+      "area": "Ph.D. in Artificial Intelligence",
+      "studyType": "Doctorate",
+      "startDate": "2023-03",
+      "endDate": "2027-02",
+      "gpa": null,
+      "courses": [],
+      "thesis": "Research Interests: AI for Resilient Infrastructure and Wind Engineering",
+      "advisor": "Prof. Thomas H.-K. Kang"
+    },
+    {
+      "institution": "University of Oklahoma",
+      "area": "Visiting Student",
+      "studyType": "Visiting",
+      "startDate": "2025-10",
+      "endDate": "2025-11",
+      "gpa": null,
+      "courses": [],
+      "thesis": "School of Civil Engineering and Environmental Sciences, Gallogly College of Engineering",
+      "advisor": "Prof. Yang Hong"
+    },
+    {
+      "institution": "Seoul National University",
+      "area": "M.S. in Structural Engineering",
+      "studyType": "Master",
+      "startDate": "2021-03",
+      "endDate": "2023-02",
+      "gpa": null,
+      "courses": [],
+      "thesis": "Machine Learning Application to Automated Impact-Echo Test for Concrete Structures",
+      "advisor": "Prof. Thomas H.-K. Kang"
+    },
+    {
+      "institution": "Seoul National University",
+      "area": "B.S. in Electrical and Computer Engineering",
+      "studyType": "Bachelor",
+      "startDate": "2017-09",
+      "endDate": "2021-02",
       "gpa": null,
       "courses": []
     },
     {
-      "institution": "GitHub University",
-      "area": "M.S. in Jekyll",
-      "studyType": "",
-      "startDate": "",
-      "endDate": "2014",
+      "institution": "Seoul National University",
+      "area": "B.S. in Architectural Engineering",
+      "studyType": "Bachelor",
+      "startDate": "2016-03",
+      "endDate": "2021-02",
       "gpa": null,
       "courses": []
     },
     {
-      "institution": "GitHub University",
-      "area": "B.S. in GitHub",
-      "studyType": "",
-      "startDate": "",
-      "endDate": "2012",
+      "institution": "Korea Science Academy of KAIST",
+      "area": "High School Diploma",
+      "studyType": "High School",
+      "startDate": "2013-03",
+      "endDate": "2016-02",
       "gpa": null,
       "courses": []
     }
   ],
-  "skills": [],
-  "languages": [],
-  "interests": [],
+  "skills": [
+    {
+      "name": "Machine Learning",
+      "level": "Expert",
+      "keywords": ["Deep Learning", "Neural Networks", "Computer Vision", "NLP", "LLM"]
+    },
+    {
+      "name": "Structural Engineering",
+      "level": "Expert",
+      "keywords": ["Wind Engineering", "Structural Health Monitoring", "Concrete Structures", "Impact-Echo Testing"]
+    },
+    {
+      "name": "Programming Languages",
+      "level": "Expert",
+      "keywords": ["Python", "MATLAB", "C/C++", "JavaScript"]
+    },
+    {
+      "name": "IoT & Hardware",
+      "level": "Advanced",
+      "keywords": ["Arduino", "ESP32", "STM32", "Teensy", "Hardware Design"]
+    },
+    {
+      "name": "Data Analysis",
+      "level": "Expert",
+      "keywords": ["Big Data Analysis", "Statistical Analysis", "AHP Analysis"]
+    }
+  ],
+  "languages": [
+    {
+      "language": "Korean",
+      "fluency": "Native"
+    },
+    {
+      "language": "English",
+      "fluency": "Professional"
+    }
+  ],
+  "interests": [
+    {
+      "name": "AI for Resilient Infrastructure",
+      "keywords": ["Machine Learning", "Structural Health Monitoring", "Smart Cities"]
+    },
+    {
+      "name": "Wind Engineering",
+      "keywords": ["Wind Load Estimation", "Remote Sensing", "Climate Modeling"]
+    },
+    {
+      "name": "Construction Technology",
+      "keywords": ["IoT", "Automation", "Digital Twin"]
+    }
+  ],
   "references": [],
-  "publications": [
-    {
-      "name": "Paper Title Number 1",
-      "publisher": "Journal 1",
-      "releaseDate": "2009-10-01",
-      "website": "http://academicpages.github.io/files/paper1.pdf",
-      "summary": "This paper is about the number 1. The number 2 is left for future work."
-    },
-    {
-      "name": "Paper Title Number 2",
-      "publisher": "Journal 1",
-      "releaseDate": "2010-10-01",
-      "website": "http://academicpages.github.io/files/paper2.pdf",
-      "summary": "This paper is about the number 2. The number 3 is left for future work."
-    },
-    {
-      "name": "Paper Title Number 3",
-      "publisher": "Journal 1",
-      "releaseDate": "2015-10-01",
-      "website": "http://academicpages.github.io/files/paper3.pdf",
-      "summary": "This paper is about the number 3. The number 4 is left for future work."
-    },
-    {
-      "name": "Paper Title Number 4",
-      "publisher": "GitHub Journal of Bugs",
-      "releaseDate": "2024-02-17",
-      "website": "http://academicpages.github.io/files/paper3.pdf",
-      "summary": "This paper is about fixing template issue #693."
-    }
-  ],
-  "presentations": [
-    {
-      "name": "Talk 1 on Relevant Topic in Your Field",
-      "event": "UC San Francisco, Department of Testing",
-      "date": "2012-03-01",
-      "location": "San Francisco, CA, USA",
-      "description": ""
-    },
-    {
-      "name": "Tutorial 1 on Relevant Topic in Your Field",
-      "event": "UC-Berkeley Institute for Testing Science",
-      "date": "2013-03-01",
-      "location": "Berkeley, CA, USA",
-      "description": ""
-    },
-    {
-      "name": "Talk 2 on Relevant Topic in Your Field",
-      "event": "London School of Testing",
-      "date": "2014-02-01",
-      "location": "London, UK",
-      "description": ""
-    },
-    {
-      "name": "Conference Proceeding talk 3 on Relevant Topic in Your Field",
-      "event": "Testing Institute of America 2014 Annual Conference",
-      "date": "2014-03-01",
-      "location": "Los Angeles, CA, USA",
-      "description": ""
-    }
-  ],
-  "teaching": [
-    {
-      "course": "Teaching experience 1",
-      "institution": "University 1, Department",
-      "date": "2014-01-01",
-      "role": "Undergraduate course",
-      "description": ""
-    },
-    {
-      "course": "Teaching experience 2",
-      "institution": "University 1, Department",
-      "date": "2015-01-01",
-      "role": "Workshop",
-      "description": ""
-    }
-  ],
-  "portfolio": [
-    {
-      "name": "Portfolio item number 1",
-      "category": "portfolio",
-      "date": "",
-      "url": "",
-      "description": "Short description of portfolio item number 1<br/><img src='/images/500x300.png'>"
-    }
-  ]
+  "publications": [],
+  "presentations": [],
+  "teaching": [],
+  "portfolio": []
 }
