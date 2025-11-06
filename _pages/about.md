@@ -39,6 +39,9 @@ I am a Ph.D. Candidate in Artificial Intelligence at Seoul National University. 
          * Computer Programming Club EOS (Senior Vice President)  
          * 24th Students Council (Senior Vice President)  
          * 23rd Students Council (Deputy Head, Department of International Affairs)
+         * Exchange Student Experiences:
+           * Moscow Chemical Lyceum @ Russia (2014)
+           * G.T. (Ellen Yeung) College @ Hong Kong (2015)
 
 # Field of Interest
 
