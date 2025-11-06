@@ -4,12 +4,12 @@ permalink: /research/
 author_profile: true
 ---
 
+My research focuses on **AI for Resilient Infrastructure and Wind Engineering**, bridging cutting-edge artificial intelligence with practical structural engineering applications.
+
 ## Research Interests
 
-My research focuses on **AI for Resilient Infrastructure and Wind Engineering**, with particular emphasis on:
-
 - **Machine Learning Applications to Structural Engineering**: Developing AI-based methods for structural health monitoring, defect detection, and performance prediction
-- **Wind Engineering**: Wind load estimation, wind pressure coefficient prediction, and remote sensing applications
+- **Wind Engineering**: Wind load estimation, wind pressure coefficient prediction, and remote sensing applications  
 - **Smart Infrastructure**: IoT-based monitoring systems, automated inspection methods, and digital twin technologies
 - **Large Language Models for Engineering**: Specialized LLM frameworks for building design codes and engineering standards
 
@@ -59,17 +59,17 @@ My research focuses on **AI for Resilient Infrastructure and Wind Engineering**,
 ### 1. Automated Impact-Echo Testing
 - Developed machine learning models for automatic classification of impact-echo test results
 - Achieved reliable detection of shallow delamination in concrete structures
-- Published in Journal of Nondestructive Evaluation (2025)
+- Published in **Journal of Nondestructive Evaluation** (2025)
 
 ### 2. Structural Health Monitoring with Deep SVDD
 - Introduced multiclass Deep Support Vector Data Description for anomaly detection
-- Achieved 88.11% accuracy using only normal condition data
-- Published in ASCE Journal of Structural Engineering (2025)
+- Achieved **88.11% accuracy** using only normal condition data (vs. 58.68% with traditional methods)
+- Published in **ASCE Journal of Structural Engineering** (2025)
 
 ### 3. Lightweight Crack Detection Models
 - Developed resource-efficient ML models for on-site concrete crack classification
 - Balanced accuracy with computational efficiency for edge device deployment
-- Published in ACI Structural Journal (2025)
+- Published in **ACI Structural Journal** (2025)
 
 ### 4. Wind Load Estimation
 - LSTM-based prediction of wind pressure coefficients for sensor reduction
@@ -79,7 +79,7 @@ My research focuses on **AI for Resilient Infrastructure and Wind Engineering**,
 ### 5. LLM for Engineering Standards
 - Developed specialized large language model framework for building design codes
 - Retrieval augmented generation for wind load design code assistance
-- Presented at APCWE10 (2025)
+- Presented at **APCWE10** (2025)
 
 ## Collaborations
 
@@ -105,6 +105,7 @@ My research focuses on **AI for Resilient Infrastructure and Wind Engineering**,
 ## Research Philosophy
 
 I believe in bridging the gap between cutting-edge AI research and practical engineering applications. My work emphasizes:
+
 - **Practical Applicability**: Developing solutions that can be deployed in real-world scenarios
 - **Robustness**: Creating models that work across different conditions and datasets
 - **Efficiency**: Balancing accuracy with computational and resource constraints
