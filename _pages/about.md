@@ -9,6 +9,15 @@ redirect_from:
 
 I am a Ph.D. Candidate in Artificial Intelligence at Seoul National University. My research interests encompass AI for Resilient Infrastructure and Wind Engineering, with a focus on machine learning applications to structural engineering and materials.
 
+## Quick Links
+
+- **[Research](/research/)** - Current research projects, methods, and collaborations
+- **[Publications](/publications/)** - Journal articles and conference papers
+- **[Talks](/talks/)** - Conference presentations and invited talks
+- **[Projects](/portfolio/)** - Research projects and industry collaborations
+- **[CV](/cv/)** - Complete curriculum vitae
+- **[Teaching](/teaching/)** - Courses taught and assisted
+
 Education
 ======
 **Ph.D.** [2023.03.-2027.02.(expected)]
