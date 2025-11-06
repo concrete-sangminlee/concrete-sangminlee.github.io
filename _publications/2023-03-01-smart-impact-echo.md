@@ -1,12 +1,11 @@
 ---
-title: "스마트 임팩트 에코 검사를 위한 기계학습 응용"
+title: "Machine Learning Application for Smart Impact-Echo Testing"
 collection: publications
 permalink: /publication/2023-03-01-smart-impact-echo
-excerpt: '스마트 임팩트 에코 검사를 위한 기계학습 응용'
+excerpt: 'Machine learning application for smart impact-echo testing'
 date: 2023-03-01
-venue: '대한건축학회지'
+venue: 'Journal of the Architectural Institute of Korea'
 paperurl: ''
-citation: '이상민 외. (2023). 스마트 임팩트 에코 검사를 위한 기계학습 응용. 대한건축학회지.'
+citation: 'Lee, S. M., et al. (2023). Machine Learning Application for Smart Impact-Echo Testing. Journal of the Architectural Institute of Korea.'
 category: manuscripts
 ---
-

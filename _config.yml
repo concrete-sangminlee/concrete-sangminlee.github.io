@@ -12,7 +12,7 @@ site_theme               : "default"
 title                    : "Sang Min Lee"
 title_separator          : "-"
 name                     : &name "Sang Min Lee"
-description              : &description "PhD Candidate in AI at Seoul National University | Research Interests: AI for Resilient Infrastructure and Wind Engineering"
+description              : &description "PhD Candidate in AI at Seoul National University | Research Interests: AI for Resilient Infrastructure and Wind Engineering | Machine Learning, Structural Health Monitoring, Wind Engineering"
 url                      : https://concrete-sangminlee.github.io
 baseurl                  : ""
 repository               : "concrete-sangminlee/concrete-sangminlee.github.io"

@@ -94,11 +94,11 @@ My research focuses on **AI for Resilient Infrastructure and Wind Engineering**,
 
 ## Patents
 
-1. **인공지능 기반 콘크리트 부재 내부 결함 탐지 시스템** (2023)
+1. **AI-Based Internal Defect Detection System for Concrete Members** (2023)
    - Applied to PCT, US patent, EU patent
    - Registered in Korea
 
-2. **인공지능 기반 풍하중 산정 시스템** (2022)
+2. **AI-Based Wind Load Estimation System** (2022)
    - Applied to PCT
    - Registered in Korea
 

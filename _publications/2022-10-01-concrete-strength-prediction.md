@@ -1,12 +1,11 @@
 ---
-title: "기계학습 모형의 콘크리트 압축강도 예측 성능 비교 연구"
+title: "Comparative Study on Concrete Compressive Strength Prediction Performance of Machine Learning Models"
 collection: publications
 permalink: /publication/2022-10-01-concrete-strength-prediction
-excerpt: '기계학습 모형의 콘크리트 압축강도 예측 성능 비교 연구'
+excerpt: 'Comparative study on concrete compressive strength prediction performance of machine learning models'
 date: 2022-10-01
-venue: '한국콘크리트학회 논문집'
+venue: 'Journal of Korea Concrete Institute'
 paperurl: ''
-citation: '이상민 외. (2022). 기계학습 모형의 콘크리트 압축강도 예측 성능 비교 연구. 한국콘크리트학회 논문집.'
+citation: 'Lee, S. M., et al. (2022). Comparative Study on Concrete Compressive Strength Prediction Performance of Machine Learning Models. Journal of Korea Concrete Institute.'
 category: manuscripts
 ---
-

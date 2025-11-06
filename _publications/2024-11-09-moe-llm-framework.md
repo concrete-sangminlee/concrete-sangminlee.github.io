@@ -1,12 +1,11 @@
 ---
-title: "전문가 혼합 아키텍처를 활용한 건축구조기준 특화 대규모 언어모델 프레임워크"
+title: "Mixture-of-Experts Architecture-Based Large Language Model Framework Specialized for Building Structural Design Codes"
 collection: publications
 permalink: /publication/2024-11-09-moe-llm-framework
-excerpt: '전문가 혼합 아키텍처를 활용한 건축구조기준 특화 대규모 언어모델 프레임워크'
+excerpt: 'Mixture-of-Experts architecture-based large language model framework specialized for building structural design codes'
 date: 2024-11-09
-venue: '한국콘크리트학회 학술대회 논문집'
+venue: 'Korea Concrete Institute Annual Conference Proceedings'
 paperurl: ''
-citation: '이상민 외. (2024). 전문가 혼합 아키텍처를 활용한 건축구조기준 특화 대규모 언어모델 프레임워크. 한국콘크리트학회 학술대회 논문집.'
+citation: 'Lee, S. M., et al. (2024). Mixture-of-Experts Architecture-Based Large Language Model Framework Specialized for Building Structural Design Codes. Korea Concrete Institute Annual Conference Proceedings.'
 category: conferences
 ---
-

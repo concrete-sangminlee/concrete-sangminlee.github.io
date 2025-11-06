@@ -7,7 +7,9 @@ redirect_from:
   - /about.html
 ---
 
-I am a Ph.D. Candidate in Artificial Intelligence at Seoul National University. My research interests encompass **AI for Resilient Infrastructure and Wind Engineering**, with a focus on machine learning applications to structural engineering and materials.
+I am a Ph.D. Candidate in Artificial Intelligence at Seoul National University, specializing in **AI for Resilient Infrastructure and Wind Engineering**. My research bridges cutting-edge machine learning techniques with practical applications in structural engineering, focusing on developing intelligent systems for infrastructure monitoring, defect detection, and wind load estimation.
+
+My work spans multiple domains including structural health monitoring, automated non-destructive testing, wind engineering, and large language models for engineering standards. I have published **28 papers** in top-tier journals and conferences, developed **2 patented systems**, and contributed to several major research projects funded by national agencies.
 
 [Curriculum Vitae (Last update: Nov. 2025)](/cv/)
 
@@ -34,11 +36,11 @@ I am a Ph.D. Candidate in Artificial Intelligence at Seoul National University. 
          * Double Major in Electrical and Computer Engineering, Seoul National University
 
 * **High School Diploma** (2013.03.-2016.02.)  
-   * **Korea Science Academy of KAIST** (KAIST 부설 한국과학영재학교)  
+   * **Korea Science Academy of KAIST**  
          * Science High School for Gifted Students  
          * Computer Programming Club EOS (Senior Vice President)  
          * 24th Students Council (Senior Vice President)  
-         * 23rd Students Council (Deputy Head, Department of International Affairs)
+         * 23rd Students Council (Deputy Head, Department of International Affairs)  
          * Exchange Student Experiences:
            * Moscow Chemical Lyceum @ Russia (2014)
            * G.T. (Ellen Yeung) College @ Hong Kong (2015)
@@ -59,49 +61,49 @@ I am a Ph.D. Candidate in Artificial Intelligence at Seoul National University. 
    * Awarded the 2025 Fall and Spring semester AI Graduate School Fellowship.  
    * Interdisciplinary Program in Artificial Intelligence, Seoul National University
 
-* **서울대학교 인공지능대학원 논문경진대회 우수상** (2025.06.)  
-   * 우수상 (상금 100만원 & 국제학술대회 참가경비 지원 500만원)  
+* **SNU AI Graduate School Paper Competition Excellence Award** (2025.06.)  
+   * Excellence Award (Prize: 1,000,000 KRW & International Conference Travel Support: 5,000,000 KRW)  
    * Interdisciplinary Program in Artificial Intelligence, Seoul National University
 
-* **서울대학교 인공지능대학원 장학금** (2024.09., 2024.03., 2023.09., 2023.03.)  
+* **SNU AI Graduate School Scholarship** (2024.09., 2024.03., 2023.09., 2023.03.)  
    * Awarded the 2023 Spring, 2023 Fall, 2024 Spring, and 2024 Fall semester scholarships.  
    * Interdisciplinary Program in Artificial Intelligence, Seoul National University
 
-* **서울대학교 우수 강의조교 표창** (2022.09.)  
-   * 2022학년도 2학기 응용과학 작은스승 우수 강의조교 표창  
+* **SNU Outstanding Teaching Assistant Award** (2022.09.)  
+   * 2022 Fall Semester Outstanding Teaching Assistant Award in Applied Sciences  
    * College of Engineering, Seoul National University
 
-* **한국콘크리트학회 우수발표논문상** (2022.05.)  
-   * 2022년도 봄 학술대회 우수발표논문상 수상  
+* **Korea Concrete Institute Outstanding Presentation Award** (2022.05.)  
+   * 2022 Spring Annual Conference Outstanding Presentation Award  
    * Korea Concrete Institute
 
-* **서울대학교 센구조 장학금** (2021.09.)  
-   * 2021년도 2학기 센구조 장학금 수혜  
+* **SNU Centennial Structure Scholarship** (2021.09.)  
+   * 2021 Fall Semester Centennial Structure Scholarship  
    * Department of Architecture and Architectural Engineering, Seoul National University
 
-* **서울대학교 관악회 장학금** (2019.09., 2019.03.)  
-   * 2019년도 1학기 및 2학기 관악회 장학금 수혜  
+* **SNU Alumni Association Scholarship** (2019.09., 2019.03.)  
+   * 2019 Spring and Fall Semester Alumni Association Scholarships  
    * Seoul National University Alumni Association
 
-* **의왕시장 공로상 표창** (2018.01.)  
-   * 배움을 나누는 사람들 의왕 부곡교육장 대표교사 표창  
+* **Uiwang Mayor Commendation** (2018.01.)  
+   * Representative Teacher Award for Bu-gok Education Center, Sharing Knowledge  
    * Uiwang City
 
-* **KAIST 부설 한국과학영재학교 공로상** (2016.02.)  
-   * 학생회장단 졸업 기념 공로상  
+* **KAIST Science Academy Commendation** (2016.02.)  
+   * Student Council Graduation Commendation  
    * Korea Science Academy of KAIST
 
-* **한국정보올림피아드 고등부 장려상** (2013.01.)  
-   * 대한민국 정부
+* **Korea Informatics Olympiad High School Division Encouragement Award** (2013.01.)  
+   * Government of the Republic of Korea
 
-* **한국중학생물리대회 금상** (2012.08.)  
-   * 한국물리학회 (구 한국물리올림피아드 중등부)
+* **Korea Middle School Physics Competition Gold Award** (2012.08.)  
+   * Korean Physical Society (formerly Korea Physics Olympiad Middle School Division)
 
-* **경기도 중학생 수학과학경시대회 은상** (2012.06.)  
-   * 경기도교육청
+* **Gyeonggi-do Middle School Mathematics and Science Competition Silver Award** (2012.06.)  
+   * Gyeonggi-do Office of Education
 
-* **안양시 중학생 수학과학경시대회 금상** (2012.04.)  
-   * 안양과천교육지원청
+* **Anyang City Middle School Mathematics and Science Competition Gold Award** (2012.04.)  
+   * Anyang-Gwacheon Office of Education
 
 # Contact
 

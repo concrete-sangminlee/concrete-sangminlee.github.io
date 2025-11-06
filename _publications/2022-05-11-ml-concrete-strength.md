@@ -1,12 +1,11 @@
 ---
-title: "머신러닝 기반 콘크리트 압축강도 예측 연구"
+title: "Machine Learning-Based Concrete Compressive Strength Prediction"
 collection: publications
 permalink: /publication/2022-05-11-ml-concrete-strength
-excerpt: '머신러닝 기반 콘크리트 압축강도 예측 연구'
+excerpt: 'Machine learning-based concrete compressive strength prediction'
 date: 2022-05-11
-venue: '한국콘크리트학회 학술대회 논문집'
+venue: 'Korea Concrete Institute Annual Conference Proceedings'
 paperurl: ''
-citation: '이상민 외. (2022). 머신러닝 기반 콘크리트 압축강도 예측 연구. 한국콘크리트학회 학술대회 논문집.'
+citation: 'Lee, S. M., et al. (2022). Machine Learning-Based Concrete Compressive Strength Prediction. Korea Concrete Institute Annual Conference Proceedings.'
 category: conferences
 ---
-

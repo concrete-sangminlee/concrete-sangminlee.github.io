@@ -1,12 +1,11 @@
 ---
-title: "GeoGebra를 활용한 Cycloid 곡선의 응용과 일반화에 대한 연구"
+title: "Application and Generalization of Cycloid Curves Using GeoGebra"
 collection: publications
 permalink: /publication/2016-02-01-cycloid-geogebra
-excerpt: 'GeoGebra를 활용한 Cycloid 곡선의 응용과 일반화에 대한 연구'
+excerpt: 'Application and generalization of Cycloid curves using GeoGebra'
 date: 2016-02-01
-venue: 'KAIST 부설 한국과학영재학교 졸업연구'
+venue: 'Korea Science Academy of KAIST Graduation Research'
 paperurl: ''
-citation: '이상민. (2016). GeoGebra를 활용한 Cycloid 곡선의 응용과 일반화에 대한 연구. KAIST 부설 한국과학영재학교 졸업연구.'
+citation: 'Lee, S. M. (2016). Application and Generalization of Cycloid Curves Using GeoGebra. Korea Science Academy of KAIST Graduation Research.'
 category: manuscripts
 ---
-

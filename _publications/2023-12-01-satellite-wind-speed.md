@@ -1,12 +1,11 @@
 ---
-title: "인공신경망을 활용한 위성사진 기반 기대풍속 예측 방법론에 관한 연구"
+title: "Artificial Neural Network-Based Expected Wind Speed Prediction Methodology Using Satellite Images"
 collection: publications
 permalink: /publication/2023-12-01-satellite-wind-speed
-excerpt: '인공신경망을 활용한 위성사진 기반 기대풍속 예측 방법론에 관한 연구'
+excerpt: 'Artificial neural network-based expected wind speed prediction methodology using satellite images'
 date: 2023-12-01
-venue: '한국풍공학회 논문집'
+venue: 'Journal of Wind Engineering Institute of Korea'
 paperurl: ''
-citation: '이상민 외. (2023). 인공신경망을 활용한 위성사진 기반 기대풍속 예측 방법론에 관한 연구. 한국풍공학회 논문집.'
+citation: 'Lee, S. M., et al. (2023). Artificial Neural Network-Based Expected Wind Speed Prediction Methodology Using Satellite Images. Journal of Wind Engineering Institute of Korea.'
 category: manuscripts
 ---
-

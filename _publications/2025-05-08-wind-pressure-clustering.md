@@ -1,12 +1,11 @@
 ---
-title: "딥러닝을 활용한 콘크리트 건물의 벽면 풍압계수 클러스터링 연구"
+title: "Deep Learning-Based Clustering of Wind Pressure Coefficients on Concrete Building Facades"
 collection: publications
 permalink: /publication/2025-05-08-wind-pressure-clustering
-excerpt: '딥러닝을 활용한 콘크리트 건물의 벽면 풍압계수 클러스터링 연구'
+excerpt: 'Deep learning-based clustering of wind pressure coefficients on concrete building facades'
 date: 2025-05-08
-venue: '한국콘크리트학회 학술대회 논문집'
+venue: 'Korea Concrete Institute Annual Conference Proceedings'
 paperurl: ''
-citation: '이상민 외. (2025). 딥러닝을 활용한 콘크리트 건물의 벽면 풍압계수 클러스터링 연구. 한국콘크리트학회 학술대회 논문집.'
+citation: 'Lee, S. M., et al. (2025). Deep Learning-Based Clustering of Wind Pressure Coefficients on Concrete Building Facades. Korea Concrete Institute Annual Conference Proceedings.'
 category: conferences
 ---
-

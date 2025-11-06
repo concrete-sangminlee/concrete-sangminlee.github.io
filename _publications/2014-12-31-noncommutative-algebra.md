@@ -1,12 +1,11 @@
 ---
-title: "곱셈에 대한 교환법칙이 성립하지 않는 대수적 구조에 대한 연구"
+title: "Algebraic Structures Where Commutative Law for Multiplication Does Not Hold"
 collection: publications
 permalink: /publication/2014-12-31-noncommutative-algebra
-excerpt: '곱셈에 대한 교환법칙이 성립하지 않는 대수적 구조에 대한 연구'
+excerpt: 'Algebraic structures where commutative law for multiplication does not hold'
 date: 2014-12-31
-venue: 'KAIST 부설 한국과학영재학교 R&E'
+venue: 'Korea Science Academy of KAIST R&E'
 paperurl: ''
-citation: '이상민. (2014). 곱셈에 대한 교환법칙이 성립하지 않는 대수적 구조에 대한 연구. KAIST 부설 한국과학영재학교 R&E.'
+citation: 'Lee, S. M. (2014). Algebraic Structures Where Commutative Law for Multiplication Does Not Hold. Korea Science Academy of KAIST R&E.'
 category: manuscripts
 ---
-

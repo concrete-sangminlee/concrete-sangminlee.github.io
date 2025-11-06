@@ -1,12 +1,11 @@
 ---
-title: "온디바이스 AI를 위한 콘크리트 균열 이미지 분류 머신러닝 모델의 경량화 연구"
+title: "Lightweight Machine Learning Model for On-Device AI-Based Concrete Crack Image Classification"
 collection: publications
 permalink: /publication/2024-05-10-ondevice-ai-crack
-excerpt: '온디바이스 AI를 위한 콘크리트 균열 이미지 분류 머신러닝 모델의 경량화 연구'
+excerpt: 'Lightweight machine learning model for on-device AI-based concrete crack image classification'
 date: 2024-05-10
-venue: '한국콘크리트학회 학술대회 논문집'
+venue: 'Korea Concrete Institute Annual Conference Proceedings'
 paperurl: ''
-citation: '이상민 외. (2024). 온디바이스 AI를 위한 콘크리트 균열 이미지 분류 머신러닝 모델의 경량화 연구. 한국콘크리트학회 학술대회 논문집.'
+citation: 'Lee, S. M., et al. (2024). Lightweight Machine Learning Model for On-Device AI-Based Concrete Crack Image Classification. Korea Concrete Institute Annual Conference Proceedings.'
 category: conferences
 ---
-
