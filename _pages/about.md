@@ -7,7 +7,7 @@ redirect_from:
   - /about.html
 ---
 
-I am a Ph.D. Candidate in Artificial Intelligence at Seoul National University, specializing in **AI for Resilient Infrastructure and Wind Engineering**. My research bridges cutting-edge machine learning techniques with practical applications in structural engineering, focusing on developing intelligent systems for infrastructure monitoring, defect detection, and wind load estimation.
+I am a Ph.D. Candidate in Artificial Intelligence at Seoul National University, specializing in **AI for resilient infrastructure and wind engineering**. My research bridges cutting-edge machine learning techniques with practical applications in structural engineering, focusing on developing intelligent systems for infrastructure monitoring, defect detection, and wind load estimation.
 
 My work spans multiple domains including structural health monitoring, automated non-destructive testing, wind engineering, and large language models for engineering standards. I have published **28 papers** in top-tier journals and conferences, developed **2 patented systems**, and contributed to several major research projects funded by national agencies.
 
@@ -42,6 +42,54 @@ My work spans multiple domains including structural health monitoring, automated
          * Exchange Student Experiences:
            * Moscow Chemical Lyceum @ Russia (2014)
            * G.T. (Ellen Yeung) College @ Hong Kong (2015)
+
+# Work Experience
+
+* **Graduate Research Assistant** (2021.03 - Present)  
+   * Seoul National University, Hi-performance Structural Engineering Lab  
+   * Research Projects:
+     * Hyper-converged Forensic Research Center for Infrastructure (2021-2027) supported by NRF Korea and funded by MSIT
+     * Smart City Innovative Technology Demonstration Project (2024-2025) supported by KAIA and funded by MOLIT
+     * Outstanding Patent Prototype Development Project (2023) supported and funded by SNU
+     * AI for Construction Research Project (2024) supported by SNU and funded by Sejong Construction
+   * National Service as a Researcher:
+     * Alternative military service for 3 years
+     * 2 years as PhD candidate (Mar 2025 - Feb 2027) in SNU and 1 year as Post-Doc in TBD
+     * Temporal leave due to basic military training (Aug 2025 - Sep 2025) in KATC
+
+* **Visiting Researcher** (2025.10 - 2025.11)  
+   * National Weather Center, Hydrometeorology and Remote Sensing Lab  
+   * Collaborated on research activities about machine learning application to remote sensing and wind engineering
+   * Affiliated with the University of Oklahoma (OU) and the National Weather Center (NWC) under the guidance of Prof. Yang Hong
+
+* **Machine Learning Engineer** (2024.09 - 2025.02)  
+   * Gentoo (Waddle Corporation), Internship  
+   * Developed LLM as a Judge system including user simulator and LLM evaluator
+   * Alignment of LLM evaluator with human
+
+* **Graduate Teaching Assistant** (2021.03 - 2024.06)  
+   * Seoul National University  
+   * Courses:
+     * Architecture and AI (22S, 23S, 24S) - Lecturer for hands-on experience about deep neural networks
+     * Introduction to IoT, AI, and Big Data (21S, 21F, 22S, 22F) - IoT project evaluator, hands-on experience with Arduino UNO, head TA during 22F
+     * Creative Engineering Design (21F, 22S) - IoT project evaluator, hands-on experience with Arduino UNO and ESP32
+     * IoT and Creative Engineering Design (21F, 22S) - IoT project evaluator, hands-on experience with Arduino UNO, Teensy, ESP32, and STM boards
+     * Structural Experiment and Material (22S) - Euler's buckling load experiment, truss structure deflection experiment, seismic design with two-way shake table test
+     * Mechanics of Materials for Architectural Engineering (21F) - Problem solving about fundamentals for structural engineering
+     * Prestressed Concrete (21F) - Class management for prestressed concrete especially for post-tensioned structure
+     * Computation in Architectural Engineering (21S) - MATLAB hands-on experience for structural engineering students
+   * *S denotes spring semester and F stands for fall semester*
+
+* **Undergraduate Research Assistant** (2018.12 - 2021.02)  
+   * Seoul National University  
+   * Jan 2021 - Feb 2021 @ HpSE in SNU - Wind pressure coefficient prediction for wind-resistant building design
+   * Oct 2019 - Feb 2020 @ SNUCEM - AHP analysis for improvement of military dining facilities
+   * Dec 2018 - Feb 2019 @ AEPRL in SNU - IoT device design (HW and SW) and fabrication for surface condensation detection of indoor environment
+
+* **Research Engineer** (2018.07 - 2018.08)  
+   * Chungyeon Architects (친환경계획그룹 청연건축사사무소), Internship  
+   * Data analysis of building energy performance evaluation
+   * ECO2, AutoCAD, and Python
 
 # Field of Interest
 
@@ -102,54 +150,6 @@ My work spans multiple domains including structural health monitoring, automated
 
 * **Anyang City Middle School Mathematics and Science Competition Gold Award** (2012.04.)  
    * Anyang-Gwacheon Office of Education
-
-# Work Experience
-
-* **Graduate Research Assistant** (2021.03 - Present)  
-   * Seoul National University, Hi-performance Structural Engineering Lab  
-   * Research Projects:
-     * Hyper-converged Forensic Research Center for Infrastructure (2021-2027) supported by NRF Korea and funded by MSIT
-     * Smart City Innovative Technology Demonstration Project (2024-2025) supported by KAIA and funded by MOLIT
-     * Outstanding Patent Prototype Development Project (2023) supported and funded by SNU
-     * AI for Construction Research Project (2024) supported by SNU and funded by Sejong Construction
-   * National Service as a Researcher:
-     * Alternative military service for 3 years
-     * 2 years as PhD candidate (Mar 2025 - Feb 2027) in SNU and 1 year as Post-Doc in TBD
-     * Temporal leave due to basic military training (Aug 2025 - Sep 2025) in KATC
-
-* **Visiting Researcher** (2025.10 - 2025.11)  
-   * National Weather Center, Hydrometeorology and Remote Sensing Lab  
-   * Collaborated on research activities about machine learning application to remote sensing and wind engineering
-   * Affiliated with the University of Oklahoma (OU) and the National Weather Center (NWC) under the guidance of Prof. Yang Hong
-
-* **Machine Learning Engineer** (2024.09 - 2025.02)  
-   * Gentoo (Waddle Corporation), Internship  
-   * Developed LLM as a Judge system including user simulator and LLM evaluator
-   * Alignment of LLM evaluator with human
-
-* **Graduate Teaching Assistant** (2021.03 - 2024.06)  
-   * Seoul National University  
-   * Courses:
-     * Architecture and AI (22S, 23S, 24S) - Lecturer for hands-on experience about deep neural networks
-     * Introduction to IoT, AI, and Big Data (21S, 21F, 22S, 22F) - IoT project evaluator, hands-on experience with Arduino UNO, head TA during 22F
-     * Creative Engineering Design (21F, 22S) - IoT project evaluator, hands-on experience with Arduino UNO and ESP32
-     * IoT and Creative Engineering Design (21F, 22S) - IoT project evaluator, hands-on experience with Arduino UNO, Teensy, ESP32, and STM boards
-     * Structural Experiment and Material (22S) - Euler's buckling load experiment, truss structure deflection experiment, seismic design with two-way shake table test
-     * Mechanics of Materials for Architectural Engineering (21F) - Problem solving about fundamentals for structural engineering
-     * Prestressed Concrete (21F) - Class management for prestressed concrete especially for post-tensioned structure
-     * Computation in Architectural Engineering (21S) - MATLAB hands-on experience for structural engineering students
-   * *S denotes spring semester and F stands for fall semester*
-
-* **Undergraduate Research Assistant** (2018.12 - 2021.02)  
-   * Seoul National University  
-   * Jan 2021 - Feb 2021 @ HpSE in SNU - Wind pressure coefficient prediction for wind-resistant building design
-   * Oct 2019 - Feb 2020 @ SNUCEM - AHP analysis for improvement of military dining facilities
-   * Dec 2018 - Feb 2019 @ AEPRL in SNU - IoT device design (HW and SW) and fabrication for surface condensation detection of indoor environment
-
-* **Research Engineer** (2018.07 - 2018.08)  
-   * Chungyeon Architects (친환경계획그룹 청연건축사사무소), Internship  
-   * Data analysis of building energy performance evaluation
-   * ECO2, AutoCAD, and Python
 
 # Certifications
 
