@@ -22,12 +22,12 @@ main:
 
   - title: "Projects"
     url: /portfolio/
-        
-  - title: "CV"
-    url: /cv/
     
   # - title: "Teaching"
   #   url: /teaching/
+    
+  # - title: "CV"
+  #   url: /cv/
     
   # - title: "CV"
   #   url: /cv-json/
