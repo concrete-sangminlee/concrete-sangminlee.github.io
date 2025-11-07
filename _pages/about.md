@@ -169,12 +169,12 @@ My work spans multiple domains including structural health monitoring, automated
 
 # Professional Memberships
 
-* **American Society of Civil Engineers (ASCE)** - Student Member (2025.03 - Present)
-* **Architectural Institute of Korea (대한건축학회)** - Regular Member (2023.03 - Present)
-* **Korea Institute for Structural Maintenance and Inspection (한국구조물진단유지관리공학회)** - Student Member (2023.03 - Present)
-* **Wind Engineering Institute of Korea (한국풍공학회)** - Student Member (2023.03 - Present)
-* **American Concrete Institute (ACI)** - Student Member (2021.03 - Present)
-* **Korea Concrete Institute (한국콘크리트학회)** - Regular Member (2021.02 - Present)
+* **American Society of Civil Engineers** - Student Member (2025.03 - Present)
+* **Architectural Institute of Korea** - Regular Member (2023.03 - Present)
+* **Korea Institute for Structural Maintenance and Inspection** - Student Member (2023.03 - Present)
+* **Wind Engineering Institute of Korea** - Student Member (2023.03 - Present)
+* **American Concrete Institute** - Student Member (2021.03 - Present)
+* **Korea Concrete Institute** - Regular Member (2021.02 - Present)
 
 # Patents
 
