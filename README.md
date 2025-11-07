@@ -18,6 +18,34 @@ This website presents my academic profile, research contributions, and professio
 - **CV** (`/cv/`) - Complete curriculum vitae
 - **Teaching** (`/teaching/`) - Courses taught and assisted at Seoul National University
 
+## Adding Your Profile Photo
+
+To add your profile photo:
+
+1. **Prepare your image**:
+   - Recommended size: 400x400 pixels (square)
+   - Format: PNG or JPG
+   - File size: Keep under 500KB for faster loading
+
+2. **Add the image file**:
+   - Place your photo in the `images/` folder
+   - Name it `profile.png` (or `profile.jpg`)
+   - Or use any name and update `_config.yml` accordingly
+
+3. **Update configuration** (if using a different filename):
+   - Open `_config.yml`
+   - Find the `author:` section
+   - Update `avatar: "profile.png"` to your filename
+
+4. **Commit and push**:
+   ```bash
+   git add images/profile.png
+   git commit -m "Add profile photo"
+   git push origin master
+   ```
+
+The profile photo will appear in the sidebar on all pages with `author_profile: true`.
+
 ## Technology Stack
 
 - **Framework**: Jekyll (static site generator)
@@ -145,6 +173,7 @@ Main site configuration is in `_config.yml`. Key settings include:
 - Author information (bio, contact, social links)
 - Navigation menu (`_data/navigation.yml`)
 - Publication categories
+- **Profile photo**: Set in `author.avatar` field
 
 ## Deployment
 
