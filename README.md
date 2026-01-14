@@ -1,12 +1,14 @@
 # Sang Min Lee - Academic Website
 
-Personal academic website hosted on GitHub Pages, showcasing research, publications, projects, and teaching experience.
+**Academic Pages is a GitHub Pages template for personal and professional portfolio-oriented websites.**
 
 🌐 **Live Site**: [https://concrete-sangminlee.github.io](https://concrete-sangminlee.github.io)
 
 ## About
 
 This website presents my academic profile, research contributions, and professional activities. I am a Ph.D. Candidate in Artificial Intelligence at Seoul National University, specializing in **AI for Resilient Infrastructure and Wind Engineering**.
+
+This site is built using the [Academic Pages](https://github.com/academicpages/academicpages.github.io) template, which is a fork of the [Minimal Mistakes](https://mmistakes.github.io/minimal-mistakes/) Jekyll theme.
 
 ## Site Structure
 
@@ -53,17 +55,7 @@ The profile photo will appear in the sidebar on all pages with `author_profile: 
 - **Hosting**: GitHub Pages
 - **Language**: Ruby, HTML, CSS, JavaScript
 
-## Local Development
-
-To run this site locally for development:
-
-### Prerequisites
-
-- Ruby (with ruby-dev)
-- Bundler
-- Node.js
-
-### Installation
+## Getting Started
 
 1. Clone the repository:
    ```bash
@@ -71,29 +63,74 @@ To run this site locally for development:
    cd concrete-sangminlee.github.io
    ```
 
-2. Install dependencies:
+2. Set site-wide configuration and add your content (see Configuration section below).
+
+3. Upload any files (like PDFs, .zip files, etc.) to the `files/` directory. They will appear at `https://concrete-sangminlee.github.io/files/example.pdf`.
+
+4. Check status by going to the repository settings, in the "GitHub pages" section.
+
+## Local Development
+
+When you are initially working on your website, it is very useful to be able to preview the changes locally before pushing them to GitHub. To work locally you will need to:
+
+### Prerequisites
+
+- **Ruby** (with ruby-dev)
+- **Bundler**
+- **Node.js**
+
+On most Linux distributions and Windows Subsystem Linux:
+```bash
+sudo apt install ruby-dev ruby-bundler nodejs
+```
+
+If you see errors like `Unable to locate package ruby-bundler` or `Unable to locate package nodejs`, run:
+```bash
+sudo apt update && sudo apt upgrade -y
+```
+
+On macOS:
+```bash
+brew install ruby
+brew install node
+gem install bundler
+```
+
+### Installation
+
+1. **Install dependencies**:
    ```bash
    bundle install
    ```
 
-   If you encounter permission errors, install gems locally:
+   If you encounter permission errors, install gems locally (recommended):
    ```bash
    bundle config set --local path 'vendor/bundle'
    bundle install
    ```
 
-3. Run the local server:
+   If you see file permission errors like `Gem::FilePermissionError` or `Bundler::PermissionError`, the local installation method above should resolve them. After successful installation, you should see a `vendor` folder and `.bundle` directory.
+
+2. **Run the local server**:
    ```bash
    bundle exec jekyll serve -l -H localhost
    ```
 
-4. Open your browser and navigate to `http://localhost:4000`
+   The local server will automatically rebuild and refresh the pages on change to Markdown (*.md) and HTML files, while changes to the core template and configuration (i.e., `_config.yml`) will require stopping and restarting Jekyll.
+
+3. **Open your browser** and navigate to `http://localhost:4000`
+
+**Note**: If you are running on Linux, it may be necessary to install some additional dependencies:
+```bash
+sudo apt install build-essential gcc make
+```
 
 ### Using Docker
 
-Alternatively, use Docker to avoid local dependency installation:
+Working from a different OS, or just want to avoid installing dependencies? You can use Docker to build a container that will run the site for you if you have Docker installed.
 
 ```bash
+chmod -R 777 .
 docker compose up
 ```
 
@@ -179,12 +216,25 @@ Main site configuration is in `_config.yml`. Key settings include:
 
 This site is automatically deployed via GitHub Pages. Simply push changes to the `master` branch, and GitHub Pages will rebuild and deploy the site within a few minutes.
 
+### GitHub Pages Setup
+
+1. Go to your repository settings
+2. Navigate to the "Pages" section
+3. Ensure the source is set to the `master` branch
+4. Your site will be available at `https://concrete-sangminlee.github.io` within a few minutes after pushing changes
+
 ## License
 
-This website is based on the [Academic Pages](https://github.com/academicpages/academicpages.github.io) template, which is a fork of [Minimal Mistakes](https://mmistakes.github.io/minimal-mistakes/) Jekyll theme.
+This website is based on the [Academic Pages](https://github.com/academicpages/academicpages.github.io) template, which is a fork of the [Minimal Mistakes](https://mmistakes.github.io/minimal-mistakes/) Jekyll theme.
 
 - **Academic Pages**: © 2016-present, released under MIT License
 - **Minimal Mistakes**: © 2016 Michael Rose, released under MIT License
+
+## Maintenance
+
+This repository was forked (then detached) by Stuart Geiger from the Minimal Mistakes Jekyll Theme, which is © 2016 Michael Rose and released under the MIT License. It is currently being maintained by Robert Zupko and additional maintainers would be welcomed.
+
+For questions concerning how to style the template, please refer to the [Academic Pages documentation](https://academicpages.github.io/) or start a new discussion on GitHub.
 
 ## Contact
 
