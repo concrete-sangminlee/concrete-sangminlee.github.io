@@ -195,4 +195,4 @@ This website is based on the [Academic Pages](https://github.com/academicpages/a
 
 ---
 
-*Last updated: November 2025*
+*Last updated: January 2026*
