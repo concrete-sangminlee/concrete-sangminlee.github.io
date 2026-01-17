@@ -6,7 +6,7 @@
 
 Ph.D. Candidate in Artificial Intelligence at **Seoul National University**, researching **AI for resilient infrastructure and wind engineering**.
 
-**Email:** 201612445[at]snu.ac.kr
+**Email:** 201612445@snu.ac.kr
 
 ---
 
@@ -35,5 +35,4 @@ Ph.D. Candidate in Artificial Intelligence at **Seoul National University**, res
 
 #### Research Interests
 
-Structural Health Monitoring | Wind Engineering | Automated NDT | LLM for Engineering
-
+Machine Learning | Wind Engineering | Concrete | Structural Health Monitoring | Non-Destructive Testing |

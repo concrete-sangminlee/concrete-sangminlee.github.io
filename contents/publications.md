@@ -9,7 +9,7 @@
 
 4. Ahn, B., Lee, D., **Lee, S. M.**, & Kang, T. H.-K. (2023). 인공신경망을 활용한 위성사진 기반 기대풍속 예측 방법론에 관한 연구. *한국풍공학회논문집, 27*(4), 135-142.
 
-5. **Lee, S. M.**, Choi, H. J., & Kang, T. H.-K. (2023). 스마트 임팩트 에코 검사를 위한 기계학습 응용. *건축(대한건축학회지), 67*(3), 47-50.
+5. **Lee, S. M.**, Choi, H., & Kang, T. H.-K. (2023). 스마트 임팩트 에코 검사를 위한 기계학습 응용. *건축(대한건축학회지), 67*(3), 47-50.
 
 6. **Lee, S. M.**, Sung, H. S., & Kang, T. H.-K. (2022). Comparison of performance for predicting compressive strength of concrete using machine learning. *Journal of the Korea Concrete Institute, 34*(5), 505-513.
 
@@ -31,7 +31,7 @@
 
 7. **Lee, S. M.**, Choi, H. S., Kim, C., & Kang, T. H.-K. (2024). Lightweighting concrete crack image classification machine learning models for on-device AI. *한국콘크리트학회 학술대회 논문집, 36*(1), 57-58.
 
-8. **Lee, S. M.**, Choi, H. J., & Kang, T. H.-K. (2023). 머신러닝 응용 임팩트 에코 검사 자동화 연구. *한국콘크리트학회 학술대회 논문집, 35*(1), 187-188.
+8. **Lee, S. M.**, Choi, H., & Kang, T. H.-K. (2023). 머신러닝 응용 임팩트 에코 검사 자동화 연구. *한국콘크리트학회 학술대회 논문집, 35*(1), 187-188.
 
 9. **Lee, S. M.**, & Kang, T. H.-K. (2022). Clustering wind pressure tap using dynamic time warping. *8th European-African Conference on Wind Engineering (EACWE2022)*. Bucharest, Romania.
 
