@@ -247,13 +247,12 @@ section .main-body hr {
     #avatar {
         position: relative;
         height: 0;
-        top: 0;
+        top: -70px;
         margin: 0 auto;
-        margin-top: -60px;
         float: none;
         display: block;
         text-align: center;
-        z-index: 9000;
+        z-index: 9999 !important;
     }
 
     #avatar img {
@@ -261,13 +260,25 @@ section .main-body hr {
         width: 100px;
         object-fit: cover;
         position: relative;
-        top: -50px;
+        z-index: 9999 !important;
     }
 
     .top-section {
         height: 14rem;
         padding: 3rem 0;
         margin-bottom: 0;
+        z-index: 1;
+    }
+
+    .top-section:before {
+        z-index: 0;
+    }
+
+    /* Avatar parent container needs z-index for stacking context */
+    #avatar + section,
+    .container:has(#avatar) {
+        position: relative;
+        z-index: 9999;
     }
 
     .top-section h2 {
