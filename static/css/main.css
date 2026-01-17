@@ -214,6 +214,7 @@ section .main-body hr {
     border: 3px solid #fff;
 }
 
+/* Tablet breakpoint */
 @media screen and (max-width: 991px) {
     #avatar {
         margin: 0;
@@ -225,6 +226,82 @@ section .main-body hr {
 
     section .main-body {
         font-size: 1rem;
+    }
+
+    .top-section {
+        height: 18rem;
+        padding: 6rem 0;
+    }
+
+    .top-section h2 {
+        font-size: 2rem;
+    }
+
+    #home-subtitle {
+        font-size: 1.3rem;
+    }
+}
+
+/* Mobile breakpoint */
+@media screen and (max-width: 576px) {
+    #avatar {
+        top: -50px;
+        margin: 0 auto;
+        float: none;
+        display: block;
+        text-align: center;
+    }
+
+    #avatar img {
+        height: 120px;
+    }
+
+    .top-section {
+        height: 14rem;
+        padding: 4rem 0;
+    }
+
+    .top-section h2 {
+        font-size: 1.5rem;
+        letter-spacing: 1px;
+    }
+
+    #home-subtitle {
+        font-size: 1.1rem;
+    }
+
+    section {
+        padding: 2rem 0;
+    }
+
+    section header h2 {
+        font-size: 1.3rem;
+        line-height: 2rem;
+    }
+
+    section .main-body {
+        font-size: 0.95rem;
+        line-height: 1.7;
+    }
+
+    section .main-body h4 {
+        font-size: 1.1rem;
+    }
+
+    section .main-body li {
+        margin-bottom: 0.8rem;
+    }
+
+    .container {
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+
+    /* Better table scrolling on mobile */
+    section .main-body table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
     }
 }
 
