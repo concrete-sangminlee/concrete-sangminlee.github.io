@@ -7,7 +7,7 @@
 
 3. Lee, Y. I., **Lee, S. M.**, & Kang, T. H.-K. (2025). Multiclass deep support vector data description for structural health monitoring. *Journal of Structural Engineering, 151*(12).
 
-4. Ahn, B. W., Lee, D. H., **Lee, S. M.**, & Kang, T. H.-K. (2023). 인공신경망을 활용한 위성사진 기반 기대풍속 예측 방법론에 관한 연구. *한국풍공학회논문집, 27*(4), 135-142.
+4. Ahn, B., Lee, D., **Lee, S. M.**, & Kang, T. H.-K. (2023). 인공신경망을 활용한 위성사진 기반 기대풍속 예측 방법론에 관한 연구. *한국풍공학회논문집, 27*(4), 135-142.
 
 5. **Lee, S. M.**, Choi, H. J., & Kang, T. H.-K. (2023). 스마트 임팩트 에코 검사를 위한 기계학습 응용. *건축(대한건축학회지), 67*(3), 47-50.
 
