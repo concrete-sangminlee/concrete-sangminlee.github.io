@@ -245,13 +245,14 @@ section .main-body hr {
 /* Mobile breakpoint */
 @media screen and (max-width: 576px) {
     #avatar {
-        position: static;
-        height: auto;
-        top: auto;
-        margin: -60px auto 1rem auto;
+        position: relative;
+        height: 0;
+        top: -50px;
+        margin: 0 auto;
         float: none;
         display: block;
         text-align: center;
+        z-index: 9000;
     }
 
     #avatar img {
