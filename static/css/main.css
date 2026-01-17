@@ -245,47 +245,51 @@ section .main-body hr {
 /* Mobile breakpoint */
 @media screen and (max-width: 576px) {
     #avatar {
-        top: -50px;
-        margin: 0 auto;
+        position: static;
+        height: auto;
+        top: auto;
+        margin: -60px auto 1rem auto;
         float: none;
         display: block;
         text-align: center;
     }
 
     #avatar img {
-        height: 120px;
+        height: 100px;
+        width: 100px;
+        object-fit: cover;
     }
 
     .top-section {
-        height: 14rem;
-        padding: 4rem 0;
+        height: 12rem;
+        padding: 3rem 0;
     }
 
     .top-section h2 {
-        font-size: 1.5rem;
+        font-size: 1.4rem;
         letter-spacing: 1px;
     }
 
     #home-subtitle {
-        font-size: 1.1rem;
+        font-size: 1rem;
     }
 
     section {
-        padding: 2rem 0;
+        padding: 1.5rem 0;
     }
 
     section header h2 {
-        font-size: 1.3rem;
+        font-size: 1.2rem;
         line-height: 2rem;
     }
 
     section .main-body {
-        font-size: 0.95rem;
+        font-size: 0.9rem;
         line-height: 1.7;
     }
 
     section .main-body h4 {
-        font-size: 1.1rem;
+        font-size: 1.05rem;
     }
 
     section .main-body li {
@@ -302,6 +306,12 @@ section .main-body hr {
         display: block;
         overflow-x: auto;
         white-space: nowrap;
+    }
+
+    /* Fix navbar overlap on iOS */
+    .header {
+        position: sticky;
+        top: 0;
     }
 }
 
