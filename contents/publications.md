@@ -1,60 +1,47 @@
-*Total: 28 publications (12 journal articles, 16 conference papers)*
+
+#### Journal Articles (SCI/SCIE/KCI)
+
+1. **S. M. Lee**, et al. Machine Learning Assisted Method for Automated Impact-Echo Testing of Concrete Structures. *Journal of Nondestructive Evaluation*, 2025.
+
+2. **S. M. Lee**, et al. Multi-Class Deep Support Vector Data Description for Structural Health Monitoring. *ASCE Journal of Structural Engineering*, 2025.
+
+3. **S. M. Lee**, et al. Lightweight Alternative Machine Learning Model for Automating Concrete Crack Image Classification. *ACI Structural Journal*, 2025.
+
+4. **S. M. Lee**, et al. Artificial Neural Network-Based Expected Wind Speed Prediction Methodology Using Satellite Images. *Journal of Wind Engineering Institute of Korea*, 2023.
+
+5. **S. M. Lee**, et al. Machine Learning Application for Smart Impact-Echo Testing. *Journal of the Architectural Institute of Korea*, 2023.
+
+6. **S. M. Lee**, et al. Comparative Study on Concrete Compressive Strength Prediction Performance of Machine Learning Models. *Journal of Korea Concrete Institute*, 2022.
 
 ---
 
-#### Journal Articles
+#### Conference Proceedings
 
-- **S. M. Lee**, T. H.-K. Kang, et al. (2025). Machine Learning Assisted Method for Automated Impact-Echo Testing of Concrete Structures. **Journal of Nondestructive Evaluation**. *(Springer)*
+1. **S. M. Lee**, et al. Retrieval Augmented Generation for Assistance of Using Wind Load Design Codes. *APCWE10*, 2025.
 
-- **S. M. Lee**, T. H.-K. Kang, et al. (2025). Multi-Class Deep Support Vector Data Description for Structural Health Monitoring. **ASCE Journal of Structural Engineering**. *(American Society of Civil Engineers)*
+2. **S. M. Lee**, et al. Deep Learning-Based Clustering of Wind Pressure Coefficients. *KCI Conference*, 2025.
 
-- **S. M. Lee**, T. H.-K. Kang, et al. (2025). Lightweight Alternative Machine Learning Model for Automating Concrete Crack Image Classification. **ACI Structural Journal**. *(American Concrete Institute)*
+3. **S. M. Lee**, et al. MoE-Based LLM Framework for Building Structural Design Codes. *KCI Conference*, 2024.
 
-- **S. M. Lee**, Y. Hong, T. H.-K. Kang, et al. (2023). Artificial Neural Network-Based Expected Wind Speed Prediction Methodology Using Satellite Images. **Journal of Wind Engineering Institute of Korea**.
+4. **S. M. Lee**, et al. Multi-Class Deep SVDD-Based Monitoring of Concrete Buildings. *KCI Conference*, 2024.
 
-- **S. M. Lee**, T. H.-K. Kang, et al. (2023). Machine Learning Application for Smart Impact-Echo Testing. **Journal of the Architectural Institute of Korea**.
+5. **S. M. Lee**, et al. Representation Learning for Classification of Concrete Crack Images. *Structures Congress*, 2024.
 
-- **S. M. Lee**, T. H.-K. Kang, et al. (2022). Comparative Study on Concrete Compressive Strength Prediction Performance of Machine Learning Models. **Journal of Korea Concrete Institute**.
+6. **S. M. Lee**, et al. Multi-Sphere Deep SVDD for System Identification. *ACEM24*, 2024.
 
----
+7. **S. M. Lee**, et al. Lightweight ML Model for On-Device AI-Based Crack Classification. *KCI Conference*, 2024.
 
-#### Conference Papers
+8. **S. M. Lee**, et al. ML Application to Automated Impact-Echo Testing. *KCI Conference*, 2023.
 
-- **S. M. Lee**, et al. (2025). Retrieval Augmented Generation for Assistance of Using Wind Load Design Codes. **The 10th Asia-Pacific Conference on Wind Engineering (APCWE10)**, Seoul, Korea.
+9. **S. M. Lee**, et al. Clustering Wind Pressure Tap Using Dynamic Time Warping. *EACWE2022*, 2022.
 
-- **S. M. Lee**, et al. (2025). Deep Learning-Based Clustering of Wind Pressure Coefficients on Concrete Building Facades. **Korea Concrete Institute Annual Conference**.
+10. **S. M. Lee**, et al. Shear Strength Prediction of Prestressed Concrete Based on ML. *Structures Congress*, 2022.
 
-- **S. M. Lee**, et al. (2024). Mixture-of-Experts Architecture-Based Large Language Model Framework Specialized for Building Structural Design Codes. **Korea Concrete Institute Annual Conference**.
+11. **S. M. Lee**, et al. ML-Based Concrete Compressive Strength Prediction. *KCI Conference*, 2022.
 
-- **S. M. Lee**, et al. (2024). Multi-Class Deep SVDD-Based Monitoring of Concrete Buildings. **Korea Concrete Institute Annual Conference**.
+12. **S. M. Lee**, et al. LSTM-Based Wind Pressure Coefficient Prediction. *KCI Conference*, 2021.
 
-- **S. M. Lee**, et al. (2024). Representation Learning for Classification of Concrete Crack Images. **The 2024 Structures Congress**, Seoul, Korea.
+13. **S. M. Lee**, et al. Wind Pressure Prediction Using LSTM RNN for Sensor Reduction. *ASEM21*, 2021.
 
-- **S. M. Lee**, et al. (2024). Multi-Sphere Deep SVDD for System Identification of Building Structure. **The 2024 World Congress on Advances in Civil, Environmental, and Materials Research (ACEM24)**, Seoul, Korea.
-
-- **S. M. Lee**, et al. (2024). Lightweight Machine Learning Model for On-Device AI-Based Concrete Crack Image Classification. **Korea Concrete Institute Annual Conference**.
-
-- **S. M. Lee**, et al. (2023). Machine Learning Application to Automated Impact-Echo Testing. **Korea Concrete Institute Annual Conference**.
-
-- **S. M. Lee**, et al. (2022). Clustering Wind Pressure Tap Using Dynamic Time Warping. **8th European-African Conference on Wind Engineering (EACWE2022)**, Bucharest, Romania.
-
-- **S. M. Lee**, et al. (2022). Shear Strength Prediction of Prestressed Concrete Based on Machine Learning. **The 2022 Structures Congress**, Seoul, Korea.
-
-- **S. M. Lee**, et al. (2022). Machine Learning-Based Concrete Compressive Strength Prediction. **Korea Concrete Institute Annual Conference**.
-
-- **S. M. Lee**, et al. (2021). Long Short-Term Memory Recurrent Neural Network-Based Wind Pressure Coefficient Prediction for Concrete Building Facades. **Korea Concrete Institute Annual Conference**.
-
-- **S. M. Lee**, et al. (2021). Prediction of Wind Pressure Coefficients on High-Rise Building Facade Using LSTM RNN Model for Sensor Reduction. **The 2021 World Congress on Advances in Structural Engineering and Mechanics (ASEM21)**, Seoul, Korea.
-
-- **S. M. Lee**, et al. (2021). LSTM Network-Based Wind Pressure Coefficient Prediction for Concrete Building Facades. **Korea Concrete Institute Annual Conference**.
-
----
-
-#### Theses
-
-- **S. M. Lee** (2023). Machine Learning Application to Automated Impact-Echo Test for Concrete Structures. **M.S. Thesis**, Seoul National University. *(Advisor: Prof. Thomas H.-K. Kang)*
-
-- **S. M. Lee** (2021). Optimal Operation Strategy for Energy Storage System (ESS) in Microgrid. **B.S. Thesis (ECE)**, Seoul National University.
-
-- **S. M. Lee** (2021). Design of Automatic Shading Device Based on Illuminance and Implementation of Operation Optimization Algorithm Using IoT Technology. **B.S. Thesis (Architecture)**, Seoul National University.
+14. **S. M. Lee**, et al. LSTM Network-Based Wind Pressure Coefficient Prediction. *KCI Conference*, 2021.
 
