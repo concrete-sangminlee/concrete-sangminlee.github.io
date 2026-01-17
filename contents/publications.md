@@ -7,9 +7,11 @@
 
 3. Lee, Y. I., **Lee, S. M.**, & Kang, T. H.-K. (2025). Multiclass deep support vector data description for structural health monitoring. *Journal of Structural Engineering, 151*(12).
 
-4. **Lee, S. M.**, Choi, H. J., & Kang, T. H.-K. (2023). 스마트 임팩트 에코 검사를 위한 기계학습 응용. *건축(대한건축학회지), 67*(3), 47-50.
+4. Ahn, B. W., Lee, D. H., **Lee, S. M.**, & Kang, T. H.-K. (2023). 인공신경망을 활용한 위성사진 기반 기대풍속 예측 방법론에 관한 연구. *한국풍공학회논문집, 27*(4), 135-142.
 
-5. **Lee, S. M.**, Sung, H. S., & Kang, T. H.-K. (2022). Comparison of performance for predicting compressive strength of concrete using machine learning. *Journal of the Korea Concrete Institute, 34*(5), 505-513.
+5. **Lee, S. M.**, Choi, H. J., & Kang, T. H.-K. (2023). 스마트 임팩트 에코 검사를 위한 기계학습 응용. *건축(대한건축학회지), 67*(3), 47-50.
+
+6. **Lee, S. M.**, Sung, H. S., & Kang, T. H.-K. (2022). Comparison of performance for predicting compressive strength of concrete using machine learning. *Journal of the Korea Concrete Institute, 34*(5), 505-513.
 
 ---
 
@@ -25,15 +27,23 @@
 
 5. **Lee, S. M.**, Lee, Y. I., & Kang, T. H.-K. (2024). Multi-sphere deep SVDD for system identification of building structure. *The 2024 World Congress on Advances in Civil, Environmental, and Materials Research (ACEM24)*.
 
-6. **Lee, S. M.**, Choi, H. S., Kim, C., & Kang, T. H.-K. (2024). Lightweighting concrete crack image classification machine learning models for on-device AI. *한국콘크리트학회 학술대회 논문집, 36*(1), 57-58.
+6. **Lee, S. M.**, Choi, H. S., Kim, C., & Kang, T. H.-K. (2024). Representation learning for classification of concrete crack images. *The 2024 Structures Congress*. Seoul, Korea.
 
-7. **Lee, S. M.**, & Choi, H. S. (2023). Representation learning for classification of concrete crack images. *한국콘크리트학회 학술대회 논문집, 35*(1), 187-188.
+7. **Lee, S. M.**, Choi, H. S., Kim, C., & Kang, T. H.-K. (2024). Lightweighting concrete crack image classification machine learning models for on-device AI. *한국콘크리트학회 학술대회 논문집, 36*(1), 57-58.
 
-8. **Lee, S. M.**, & Kang, T. H.-K. (2022). Clustering wind pressure tap using dynamic time warping. *8th European-African Conference on Wind Engineering (EACWE2022)*. Bucharest, Romania.
+8. **Lee, S. M.**, Choi, H. J., & Kang, T. H.-K. (2023). 머신러닝 응용 임팩트 에코 검사 자동화 연구. *한국콘크리트학회 학술대회 논문집, 35*(1), 187-188.
 
-9. **Lee, S. M.**, & Kang, T. H.-K. (2022). Shear strength prediction of prestressed concrete based on machine learning. *The 2022 Structures Congress*. Seoul, Korea.
+9. **Lee, S. M.**, & Kang, T. H.-K. (2022). Clustering wind pressure tap using dynamic time warping. *8th European-African Conference on Wind Engineering (EACWE2022)*. Bucharest, Romania.
 
-10. **Lee, S. M.**, & Kang, T. H.-K. (2021). Prediction of wind pressure coefficients on high-rise building façade using LSTM RNN model for sensor reduction. *The 2021 World Congress on Advances in Structural Engineering and Mechanics (ASEM21)*.
+10. **Lee, S. M.**, & Kang, T. H.-K. (2022). Shear strength prediction of prestressed concrete based on machine learning. *The 2022 Structures Congress*. Seoul, Korea.
+
+11. **Lee, S. M.**, Sung, H. S., & Kang, T. H.-K. (2022). 머신러닝 기반 콘크리트 압축강도 예측 연구. *한국콘크리트학회 학술대회 논문집, 34*(1), 179-180.
+
+12. **Lee, S. M.**, & Kang, T. H.-K. (2021). Prediction of wind pressure coefficients on high-rise building façade using LSTM RNN model for sensor reduction. *The 2021 World Congress on Advances in Structural Engineering and Mechanics (ASEM21)*.
+
+13. **Lee, S. M.**, & Kang, T. H.-K. (2021). 장단기기억 순환신경망 기반 콘크리트 건물 벽면 풍압계수 예측 연구. *한국콘크리트학회 학술대회 논문집, 33*(2), 155-156.
+
+14. **Lee, S. M.**, & Kang, T. H.-K. (2021). LSTM 네트워크를 활용한 콘크리트 건물의 벽면 풍압계수 예측 연구. *한국콘크리트학회 학술대회 논문집, 33*(1), 189-190.
 
 ---
 
@@ -41,9 +51,9 @@
 
 1. **Lee, S. M.** (2023). *Machine learning application to automated impact-echo test for concrete structures* [Master's thesis]. Seoul National University.
 
-2. **Lee, S. M.** (2021). *조도 기반 차양장치 설계 및 IoT를 활용한 알고리즘의 구현에 대한 연구* [Bachelor's thesis]. Seoul National University, Department of Architecture.
+2. **Lee, S. M.** (2021). *조도에 따른 자동 개폐성 차양장치의 설계 및 사물인터넷 기술을 이용한 동작 최적화 알고리즘의 구현에 대한 연구* [Bachelor's thesis]. Seoul National University.
 
-3. **Lee, S. M.** (2021). *마이크로그리드 내 에너지저장장치(ESS) 최적 운영 방안에 대한 연구* [Bachelor's thesis]. Seoul National University, Department of Electrical and Computer Engineering.
+3. **Lee, S. M.** (2021). *마이크로그리드 내 에너지저장장치(ESS) 최적 운영 방안에 대한 연구* [Bachelor's thesis]. Seoul National University.
 
 ---
 
@@ -56,4 +66,6 @@
 3. Jeon, Y. C., Cha, S. H., **Lee, S. M.**, & Jung, S. H. (2015). Boolean 환과 그 일반화에 대한 연구. *한국수학교육학회 뉴스레터, 31*(4), 11.
 
 4. **Lee, S. M.**, Lee, C. H., Jung, S. H., Jung, J. S., Kim, Y. G., Jeon, Y. C., & Cheon, J. A. (2014). *곱셈에 대한 교환법칙이 성립하지 않는 대수적 구조에 대한 연구* [R&E Report]. Korea Science Academy of KAIST.
+
+5. Jeon, Y. C., Kim, Y. G., **Lee, S. M.**, Lee, C. H., Jung, S. H., & Jung, J. S. (2014). 정역의 일반화에 대한 연구. *한국수학교육학회 뉴스레터, 30*(5), 17.
 
