@@ -75,6 +75,7 @@ footer a:hover {
 }
 
 .top-section h2 {
+    font-family: "Times New Roman", Times, Georgia, serif !important;
     font-weight: 300;
     font-size: 2.5rem;
     letter-spacing: 2px;
