@@ -1,356 +1,99 @@
 @import "./styles.css";
 
+/* ── VARIABLES ── */
 :root {
-    --h-title-color: #1a365d;
-    --primary-color: #2c3e50;
-    --accent-color: #34495e;
-    --text-color: #333;
-    --light-bg: #fafafa;
-    --gray-bg: #f5f5f5;
+  --green:        #39d353;
+  --green-glow:   rgba(57, 211, 83, 0.5);
+  --green-dim:    rgba(57, 211, 83, 0.12);
+  --green-border: rgba(57, 211, 83, 0.3);
+  --bg:           #050505;
+  --bg2:          #0a0a0a;
+  --bg3:          #0e0e0e;
+  --surface:      #141414;
+  --border:       #1f1f1f;
+  --border2:      #2a2a2a;
+  --text:         #c8c8c8;
+  --text-dim:     #505050;
+  --text-bright:  #eeeeee;
+  --mono: 'JetBrains Mono', 'Courier New', monospace;
+  --sans: 'Inter', system-ui, -apple-system, sans-serif;
 }
 
-/* Global Font Settings */
+/* ── GLOBAL RESET ── */
+html { scroll-behavior: smooth; }
+
 body, html {
-    font-family: "Times New Roman", Times, Georgia, serif !important;
-    color: var(--text-color);
-    font-size: 16px;
-    line-height: 1.8;
+  font-family: var(--sans) !important;
+  background: var(--bg) !important;
+  color: var(--text) !important;
+  font-size: 15px;
+  line-height: 1.7;
 }
 
 h1, h2, h3, h4, h5, h6 {
-    font-family: "Times New Roman", Times, Georgia, serif !important;
-    font-weight: 600;
-    color: var(--primary-color);
+  font-family: var(--mono) !important;
+  color: var(--text-bright);
 }
 
 p, li, td, th, span, a, div {
-    font-family: "Times New Roman", Times, Georgia, serif !important;
+  font-family: inherit !important;
 }
 
-/* Navigation */
+/* Hide avatar — no longer used */
+#avatar { display: none !important; }
+
+/* Hide home-subtitle — name is shown in hero */
+#home-subtitle { display: none !important; }
+
+/* ── NAVBAR ── */
 .header {
-    border-bottom: solid 2px var(--primary-color);
-    z-index: 10000;
-    background: rgba(255, 255, 255, 0.98) !important;
+  height: 50px;
+  background: rgba(5, 5, 5, 0.92) !important;
+  border-bottom: 1px solid var(--border) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  z-index: 1000;
 }
 
-.navbar-brand, .nav-link {
-    font-family: "Times New Roman", Times, Georgia, serif !important;
-    font-weight: 600 !important;
-    letter-spacing: 0.5px;
+.navbar-brand,
+#page-top-title {
+  font-family: var(--mono) !important;
+  font-size: 0.8rem !important;
+  color: var(--green) !important;
+  letter-spacing: 1px;
+  font-weight: 400 !important;
+}
+
+#page-top-title::before {
+  content: '~/';
+  color: var(--text-dim);
 }
 
 .nav-link {
-    color: var(--primary-color) !important;
-    font-size: 0.95rem !important;
-    transition: color 0.2s ease;
+  font-family: var(--mono) !important;
+  font-size: 0.65rem !important;
+  color: var(--text-dim) !important;
+  letter-spacing: 1.5px;
+  transition: color 0.2s !important;
+  position: relative;
 }
 
-.nav-link:hover {
-    color: var(--accent-color) !important;
+.nav-link::after {
+  content: '';
+  position: absolute;
+  bottom: -4px; left: 0; right: 0;
+  height: 1px;
+  background: var(--green);
+  transform: scaleX(0);
+  transition: transform 0.2s;
 }
 
-/* Footer */
-.bg-bottom {
-    background-color: var(--primary-color);
-}
+.nav-link:hover { color: var(--green) !important; }
+.nav-link:hover::after { transform: scaleX(1); }
 
-footer a {
-    color: rgba(255, 255, 255, 0.8) !important;
-    text-decoration: none;
-    transition: color 0.2s ease;
-}
-
-footer a:hover {
-    color: #fff !important;
-}
-
-/* Top Section */
-.top-section {
-    position: relative;
-    padding: 8rem 0;
-    background-position: center;
-    background-size: cover;
-    height: 22rem;
-}
-
-.top-section h2 {
-    font-family: "Times New Roman", Times, Georgia, serif !important;
-    font-weight: 300;
-    font-size: 2.5rem;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-}
-
-.top-section .top-section-content {
-    position: relative;
-    z-index: 1;
-}
-
-.top-section:before {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.55);
-}
-
-/* Section Headers */
-section header h2 {
-    font-family: "Times New Roman", Times, Georgia, serif !important;
-    color: var(--h-title-color);
-    font-size: 1.8rem;
-    line-height: 3rem;
-    font-weight: 600;
-    letter-spacing: 1px;
-    border-bottom: 2px solid var(--h-title-color);
-    padding-bottom: 0.5rem;
-    margin-bottom: 1.5rem;
-}
-
-section header h2 i {
-    margin-right: 0.5rem;
-}
-
-/* Main Body Content */
-section .main-body {
-    font-size: 1.05rem;
-    font-weight: 400;
-    line-height: 1.9;
-    color: var(--text-color);
-}
-
-section .main-body h4 {
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: var(--primary-color);
-    margin-top: 1.5rem;
-    margin-bottom: 1rem;
-    border-left: 4px solid var(--h-title-color);
-    padding-left: 0.75rem;
-}
-
-section .main-body strong {
-    font-weight: 600;
-    color: var(--primary-color);
-}
-
-section .main-body a {
-    color: var(--h-title-color);
-    text-decoration: none;
-    border-bottom: 1px solid transparent;
-    transition: border-bottom 0.2s ease;
-}
-
-section .main-body a:hover {
-    border-bottom: 1px solid var(--h-title-color);
-}
-
-/* Lists */
-section .main-body ul, section .main-body ol {
-    padding-left: 1.5rem;
-}
-
-section .main-body li {
-    margin-bottom: 0.6rem;
-}
-
-/* Tables */
-section .main-body table {
-    width: 100%;
-    border-collapse: collapse;
-    margin: 1rem 0;
-    font-size: 1rem;
-}
-
-section .main-body th, section .main-body td {
-    padding: 0.75rem 1rem;
-    text-align: left;
-    border-bottom: 1px solid #ddd;
-}
-
-section .main-body th {
-    background-color: var(--gray-bg);
-    font-weight: 600;
-    color: var(--primary-color);
-}
-
-section .main-body tr:hover {
-    background-color: #f9f9f9;
-}
-
-/* Horizontal Rules */
-section .main-body hr {
-    border: none;
-    border-top: 1px solid #ddd;
-    margin: 2rem 0;
-}
-
-/* Background Sections */
-.bg-gradient-primary-to-secondary-light {
-    background: var(--light-bg) !important;
-}
-
-.bg-gradient-primary-to-secondary-gray {
-    background: var(--gray-bg) !important;
-}
-
-/* Avatar */
-#avatar {
-    position: relative;
-    height: 0;
-    top: min(-65px, max(-100px, calc(-1*100vw/12)));
-    max-width: 55em;
-    margin: 0 1.5rem 0 0;
-    float: right;
-    z-index: 9000;
-}
-
-#avatar img {
-    height: max(140px, min(200px, calc(100vw/6)));
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    border: 3px solid #fff;
-}
-
-/* Tablet breakpoint */
-@media screen and (max-width: 991px) {
-    #avatar {
-        margin: 0;
-    }
-
-    section header h2 {
-        font-size: 1.5rem;
-    }
-
-    section .main-body {
-        font-size: 1rem;
-    }
-
-    .top-section {
-        height: 18rem;
-        padding: 6rem 0;
-    }
-
-    .top-section h2 {
-        font-size: 2rem;
-    }
-
-    #home-subtitle {
-        font-size: 1.3rem;
-    }
-}
-
-/* Mobile breakpoint */
-@media screen and (max-width: 576px) {
-    #avatar {
-        position: relative;
-        height: 0;
-        top: -70px;
-        margin: 0 auto;
-        float: none;
-        display: block;
-        text-align: center;
-        z-index: 9999 !important;
-    }
-
-    #avatar img {
-        height: 100px;
-        width: 100px;
-        object-fit: cover;
-        position: relative;
-        z-index: 9999 !important;
-    }
-
-    .top-section {
-        height: 14rem;
-        padding: 3rem 0;
-        margin-bottom: 0;
-        z-index: 1;
-    }
-
-    .top-section:before {
-        z-index: 0;
-    }
-
-    /* Avatar parent container needs z-index for stacking context */
-    #avatar + section,
-    .container:has(#avatar) {
-        position: relative;
-        z-index: 9999;
-    }
-
-    .top-section h2 {
-        font-size: 1.4rem;
-        letter-spacing: 1px;
-    }
-
-    #home-subtitle {
-        font-size: 1rem;
-    }
-
-    section {
-        padding: 1.5rem 0;
-    }
-
-    section header h2 {
-        font-size: 1.2rem;
-        line-height: 2rem;
-    }
-
-    section .main-body {
-        font-size: 0.9rem;
-        line-height: 1.7;
-    }
-
-    section .main-body h4 {
-        font-size: 1.05rem;
-    }
-
-    section .main-body li {
-        margin-bottom: 0.8rem;
-    }
-
-    .container {
-        padding-left: 1rem;
-        padding-right: 1rem;
-    }
-
-    /* Better table scrolling on mobile */
-    section .main-body table {
-        display: block;
-        overflow-x: auto;
-        white-space: nowrap;
-    }
-
-    /* Fix navbar overlap on iOS */
-    .header {
-        position: sticky;
-        top: 0;
-    }
-}
-
-/* Badges - Override Shield.io styles context */
-section .main-body img[src*="shields.io"] {
-    margin-right: 0.3rem;
-    vertical-align: middle;
-}
-
-/* Subtitle styling */
-#home-subtitle {
-    font-family: "Times New Roman", Times, Georgia, serif !important;
-    font-size: 1.6rem;
-    font-weight: 400;
-    color: var(--primary-color);
-    letter-spacing: 1px;
-}
-
-/* Professional spacing */
-section {
-    padding: 3rem 0;
-}
-
-.container {
-    max-width: 900px;
+.navbar-toggler {
+  border: 1px solid var(--border2) !important;
+  color: var(--text-dim) !important;
+  font-family: var(--mono) !important;
+  font-size: 0.7rem !important;
 }
