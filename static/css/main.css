@@ -35,8 +35,6 @@ h1, h2, h3, h4, h5, h6 {
   color: var(--text-bright);
 }
 
-/* Hide avatar — no longer used */
-#avatar { display: none !important; }
 
 /* Hide home-subtitle — name is shown in hero */
 #home-subtitle { display: none !important; }
@@ -216,6 +214,35 @@ h1, h2, h3, h4, h5, h6 {
 
 @keyframes fadein {
   to { opacity: 1; }
+}
+
+/* ── HERO PROFILE PHOTO ── */
+.hero-photo-wrap {
+  display: inline-block;
+  border-radius: 50%;
+  padding: 3px;
+  background: linear-gradient(135deg, var(--green) 0%, transparent 70%);
+  box-shadow: 0 0 24px var(--green-glow), 0 0 48px rgba(57, 211, 83, 0.15);
+  opacity: 0;
+  animation: fadein 0.4s 1.2s forwards;
+}
+
+.hero-photo {
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+  border: 2px solid var(--bg);
+  filter: grayscale(20%) contrast(1.05);
+}
+
+@media screen and (max-width: 991px) {
+  .hero-photo { width: 140px; height: 140px; }
+}
+
+@media screen and (max-width: 576px) {
+  .hero-photo { width: 110px; height: 110px; }
 }
 
 /* ── SECTION WRAPPERS ── */
