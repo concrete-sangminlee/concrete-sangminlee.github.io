@@ -167,6 +167,31 @@ function initPublicationFilter() {
     if (term) md.insertBefore(bar, term);
 }
 
+function initStatsCounter() {
+    const bar = document.querySelector('.stats-bar');
+    if (!bar) return;
+    const observer = new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+            if (!entry.isIntersecting) return;
+            entry.target.querySelectorAll('.stat-num').forEach(el => {
+                const target = parseInt(el.dataset.target, 10);
+                const duration = 900;
+                const stepTime = 16;
+                const steps = duration / stepTime;
+                const increment = target / steps;
+                let current = 0;
+                const timer = setInterval(() => {
+                    current = Math.min(current + increment, target);
+                    el.textContent = Math.floor(current);
+                    if (current >= target) clearInterval(timer);
+                }, stepTime);
+            });
+            observer.unobserve(entry.target);
+        });
+    }, { threshold: 0.3 });
+    observer.observe(bar);
+}
+
 window.addEventListener('DOMContentLoaded', event => {
     initMatrixRain();
     initTypingAnimation();
