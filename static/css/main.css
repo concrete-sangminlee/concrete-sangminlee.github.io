@@ -584,6 +584,11 @@ footer a:hover {
 .cite-copy-btn:hover,
 .cite-copy-btn.copied { color: var(--green); border-color: var(--green); opacity: 1; }
 
+#publications-md .main-body li,
+#publications .main-body li {
+  padding-right: 2.6rem !important;
+}
+
 /* ── PUBLICATION FILTER BAR ── */
 .pub-filter-bar {
   display: flex;

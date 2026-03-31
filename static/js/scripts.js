@@ -105,8 +105,8 @@ function addCopyButtons() {
         btn.className = 'cite-copy-btn';
         btn.title = 'Copy citation';
         btn.textContent = '⎘';
-        btn.addEventListener('click', (e) => {
-            e.stopPropagation();
+        btn.addEventListener('click', () => {
+            if (!navigator.clipboard) return;
             navigator.clipboard.writeText(citationText).then(() => {
                 btn.textContent = '✓';
                 btn.classList.add('copied');
@@ -114,7 +114,7 @@ function addCopyButtons() {
                     btn.textContent = '⎘';
                     btn.classList.remove('copied');
                 }, 1500);
-            });
+            }).catch(() => {});
         });
         li.appendChild(btn);
     });
