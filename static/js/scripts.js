@@ -95,6 +95,78 @@ function initScrollAnimations() {
     });
 }
 
+function addCopyButtons() {
+    const container = document.getElementById('publications-md');
+    if (!container) return;
+    container.querySelectorAll('li').forEach(li => {
+        const citationText = li.textContent.trim();
+        li.style.position = 'relative';
+        const btn = document.createElement('button');
+        btn.className = 'cite-copy-btn';
+        btn.title = 'Copy citation';
+        btn.textContent = '⎘';
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            navigator.clipboard.writeText(citationText).then(() => {
+                btn.textContent = '✓';
+                btn.classList.add('copied');
+                setTimeout(() => {
+                    btn.textContent = '⎘';
+                    btn.classList.remove('copied');
+                }, 1500);
+            });
+        });
+        li.appendChild(btn);
+    });
+}
+
+function initPublicationFilter() {
+    const md = document.getElementById('publications-md');
+    if (!md) return;
+    const termBody = md.querySelector('.term-body');
+    if (!termBody) return;
+
+    // Group elements by their preceding h4 heading
+    const children = Array.from(termBody.children);
+    const sections = [];
+    let cur = null;
+    children.forEach(el => {
+        if (el.tagName === 'H4') {
+            cur = { key: el.textContent.trim().split(' ')[0].toLowerCase(), els: [el] };
+            sections.push(cur);
+        } else if (cur) {
+            cur.els.push(el);
+        }
+    });
+    if (!sections.length) return;
+
+    // Build filter bar
+    const bar = document.createElement('div');
+    bar.className = 'pub-filter-bar';
+    const filters = [
+        { key: 'all', label: 'ALL' },
+        ...sections.map(s => ({ key: s.key, label: s.key.toUpperCase() }))
+    ];
+    filters.forEach(f => {
+        const btn = document.createElement('button');
+        btn.className = 'pub-filter-btn' + (f.key === 'all' ? ' active' : '');
+        btn.textContent = f.label;
+        btn.addEventListener('click', () => {
+            bar.querySelectorAll('.pub-filter-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            sections.forEach(s => {
+                const show = f.key === 'all' || s.key === f.key;
+                s.els.forEach(el => { el.style.display = show ? '' : 'none'; });
+            });
+        });
+        bar.appendChild(btn);
+    });
+
+    // Insert filter bar before the .term element
+    const term = md.querySelector('.term');
+    if (term) md.insertBefore(bar, term);
+}
+
 window.addEventListener('DOMContentLoaded', event => {
     initMatrixRain();
     initTypingAnimation();
