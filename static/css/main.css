@@ -584,7 +584,6 @@ footer a:hover {
 .cite-copy-btn:hover,
 .cite-copy-btn.copied { color: var(--green); border-color: var(--green); opacity: 1; }
 
-#publications-md .main-body li,
 #publications .main-body li {
   padding-right: 2.6rem !important;
 }
@@ -706,6 +705,8 @@ footer a:hover {
 
 /* ── FEATURED PAPER ── */
 .featured-paper {
+  display: block;
+  text-decoration: none !important;
   margin-top: 2rem;
   padding: 1.2rem 1.5rem;
   border: 1px solid var(--green-border);
