@@ -133,6 +133,13 @@
                         <p class="hero-prompt">$ ./portfolio --init --user="sangmin"</p>
                         <h1 class="hero-name"><span id="hero-typed-name"></span><span class="hero-cursor" aria-hidden="true"></span></h1>
                         <h2 id="top-section-bg-text"></h2>
+                        <div class="hero-terminal-input">
+                            <span class="g">$</span>
+                            <input type="text" id="hero-cmd-input" class="hero-cmd-field"
+                                   placeholder="type 'help' for commands..."
+                                   autocomplete="off" spellcheck="false" aria-label="Terminal command input">
+                        </div>
+                        <div id="hero-cmd-output" class="hero-cmd-output" aria-live="polite"></div>
                     </div>
                     <div class="col-lg-4 col-md-5 text-center mt-4 mt-md-0">
                         <div class="hero-photo-wrap">

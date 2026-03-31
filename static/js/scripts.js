@@ -192,9 +192,84 @@ function initStatsCounter() {
     observer.observe(bar);
 }
 
+function escapeHtml(str) {
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+}
+
+function initHeroTerminal() {
+    const input = document.getElementById('hero-cmd-input');
+    const output = document.getElementById('hero-cmd-output');
+    if (!input || !output) return;
+
+    const navSections = ['home', 'publications', 'projects', 'patents', 'awards', 'services', 'contact'];
+
+    const commands = {
+        help: () =>
+            'available commands:\n' +
+            '  help          — show this message\n' +
+            '  ls            — list sections\n' +
+            '  cd <section>  — navigate to section\n' +
+            '  whoami        — who is this?\n' +
+            '  cat bio.txt   — research bio\n' +
+            '  clear         — clear output',
+        ls: () => navSections.map(s => `  ${s}/`).join('\n'),
+        whoami: () =>
+            'Sang Min Lee\n' +
+            'Ph.D. Candidate in AI @ Seoul National University\n' +
+            'Research: AI for Resilient Infrastructure',
+        'cat bio.txt': () =>
+            'Ph.D. Candidate in Artificial Intelligence\n' +
+            'at Seoul National University.\n' +
+            'Research focuses on machine learning for\n' +
+            'structural health monitoring and wind engineering.',
+    };
+
+    function runCommand(raw) {
+        const cmd = raw.trim();
+        if (!cmd) return;
+
+        let resultHtml;
+
+        if (cmd === 'clear') {
+            output.innerHTML = '';
+            return;
+        } else if (commands[cmd]) {
+            resultHtml = `<span class="g">$</span> ${escapeHtml(cmd)}\n${escapeHtml(commands[cmd]())}`;
+        } else if (cmd.startsWith('cd ')) {
+            const target = cmd.slice(3).trim().replace(/\/$/, '');
+            const el = document.getElementById(target === 'home' ? 'page-top' : target);
+            if (el) {
+                el.scrollIntoView({ behavior: 'smooth' });
+                resultHtml = `<span class="g">$</span> ${escapeHtml(cmd)}\nnavigating to /${escapeHtml(target)}/`;
+            } else {
+                resultHtml = `<span class="g">$</span> ${escapeHtml(cmd)}\n<span class="err">cd: ${escapeHtml(target)}: no such section</span>`;
+            }
+        } else {
+            resultHtml = `<span class="g">$</span> ${escapeHtml(cmd)}\n<span class="err">${escapeHtml(cmd)}: command not found — try 'help'</span>`;
+        }
+
+        const line = document.createElement('div');
+        line.className = 'hero-cmd-line';
+        line.innerHTML = resultHtml;
+        output.appendChild(line);
+        output.scrollTop = output.scrollHeight;
+    }
+
+    input.addEventListener('keydown', e => {
+        if (e.key === 'Enter') {
+            runCommand(input.value);
+            input.value = '';
+        }
+    });
+}
+
 window.addEventListener('DOMContentLoaded', event => {
     initMatrixRain();
     initTypingAnimation();
+    initHeroTerminal();
 
     // Activate Bootstrap scrollspy on the main nav element
     const mainNav = document.body.querySelector('#mainNav');

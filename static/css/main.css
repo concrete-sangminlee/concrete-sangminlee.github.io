@@ -742,3 +742,65 @@ footer a:hover {
   font-size: 0.78rem;
   color: var(--text);
 }
+
+/* ── HERO INTERACTIVE TERMINAL ── */
+.hero-terminal-input {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: 1.4rem;
+  border: 1px solid var(--border2);
+  border-radius: 4px;
+  padding: 0.4rem 0.9rem;
+  background: rgba(5, 5, 5, 0.65);
+  max-width: 480px;
+  opacity: 0;
+  animation: fadein 0.4s 1.6s forwards;
+  transition: border-color 0.2s;
+}
+.hero-terminal-input:focus-within {
+  border-color: var(--green-border);
+}
+.hero-terminal-input .g {
+  color: var(--green);
+  font-family: var(--mono);
+  font-size: 0.82rem;
+  flex-shrink: 0;
+}
+.hero-cmd-field {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text-bright);
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  caret-color: var(--green);
+  min-width: 0;
+}
+.hero-cmd-field::placeholder {
+  color: var(--text-dim);
+  font-size: 0.7rem;
+}
+.hero-cmd-output {
+  margin-top: 0.5rem;
+  max-width: 480px;
+  max-height: 140px;
+  overflow-y: auto;
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  line-height: 1.6;
+  color: var(--text);
+}
+.hero-cmd-output::-webkit-scrollbar { width: 4px; }
+.hero-cmd-output::-webkit-scrollbar-track { background: transparent; }
+.hero-cmd-output::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+.hero-cmd-line {
+  white-space: pre-wrap;
+  margin-bottom: 0.4rem;
+  padding-bottom: 0.4rem;
+  border-bottom: 1px solid var(--border);
+}
+.hero-cmd-line:last-child { border-bottom: none; margin-bottom: 0; }
+.hero-cmd-line .g { color: var(--green); }
+.hero-cmd-line .err { color: #ff5f57; }
