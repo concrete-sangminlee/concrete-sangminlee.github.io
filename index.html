@@ -12,6 +12,11 @@
     <!-- Icon -->
     <link rel="icon" type="image/x-icon" href="static/assets/favicon.ico" />
 
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+
     <!-- Bootstrap icons-->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.5.0/font/bootstrap-icons.css" rel="stylesheet" />
 
@@ -108,10 +113,21 @@
     </nav>
 
     <!-- Top Section -->
-    <section class="top-section" style="background-image: url('static/assets/img/background.jpeg');">
+    <section class="top-section">
+        <canvas id="matrix-canvas"></canvas>
+        <div class="hero-overlay"></div>
+        <div class="hero-scanlines"></div>
+        <div class="hero-corners">
+            <span class="corner tl"></span>
+            <span class="corner tr"></span>
+            <span class="corner bl"></span>
+            <span class="corner br"></span>
+        </div>
         <div class="top-section-content">
             <div class="container px-5">
-                <h2 id="top-section-bg-text" class="text-white display-3 lh-1 font-alt"></h2>
+                <p class="hero-prompt">$ ./portfolio --init --user="sangmin"</p>
+                <div class="hero-name"><span id="hero-typed-name"></span><span class="hero-cursor"></span></div>
+                <h2 id="top-section-bg-text"></h2>
             </div>
         </div>
     </section>
