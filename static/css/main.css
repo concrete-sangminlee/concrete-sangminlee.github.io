@@ -614,3 +614,50 @@ footer a:hover {
   border-color: var(--green);
   background: var(--green-dim);
 }
+
+/* ── CONTACT SECTION ── */
+#contact { background: var(--bg) !important; }
+
+.contact-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 1rem;
+}
+
+.contact-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 1rem 1.2rem;
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 6px;
+  text-decoration: none !important;
+  transition: border-color 0.2s, background 0.2s, transform 0.2s;
+}
+.contact-card:hover {
+  border-color: var(--green) !important;
+  background: var(--green-dim);
+  transform: translateY(-2px);
+}
+.contact-icon {
+  font-family: var(--mono);
+  font-size: 0.85rem;
+  color: var(--green);
+}
+.contact-label {
+  font-family: var(--mono);
+  font-size: 0.56rem;
+  color: var(--text-dim);
+  letter-spacing: 2px;
+}
+.contact-val {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  color: var(--text-bright);
+  word-break: break-all;
+}
+
+@media (max-width: 576px) {
+  .contact-grid { grid-template-columns: 1fr 1fr; }
+}
