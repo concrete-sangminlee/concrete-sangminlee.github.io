@@ -544,3 +544,14 @@ footer a:hover {
     padding: 0.5rem 0;
   }
 }
+
+/* ── SCROLL ANIMATIONS ── */
+.anim-target {
+  opacity: 0;
+  transform: translateY(18px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+.anim-target.anim-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
