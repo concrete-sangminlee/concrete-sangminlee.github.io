@@ -48,8 +48,41 @@ function initMatrixRain() {
     setInterval(draw, 40);
 }
 
+function initTypingAnimation() {
+    const el = document.getElementById('hero-typed-name');
+    if (!el) return;
+    const name = 'SANG MIN LEE';
+    let i = 0;
+    setTimeout(() => {
+        const interval = setInterval(() => {
+            el.textContent = name.slice(0, ++i);
+            if (i >= name.length) clearInterval(interval);
+        }, 80);
+    }, 600);
+}
+
+function wrapInTerminal(name) {
+    const body = document.getElementById(name + '-md');
+    if (!body) return;
+    const originalContent = body.innerHTML;
+    body.innerHTML = `
+        <div class="term">
+            <div class="term-bar">
+                <span class="dot dot-r"></span>
+                <span class="dot dot-y"></span>
+                <span class="dot dot-g"></span>
+                <span class="term-title">~/${name}/</span>
+            </div>
+            <div class="term-body">
+                <div class="term-cmd"><span class="g">$</span> ls ./${name}/</div>
+                ${originalContent}
+            </div>
+        </div>`;
+}
+
 window.addEventListener('DOMContentLoaded', event => {
     initMatrixRain();
+    initTypingAnimation();
 
     // Activate Bootstrap scrollspy on the main nav element
     const mainNav = document.body.querySelector('#mainNav');
@@ -99,8 +132,10 @@ window.addEventListener('DOMContentLoaded', event => {
             .then(markdown => {
                 const html = marked.parse(markdown);
                 document.getElementById(name + '-md').innerHTML = html;
+                if (name !== 'home') {
+                    wrapInTerminal(name);
+                }
             }).then(() => {
-                // MathJax
                 MathJax.typeset();
             })
             .catch(error => console.log(error));
