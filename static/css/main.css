@@ -555,3 +555,10 @@ footer a:hover {
   opacity: 1;
   transform: translateY(0);
 }
+@media (prefers-reduced-motion: reduce) {
+  .anim-target {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}

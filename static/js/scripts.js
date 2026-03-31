@@ -84,14 +84,8 @@ function initScrollAnimations() {
     const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             if (!entry.isIntersecting) return;
-            const el = entry.target;
-            el.classList.add('anim-visible');
-            // Stagger li items inside this terminal
-            el.querySelectorAll('li').forEach((li, i) => {
-                li.classList.add('anim-target');
-                setTimeout(() => li.classList.add('anim-visible'), 60 + i * 50);
-            });
-            observer.unobserve(el);
+            entry.target.classList.add('anim-visible');
+            observer.unobserve(entry.target);
         });
     }, { threshold: 0.07 });
 
@@ -168,6 +162,6 @@ window.addEventListener('DOMContentLoaded', event => {
     Promise.all(sectionPromises).then(() => {
         initScrollAnimations();
         if (typeof initStatsCounter === 'function') initStatsCounter();
-    });
+    }).catch(error => console.log('Post-load init failed:', error));
 
 });
