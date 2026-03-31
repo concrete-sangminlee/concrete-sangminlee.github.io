@@ -80,9 +80,196 @@ function wrapInTerminal(name) {
         </div>`;
 }
 
+function initScrollAnimations() {
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (!entry.isIntersecting) return;
+            entry.target.classList.add('anim-visible');
+            observer.unobserve(entry.target);
+        });
+    }, { threshold: 0.07 });
+
+    document.querySelectorAll('.term').forEach(el => {
+        el.classList.add('anim-target');
+        observer.observe(el);
+    });
+}
+
+function addCopyButtons() {
+    const container = document.getElementById('publications-md');
+    if (!container) return;
+    container.querySelectorAll('li').forEach(li => {
+        const citationText = li.textContent.trim();
+        li.style.position = 'relative';
+        const btn = document.createElement('button');
+        btn.className = 'cite-copy-btn';
+        btn.title = 'Copy citation';
+        btn.textContent = '⎘';
+        btn.addEventListener('click', () => {
+            if (!navigator.clipboard) return;
+            navigator.clipboard.writeText(citationText).then(() => {
+                btn.textContent = '✓';
+                btn.classList.add('copied');
+                setTimeout(() => {
+                    btn.textContent = '⎘';
+                    btn.classList.remove('copied');
+                }, 1500);
+            }).catch(() => {});
+        });
+        li.appendChild(btn);
+    });
+}
+
+function initPublicationFilter() {
+    const md = document.getElementById('publications-md');
+    if (!md) return;
+    const termBody = md.querySelector('.term-body');
+    if (!termBody) return;
+
+    // Group elements by their preceding h4 heading
+    const children = Array.from(termBody.children);
+    const sections = [];
+    let cur = null;
+    children.forEach(el => {
+        if (el.tagName === 'H4') {
+            cur = { key: el.textContent.trim().split(' ')[0].toLowerCase(), els: [el] };
+            sections.push(cur);
+        } else if (cur) {
+            cur.els.push(el);
+        }
+    });
+    if (!sections.length) return;
+
+    // Build filter bar
+    const bar = document.createElement('div');
+    bar.className = 'pub-filter-bar';
+    const filters = [
+        { key: 'all', label: 'ALL' },
+        ...sections.map(s => ({ key: s.key, label: s.key.toUpperCase() }))
+    ];
+    filters.forEach(f => {
+        const btn = document.createElement('button');
+        btn.className = 'pub-filter-btn' + (f.key === 'all' ? ' active' : '');
+        btn.textContent = f.label;
+        btn.addEventListener('click', () => {
+            bar.querySelectorAll('.pub-filter-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            sections.forEach(s => {
+                const show = f.key === 'all' || s.key === f.key;
+                s.els.forEach(el => { el.style.display = show ? '' : 'none'; });
+            });
+        });
+        bar.appendChild(btn);
+    });
+
+    // Insert filter bar before the .term element
+    const term = md.querySelector('.term');
+    if (term) md.insertBefore(bar, term);
+}
+
+function initStatsCounter() {
+    const bar = document.querySelector('.stats-bar');
+    if (!bar) return;
+    const observer = new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+            if (!entry.isIntersecting) return;
+            entry.target.querySelectorAll('.stat-num').forEach(el => {
+                const target = parseInt(el.dataset.target, 10);
+                const duration = 900;
+                const stepTime = 16;
+                const steps = duration / stepTime;
+                const increment = target / steps;
+                let current = 0;
+                const timer = setInterval(() => {
+                    current = Math.min(current + increment, target);
+                    el.textContent = Math.floor(current);
+                    if (current >= target) clearInterval(timer);
+                }, stepTime);
+            });
+            observer.unobserve(entry.target);
+        });
+    }, { threshold: 0.3 });
+    observer.observe(bar);
+}
+
+function escapeHtml(str) {
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+}
+
+function initHeroTerminal() {
+    const input = document.getElementById('hero-cmd-input');
+    const output = document.getElementById('hero-cmd-output');
+    if (!input || !output) return;
+
+    const navSections = ['home', 'publications', 'projects', 'patents', 'awards', 'services', 'contact'];
+
+    const commands = {
+        help: () =>
+            'available commands:\n' +
+            '  help          — show this message\n' +
+            '  ls            — list sections\n' +
+            '  cd <section>  — navigate to section\n' +
+            '  whoami        — who is this?\n' +
+            '  cat bio.txt   — research bio\n' +
+            '  clear         — clear output',
+        ls: () => navSections.map(s => `  ${s}/`).join('\n'),
+        whoami: () =>
+            'Sang Min Lee\n' +
+            'Ph.D. Candidate in AI @ Seoul National University\n' +
+            'Research: AI for Resilient Infrastructure',
+        'cat bio.txt': () =>
+            'Ph.D. Candidate in Artificial Intelligence\n' +
+            'at Seoul National University.\n' +
+            'Research focuses on machine learning for\n' +
+            'structural health monitoring and wind engineering.',
+    };
+
+    function runCommand(raw) {
+        const cmd = raw.trim();
+        if (!cmd) return;
+
+        let resultHtml;
+
+        if (cmd === 'clear') {
+            output.innerHTML = '';
+            return;
+        } else if (commands[cmd]) {
+            resultHtml = `<span class="g">$</span> ${escapeHtml(cmd)}\n${escapeHtml(commands[cmd]())}`;
+        } else if (cmd.startsWith('cd ')) {
+            const target = cmd.slice(3).trim().replace(/\/$/, '');
+            const el = document.getElementById(target === 'home' ? 'page-top' : target);
+            if (el) {
+                el.scrollIntoView({ behavior: 'smooth' });
+                resultHtml = `<span class="g">$</span> ${escapeHtml(cmd)}\nnavigating to /${escapeHtml(target)}/`;
+            } else {
+                resultHtml = `<span class="g">$</span> ${escapeHtml(cmd)}\n<span class="err">cd: ${escapeHtml(target)}: no such section</span>`;
+            }
+        } else {
+            resultHtml = `<span class="g">$</span> ${escapeHtml(cmd)}\n<span class="err">${escapeHtml(cmd)}: command not found — try 'help'</span>`;
+        }
+
+        const line = document.createElement('div');
+        line.className = 'hero-cmd-line';
+        line.innerHTML = resultHtml;
+        output.appendChild(line);
+        output.scrollTop = output.scrollHeight;
+    }
+
+    input.addEventListener('keydown', e => {
+        if (e.key === 'Enter') {
+            runCommand(input.value);
+            input.value = '';
+        }
+    });
+}
+
 window.addEventListener('DOMContentLoaded', event => {
     initMatrixRain();
     initTypingAnimation();
+    initHeroTerminal();
 
     // Activate Bootstrap scrollspy on the main nav element
     const mainNav = document.body.querySelector('#mainNav');
@@ -126,8 +313,8 @@ window.addEventListener('DOMContentLoaded', event => {
 
     // Marked
     marked.use({ mangle: false, headerIds: false })
-    section_names.forEach((name, idx) => {
-        fetch(content_dir + name + '.md')
+    const sectionPromises = section_names.map((name) => {
+        return fetch(content_dir + name + '.md')
             .then(response => response.text())
             .then(markdown => {
                 const html = marked.parse(markdown);
@@ -137,8 +324,16 @@ window.addEventListener('DOMContentLoaded', event => {
                 }
             }).then(() => {
                 MathJax.typeset();
+                if (name === 'publications') {
+                    if (typeof addCopyButtons === 'function') addCopyButtons();
+                    if (typeof initPublicationFilter === 'function') initPublicationFilter();
+                }
             })
             .catch(error => console.log(error));
-    })
+    });
+    Promise.all(sectionPromises).then(() => {
+        initScrollAnimations();
+        if (typeof initStatsCounter === 'function') initStatsCounter();
+    }).catch(error => console.log('Post-load init failed:', error));
 
 });

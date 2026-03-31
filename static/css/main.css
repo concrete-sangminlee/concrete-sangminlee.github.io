@@ -544,3 +544,264 @@ footer a:hover {
     padding: 0.5rem 0;
   }
 }
+
+/* ── SCROLL ANIMATIONS ── */
+.anim-target {
+  opacity: 0;
+  transform: translateY(18px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+.anim-target.anim-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+@media (prefers-reduced-motion: reduce) {
+  .anim-target {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
+/* ── COPY CITATION BUTTON ── */
+.cite-copy-btn {
+  position: absolute;
+  top: 0.4rem;
+  right: 0.4rem;
+  background: transparent;
+  border: 1px solid var(--border2);
+  color: var(--text-dim);
+  font-size: 0.72rem;
+  padding: 1px 6px;
+  border-radius: 3px;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s, color 0.2s, border-color 0.2s;
+  font-family: var(--mono);
+  line-height: 1.6;
+}
+.main-body li:hover .cite-copy-btn { opacity: 1; }
+.cite-copy-btn:hover,
+.cite-copy-btn.copied { color: var(--green); border-color: var(--green); opacity: 1; }
+
+#publications .main-body li {
+  padding-right: 2.6rem !important;
+}
+
+/* ── PUBLICATION FILTER BAR ── */
+.pub-filter-bar {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.8rem;
+  flex-wrap: wrap;
+}
+.pub-filter-btn {
+  font-family: var(--mono);
+  font-size: 0.62rem;
+  color: var(--text-dim);
+  background: transparent;
+  border: 1px solid var(--border2);
+  padding: 0.25rem 0.65rem;
+  border-radius: 3px;
+  cursor: pointer;
+  letter-spacing: 1px;
+  transition: color 0.2s, border-color 0.2s, background 0.2s;
+}
+.pub-filter-btn:hover,
+.pub-filter-btn.active {
+  color: var(--green);
+  border-color: var(--green);
+  background: var(--green-dim);
+}
+
+/* ── CONTACT SECTION ── */
+#contact { background: var(--bg) !important; }
+
+.contact-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 1rem;
+}
+
+.contact-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 1rem 1.2rem;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border2);
+  border-radius: 6px;
+  text-decoration: none !important;
+  transition: border-color 0.2s, background 0.2s, transform 0.2s;
+}
+.contact-card:hover {
+  border-color: var(--green) !important;
+  background: var(--green-dim);
+  transform: translateY(-2px);
+}
+.contact-icon {
+  font-family: var(--mono);
+  font-size: 0.85rem;
+  color: var(--green);
+}
+.contact-label {
+  font-family: var(--mono);
+  font-size: 0.56rem;
+  color: var(--text-dim);
+  letter-spacing: 2px;
+}
+.contact-val {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  color: var(--text-bright);
+  word-break: break-all;
+}
+
+@media (max-width: 576px) {
+  .contact-grid { grid-template-columns: 1fr 1fr; }
+}
+
+@media (max-width: 360px) {
+  .contact-grid { grid-template-columns: 1fr; }
+}
+
+/* ── RESEARCH STATS BAR ── */
+.stats-bar {
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  padding: 1.8rem 0;
+}
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+  text-align: center;
+}
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+}
+.stat-num {
+  font-family: var(--mono);
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: var(--green);
+  text-shadow: 0 0 20px var(--green-glow);
+  line-height: 1;
+}
+.stat-label {
+  font-family: var(--mono);
+  font-size: 0.54rem;
+  color: var(--text-dim);
+  letter-spacing: 2px;
+}
+@media (max-width: 576px) {
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .stat-num { font-size: 1.8rem; }
+}
+
+/* ── FEATURED PAPER ── */
+.featured-paper {
+  display: block;
+  text-decoration: none !important;
+  margin-top: 2rem;
+  padding: 1.2rem 1.5rem;
+  border: 1px solid var(--green-border);
+  border-left-width: 3px;
+  border-left-color: var(--green);
+  border-radius: 0 6px 6px 0;
+  background: var(--green-dim);
+  transition: background 0.2s;
+}
+.featured-paper:hover {
+  background: rgba(57, 211, 83, 0.07);
+}
+.featured-label {
+  font-family: var(--mono);
+  font-size: 0.58rem;
+  color: var(--green);
+  letter-spacing: 2px;
+  margin-bottom: 0.7rem;
+}
+.featured-venue {
+  font-family: var(--mono);
+  font-size: 0.65rem;
+  color: var(--text-dim);
+  margin-bottom: 0.35rem;
+}
+.featured-title {
+  font-size: 0.92rem;
+  color: var(--text-bright);
+  font-weight: 500;
+  margin-bottom: 0.35rem;
+  line-height: 1.5;
+}
+.featured-authors {
+  font-size: 0.78rem;
+  color: var(--text);
+}
+
+/* ── HERO INTERACTIVE TERMINAL ── */
+.hero-terminal-input {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: 1.4rem;
+  border: 1px solid var(--border2);
+  border-radius: 4px;
+  padding: 0.4rem 0.9rem;
+  background: rgba(5, 5, 5, 0.65);
+  max-width: 480px;
+  opacity: 0;
+  animation: fadein 0.4s 1.6s forwards;
+  transition: border-color 0.2s;
+}
+.hero-terminal-input:focus-within {
+  border-color: var(--green-border);
+}
+.hero-terminal-input .g {
+  color: var(--green);
+  font-family: var(--mono);
+  font-size: 0.82rem;
+  flex-shrink: 0;
+}
+.hero-cmd-field {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text-bright);
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  caret-color: var(--green);
+  min-width: 0;
+}
+.hero-cmd-field::placeholder {
+  color: var(--text-dim);
+  font-size: 0.7rem;
+}
+.hero-cmd-output {
+  margin-top: 0.5rem;
+  max-width: 480px;
+  max-height: 140px;
+  overflow-y: auto;
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  line-height: 1.6;
+  color: var(--text);
+}
+.hero-cmd-output::-webkit-scrollbar { width: 4px; }
+.hero-cmd-output::-webkit-scrollbar-track { background: transparent; }
+.hero-cmd-output::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+.hero-cmd-line {
+  white-space: pre-wrap;
+  margin-bottom: 0.4rem;
+  padding-bottom: 0.4rem;
+  border-bottom: 1px solid var(--border);
+}
+.hero-cmd-line:last-child { border-bottom: none; margin-bottom: 0; }
+.hero-cmd-line .g { color: var(--green); }
+.hero-cmd-line .err { color: #ff5f57; }

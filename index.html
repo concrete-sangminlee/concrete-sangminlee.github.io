@@ -106,6 +106,9 @@
                     <li class="nav-item">
                         <a class="nav-link me-lg-3" href="#services">SERVICES</a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link me-lg-3" href="#contact">CONTACT</a>
+                    </li>
 
                 </ul>
             </div>
@@ -130,6 +133,13 @@
                         <p class="hero-prompt">$ ./portfolio --init --user="sangmin"</p>
                         <h1 class="hero-name"><span id="hero-typed-name"></span><span class="hero-cursor" aria-hidden="true"></span></h1>
                         <h2 id="top-section-bg-text"></h2>
+                        <div class="hero-terminal-input">
+                            <span class="g">$</span>
+                            <input type="text" id="hero-cmd-input" class="hero-cmd-field"
+                                   placeholder="type 'help' for commands..."
+                                   autocomplete="off" spellcheck="false" aria-label="Terminal command input">
+                        </div>
+                        <div id="hero-cmd-output" class="hero-cmd-output" aria-live="polite"></div>
                     </div>
                     <div class="col-lg-4 col-md-5 text-center mt-4 mt-md-0">
                         <div class="hero-photo-wrap">
@@ -141,7 +151,32 @@
         </div>
     </section>
     <!-- Top Section -->
-    
+
+    <!-- Stats -->
+    <div class="stats-bar">
+        <div class="container px-5">
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <span class="stat-num" data-target="6">0</span>
+                    <span class="stat-label">JOURNAL PAPERS</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-num" data-target="14">0</span>
+                    <span class="stat-label">CONFERENCE PAPERS</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-num" data-target="5">0</span>
+                    <span class="stat-label">YEARS IN RESEARCH</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-num" data-target="6">0</span>
+                    <span class="stat-label">AWARDS</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Stats -->
+
     <!-- Home -->
     <section class="bg-gradient-primary-to-secondary-light mt5 md5" id="home">
         <div class="container px-5">
@@ -150,6 +185,12 @@
                 <!-- <span class="bi bi-list"></span> -->
             </header>
             <div class="main-body" id="home-md"></div>
+            <a href="#publications" class="featured-paper">
+                <div class="featured-label">// FEATURED PAPER</div>
+                <div class="featured-venue">Journal of Nondestructive Evaluation &middot; 2025</div>
+                <div class="featured-title">Machine Learning Assisted Method for Automated Impact-Echo Testing of Concrete Structures</div>
+                <div class="featured-authors">Lee, S. M., Hong, J., Choi, H., &amp; Kang, T. H.-K.</div>
+            </a>
         </div>
     </section>
     <!-- Home -->
@@ -214,6 +255,42 @@
     </section>
     <!-- Services -->
 
+    <!-- Contact -->
+    <section id="contact">
+        <div class="container px-5">
+            <header>
+                <h2>CONTACT</h2>
+            </header>
+            <div class="contact-grid">
+                <a class="contact-card" href="mailto:201612445@snu.ac.kr">
+                    <span class="contact-icon" aria-hidden="true">[✉]</span>
+                    <span class="contact-label">EMAIL</span>
+                    <span class="contact-val">201612445@snu.ac.kr</span>
+                </a>
+                <a class="contact-card" href="https://github.com/concrete-sangminlee" target="_blank" rel="noopener noreferrer">
+                    <span class="contact-icon" aria-hidden="true">[GH]</span>
+                    <span class="contact-label">GITHUB</span>
+                    <span class="contact-val">concrete-sangminlee</span>
+                </a>
+                <a class="contact-card" href="https://scholar.google.com/citations?user=ogvd_LsAAAAJ&amp;hl=en" target="_blank" rel="noopener noreferrer">
+                    <span class="contact-icon" aria-hidden="true">[GS]</span>
+                    <span class="contact-label">GOOGLE SCHOLAR</span>
+                    <span class="contact-val">Sang Min Lee</span>
+                </a>
+                <a class="contact-card" href="https://www.linkedin.com/in/sang-min-lee-3a2568174/" target="_blank" rel="noopener noreferrer">
+                    <span class="contact-icon" aria-hidden="true">[IN]</span>
+                    <span class="contact-label">LINKEDIN</span>
+                    <span class="contact-val">Sang Min Lee</span>
+                </a>
+                <a class="contact-card" href="https://orcid.org/0000-0002-6822-5252" target="_blank" rel="noopener noreferrer">
+                    <span class="contact-icon" aria-hidden="true">[ID]</span>
+                    <span class="contact-label">ORCID</span>
+                    <span class="contact-val">0000-0002-6822-5252</span>
+                </a>
+            </div>
+        </div>
+    </section>
+    <!-- Contact -->
 
     <!-- Footer-->
     <footer class="bg-bottom text-center py-5">
