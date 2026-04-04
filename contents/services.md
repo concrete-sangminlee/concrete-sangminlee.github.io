@@ -1,7 +1,14 @@
 
 #### Memberships
 
-ASCE | ACI | KCI | AIK | WEIK | KSMI
+- ASCE (American Society of Civil Engineers)
+- ACI (American Concrete Institute)
+- KCI (Korea Concrete Institute)
+- AIK (Architectural Institute of Korea)
+- WEIK (Wind Engineering Institute of Korea)
+- KSMI (Korea Structural Maintenance Institute)
+
+---
 
 #### Conference Organization
 
