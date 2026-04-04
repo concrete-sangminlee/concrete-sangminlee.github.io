@@ -6,7 +6,7 @@
 - KCI (Korea Concrete Institute)
 - AIK (Architectural Institute of Korea)
 - WEIK (Wind Engineering Institute of Korea)
-- KSMI (Korea Structural Maintenance Institute)
+- KSMI (Korea Institute for Structural Maintenance and Inspection)
 
 ---
 
