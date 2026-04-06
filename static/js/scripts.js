@@ -1,5 +1,5 @@
 
-const section_names = ['home', 'publications', 'projects', 'patents', 'awards', 'services'];
+const section_names = ['home', 'education', 'research-interests', 'publications', 'projects', 'patents', 'awards', 'services'];
 
 function initMatrixRain() {
     const canvas = document.getElementById('matrix-canvas');

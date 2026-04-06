@@ -7,7 +7,7 @@ import yaml from 'js-yaml';
 
 const CONTENT_DIR = 'contents';
 const DIST_DIR = 'dist';
-const SECTIONS = ['home', 'publications', 'projects', 'patents', 'awards', 'services'];
+const SECTIONS = ['home', 'education', 'research-interests', 'publications', 'projects', 'patents', 'awards', 'services'];
 
 // Read and parse config
 const config = yaml.load(fs.readFileSync(path.join(CONTENT_DIR, 'config.yml'), 'utf8'));
