@@ -199,8 +199,12 @@ function initHeroTerminal() {
             return `${titleEl ? titleEl.textContent : 'Sang Min Lee'}\n${subtitleEl ? subtitleEl.textContent : ''}`;
         },
         'cat bio.txt': () => {
-            const bioEl = document.querySelector('#home-md p');
-            return bioEl ? bioEl.textContent : '';
+            const paragraphs = document.querySelectorAll('#home-md p');
+            for (const p of paragraphs) {
+                const text = p.textContent.trim();
+                if (text) return text;
+            }
+            return '';
         },
     };
 
