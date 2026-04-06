@@ -56,11 +56,11 @@
 
 #### Theses
 
-1. **Lee, S. M.** (2023). *Machine learning application to automated impact-echo test for concrete structures* [Master's thesis]. Seoul National University.
+1. **Lee, S. M.** (2023). Machine learning application to automated impact-echo test for concrete structures *[Master's thesis]*. Seoul National University.
 
-2. **Lee, S. M.** (2021). *조도에 따른 자동 개폐성 차양장치의 설계 및 사물인터넷 기술을 이용한 동작 최적화 알고리즘의 구현에 대한 연구* [Bachelor's thesis]. Seoul National University.
+2. **Lee, S. M.** (2021). 조도에 따른 자동 개폐성 차양장치의 설계 및 사물인터넷 기술을 이용한 동작 최적화 알고리즘의 구현에 대한 연구 *[Bachelor's thesis]*. Seoul National University.
 
-3. **Lee, S. M.** (2021). *마이크로그리드 내 에너지저장장치(ESS) 최적 운영 방안에 대한 연구* [Bachelor's thesis]. Seoul National University.
+3. **Lee, S. M.** (2021). 마이크로그리드 내 에너지저장장치(ESS) 최적 운영 방안에 대한 연구 *[Bachelor's thesis]*. Seoul National University.
 
 ---
 
