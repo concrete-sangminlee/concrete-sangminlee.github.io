@@ -36,6 +36,11 @@ contact:
     label: BLOG
     value: concrete-sangminlee
     url: '/blog/'
+  - icon: TM
+    code: TM
+    label: THINKMANY
+    value: concrete-sangminlee
+    url: '/thinkmany/'
 
 # Stats bar
 stats:
