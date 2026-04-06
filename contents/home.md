@@ -35,4 +35,8 @@ Ph.D. Candidate in Artificial Intelligence at **Seoul National University**, res
 
 #### Research Interests
 
-Machine Learning | Wind Engineering | Concrete | Structural Health Monitoring | Non-Destructive Testing |
+- Machine Learning
+- Wind Engineering
+- Concrete
+- Structural Health Monitoring
+- Non-Destructive Testing
