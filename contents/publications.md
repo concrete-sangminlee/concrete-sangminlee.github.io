@@ -72,7 +72,7 @@
 
 3. Jeon, Y. C., Cha, S. H., **Lee, S. M.**, & Jung, S. H. (2015). Boolean 환과 그 일반화에 대한 연구. *한국수학교육학회 뉴스레터, 31*(4), 11.
 
-4. **Lee, S. M.**, Lee, C. H., Jung, S. H., Jung, J. S., Kim, Y. G., Jeon, Y. C., & Cheon, J. A. (2014). *곱셈에 대한 교환법칙이 성립하지 않는 대수적 구조에 대한 연구* [R&E Report]. Korea Science Academy of KAIST.
+4. **Lee, S. M.**, Lee, C. H., Jung, S. H., Jung, J. S., Kim, Y. G., Jeon, Y. C., & Cheon, J. A. (2014). 곱셈에 대한 교환법칙이 성립하지 않는 대수적 구조에 대한 연구 *[R&E Report]*. Korea Science Academy of KAIST.
 
 5. Jeon, Y. C., Kim, Y. G., **Lee, S. M.**, Lee, C. H., Jung, S. H., & Jung, J. S. (2014). 정역의 일반화에 대한 연구. *한국수학교육학회 뉴스레터, 30*(5), 17.
 
