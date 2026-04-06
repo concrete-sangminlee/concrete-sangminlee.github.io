@@ -1,11 +1,14 @@
 
 #### Journal Articles
 
-1. **Lee, S. M.**, Hong, J., Choi, H., & Kang, T. H.-K. (2025). [Machine learning assisted method for automated impact-echo testing of concrete structures.](https://link.springer.com/article/10.1007/s10921-025-01260-3) *Journal of Nondestructive Evaluation, 44*(4), 121.
+1. **Lee, S. M.**, Hong, J., Choi, H., & Kang, T. H.-K. (2025). Machine learning assisted method for automated impact-echo testing of concrete structures. *Journal of Nondestructive Evaluation, 44*(4), 121.
+	[link](https://link.springer.com/article/10.1007/s10921-025-01260-3)
 
-2. **Lee, S. M.**, Choi, H. S., Kim, C., & Kang, T. H.-K. (2025). [Lightweight alternative machine learning model for automating concrete crack image classification.](https://www.proquest.com/docview/3249300050?pq-origsite=gscholar&fromopenview=true&sourcetype=Scholarly%20Journals) *ACI Structural Journal, 122*(5).
+2. **Lee, S. M.**, Choi, H. S., Kim, C., & Kang, T. H.-K. (2025). Lightweight alternative machine learning model for automating concrete crack image classification. *ACI Structural Journal, 122*(5).
+	[link](https://www.proquest.com/docview/3249300050?pq-origsite=gscholar&fromopenview=true&sourcetype=Scholarly%20Journals)
 
-3. Lee, Y. I., **Lee, S. M.**, & Kang, T. H.-K. (2025). [Multiclass deep support vector data description for structural health monitoring.](https://ascelibrary.org/doi/full/10.1061/JSENDH.STENG-14823) *Journal of Structural Engineering, 151*(12).
+3. Lee, Y. I., **Lee, S. M.**, & Kang, T. H.-K. (2025). Multiclass deep support vector data description for structural health monitoring. *Journal of Structural Engineering, 151*(12).
+	[link](https://ascelibrary.org/doi/full/10.1061/JSENDH.STENG-14823)
 
 4. Ahn, B., Lee, D., **Lee, S. M.**, & Kang, T. H.-K. (2023). 인공신경망을 활용한 위성사진 기반 기대풍속 예측 방법론에 관한 연구. *한국풍공학회논문집, 27*(4), 135-142.
 
