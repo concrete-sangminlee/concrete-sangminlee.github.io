@@ -4,6 +4,7 @@ const content_dir = 'contents/'
 const config_file = 'config.yml'
 const section_names = ['home', 'publications', 'projects', 'patents', 'awards', 'services']
 
+let siteConfig = null;
 
 function initMatrixRain() {
     const canvas = document.getElementById('matrix-canvas');
@@ -126,7 +127,6 @@ function initPublicationFilter() {
     const termBody = md.querySelector('.term-body');
     if (!termBody) return;
 
-    // Group elements by their preceding h4 heading
     const children = Array.from(termBody.children);
     const sections = [];
     let cur = null;
@@ -140,7 +140,6 @@ function initPublicationFilter() {
     });
     if (!sections.length) return;
 
-    // Build filter bar
     const bar = document.createElement('div');
     bar.className = 'pub-filter-bar';
     const filters = [
@@ -162,7 +161,6 @@ function initPublicationFilter() {
         bar.appendChild(btn);
     });
 
-    // Insert filter bar before the .term element
     const term = md.querySelector('.term');
     if (term) md.insertBefore(bar, term);
 }
@@ -183,7 +181,10 @@ function initStatsCounter() {
                 const timer = setInterval(() => {
                     current = Math.min(current + increment, target);
                     el.textContent = Math.floor(current);
-                    if (current >= target) clearInterval(timer);
+                    if (current >= target) {
+                        el.textContent = target;
+                        clearInterval(timer);
+                    }
                 }, stepTime);
             });
             observer.unobserve(entry.target);
@@ -204,7 +205,9 @@ function initHeroTerminal() {
     const output = document.getElementById('hero-cmd-output');
     if (!input || !output) return;
 
-    const navSections = ['home', 'publications', 'projects', 'patents', 'awards', 'services', 'contact'];
+    const allSections = [...section_names, 'contact'];
+
+    const bio = (siteConfig && siteConfig.bio) || 'Ph.D. Candidate in Artificial Intelligence at Seoul National University.';
 
     const commands = {
         help: () =>
@@ -215,16 +218,13 @@ function initHeroTerminal() {
             '  whoami        — who is this?\n' +
             '  cat bio.txt   — research bio\n' +
             '  clear         — clear output',
-        ls: () => navSections.map(s => `  ${s}/`).join('\n'),
-        whoami: () =>
-            'Sang Min Lee\n' +
-            'Ph.D. Candidate in AI @ Seoul National University\n' +
-            'Research: AI for Resilient Infrastructure',
-        'cat bio.txt': () =>
-            'Ph.D. Candidate in Artificial Intelligence\n' +
-            'at Seoul National University.\n' +
-            'Research focuses on machine learning for\n' +
-            'structural health monitoring and wind engineering.',
+        ls: () => allSections.map(s => `  ${s}/`).join('\n'),
+        whoami: () => {
+            const title = (siteConfig && siteConfig.title) || 'Sang Min Lee';
+            const subtitle = (siteConfig && siteConfig['top-section-bg-text']) || '';
+            return `${title}\n${subtitle}`;
+        },
+        'cat bio.txt': () => bio,
     };
 
     function runCommand(raw) {
@@ -237,7 +237,8 @@ function initHeroTerminal() {
             output.innerHTML = '';
             return;
         } else if (commands[cmd]) {
-            resultHtml = `<span class="g">$</span> ${escapeHtml(cmd)}\n${escapeHtml(commands[cmd]())}`;
+            const result = typeof commands[cmd] === 'function' ? commands[cmd]() : commands[cmd];
+            resultHtml = `<span class="g">$</span> ${escapeHtml(cmd)}\n${escapeHtml(result)}`;
         } else if (cmd.startsWith('cd ')) {
             const target = cmd.slice(3).trim().replace(/\/$/, '');
             const el = document.getElementById(target === 'home' ? 'page-top' : target);
@@ -266,10 +267,45 @@ function initHeroTerminal() {
     });
 }
 
+function renderStatsFromConfig(yml) {
+    const grid = document.getElementById('stats-grid');
+    if (!grid || !yml.stats) return;
+    grid.innerHTML = yml.stats.map(s =>
+        `<div class="stat-item">
+            <span class="stat-num" data-target="${s.value}">0</span>
+            <span class="stat-label">${s.label}</span>
+        </div>`
+    ).join('');
+}
+
+function renderContactFromConfig(yml) {
+    const grid = document.getElementById('contact-grid');
+    if (!grid || !yml.contact) return;
+    grid.innerHTML = yml.contact.map(c => {
+        const isExternal = !c.url.startsWith('mailto:') && c.url !== '/blog/';
+        const attrs = isExternal ? ' target="_blank" rel="noopener noreferrer"' : '';
+        return `<a class="contact-card" href="${c.url}"${attrs}>
+            <span class="contact-icon" aria-hidden="true">[${c.code}]</span>
+            <span class="contact-label">${c.label}</span>
+            <span class="contact-val">${c.value}</span>
+        </a>`;
+    }).join('');
+}
+
+function renderFeaturedPaperFromConfig(yml) {
+    const el = document.getElementById('featured-paper');
+    if (!el || !yml.featured_paper) return;
+    const fp = yml.featured_paper;
+    el.innerHTML = `
+        <div class="featured-label">// FEATURED PAPER</div>
+        <div class="featured-venue">${fp.venue}</div>
+        <div class="featured-title">${fp.title}</div>
+        <div class="featured-authors">${fp.authors}</div>`;
+}
+
 window.addEventListener('DOMContentLoaded', event => {
     initMatrixRain();
     initTypingAnimation();
-    initHeroTerminal();
 
     // Activate Bootstrap scrollspy on the main nav element
     const mainNav = document.body.querySelector('#mainNav');
@@ -294,19 +330,31 @@ window.addEventListener('DOMContentLoaded', event => {
     });
 
 
-    // Yaml
+    // Yaml — load config and render dynamic sections
     fetch(content_dir + config_file)
         .then(response => response.text())
         .then(text => {
             const yml = jsyaml.load(text);
-            Object.keys(yml).forEach(key => {
-                try {
-                    document.getElementById(key).innerHTML = yml[key];
-                } catch {
-                    console.log("Unknown id and value: " + key + "," + yml[key].toString())
-                }
+            siteConfig = yml;
 
-            })
+            // Simple key-value config (title, copyright, etc.)
+            Object.keys(yml).forEach(key => {
+                if (typeof yml[key] === 'string') {
+                    try {
+                        document.getElementById(key).innerHTML = yml[key];
+                    } catch {
+                        // No matching element for this key
+                    }
+                }
+            });
+
+            // Render config-driven sections
+            renderStatsFromConfig(yml);
+            renderContactFromConfig(yml);
+            renderFeaturedPaperFromConfig(yml);
+
+            // Init hero terminal after config is loaded
+            initHeroTerminal();
         })
         .catch(error => console.log(error));
 

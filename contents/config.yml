@@ -3,3 +3,56 @@ page-top-title: Sang Min Lee
 top-section-bg-text: AI for Resilient Infrastructure
 home-subtitle: Sang Min Lee | Seoul National University
 copyright-text: '&copy; 2026 Sang Min Lee. All Rights Reserved.'
+
+# Contact information
+contact:
+  - icon: '✉'
+    code: EM
+    label: EMAIL
+    value: 201612445@snu.ac.kr
+    url: 'mailto:201612445@snu.ac.kr'
+  - icon: GH
+    code: GH
+    label: GITHUB
+    value: concrete-sangminlee
+    url: 'https://github.com/concrete-sangminlee'
+  - icon: GS
+    code: GS
+    label: GOOGLE SCHOLAR
+    value: Sang Min Lee
+    url: 'https://scholar.google.com/citations?user=ogvd_LsAAAAJ&hl=en'
+  - icon: IN
+    code: IN
+    label: LINKEDIN
+    value: Sang Min Lee
+    url: 'https://www.linkedin.com/in/sang-min-lee-3a2568174/'
+  - icon: ID
+    code: ID
+    label: ORCID
+    value: 0000-0002-6822-5252
+    url: 'https://orcid.org/0000-0002-6822-5252'
+  - icon: BL
+    code: BL
+    label: BLOG
+    value: concrete-sangminlee
+    url: '/blog/'
+
+# Stats bar
+stats:
+  - value: 6
+    label: JOURNAL PAPERS
+  - value: 14
+    label: CONFERENCE PAPERS
+  - value: 5
+    label: YEARS IN RESEARCH
+  - value: 6
+    label: AWARDS
+
+# Featured paper
+featured_paper:
+  venue: 'Journal of Nondestructive Evaluation &middot; 2025'
+  title: 'Machine Learning Assisted Method for Automated Impact-Echo Testing of Concrete Structures'
+  authors: 'Lee, S. M., Hong, J., Choi, H., &amp; Kang, T. H.-K.'
+
+# Bio for hero terminal
+bio: 'Ph.D. Candidate in Artificial Intelligence at Seoul National University. Research focuses on machine learning for structural health monitoring and wind engineering.'
