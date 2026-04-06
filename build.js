@@ -89,7 +89,7 @@ let output = template;
 for (const [key, val] of Object.entries(config)) {
     if (typeof val === 'string') {
         output = output.replace(
-            new RegExp(`(<[^>]+id="${key}"[^>]*>)(</[^>]+>)`),
+            new RegExp(`(<[^>]+id="${key}"[^>]*>)[^<]*(</[^>]+>)`),
             `$1${val}$2`
         );
     }
