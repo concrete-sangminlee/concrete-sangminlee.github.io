@@ -1,10 +1,5 @@
 
-
-const content_dir = 'contents/'
-const config_file = 'config.yml'
-const section_names = ['home', 'publications', 'projects', 'patents', 'awards', 'services']
-
-let siteConfig = null;
+const section_names = ['home', 'publications', 'projects', 'patents', 'awards', 'services'];
 
 function initMatrixRain() {
     const canvas = document.getElementById('matrix-canvas');
@@ -60,25 +55,6 @@ function initTypingAnimation() {
             if (i >= name.length) clearInterval(interval);
         }, 80);
     }, 600);
-}
-
-function wrapInTerminal(name) {
-    const body = document.getElementById(name + '-md');
-    if (!body) return;
-    const originalContent = body.innerHTML;
-    body.innerHTML = `
-        <div class="term">
-            <div class="term-bar">
-                <span class="dot dot-r"></span>
-                <span class="dot dot-y"></span>
-                <span class="dot dot-g"></span>
-                <span class="term-title">~/${name}/</span>
-            </div>
-            <div class="term-body">
-                <div class="term-cmd"><span class="g">$</span> ls ./${name}/</div>
-                ${originalContent}
-            </div>
-        </div>`;
 }
 
 function initScrollAnimations() {
@@ -207,8 +183,6 @@ function initHeroTerminal() {
 
     const allSections = [...section_names, 'contact'];
 
-    const bio = (siteConfig && siteConfig.bio) || 'Ph.D. Candidate in Artificial Intelligence at Seoul National University.';
-
     const commands = {
         help: () =>
             'available commands:\n' +
@@ -220,11 +194,14 @@ function initHeroTerminal() {
             '  clear         — clear output',
         ls: () => allSections.map(s => `  ${s}/`).join('\n'),
         whoami: () => {
-            const title = (siteConfig && siteConfig.title) || 'Sang Min Lee';
-            const subtitle = (siteConfig && siteConfig['top-section-bg-text']) || '';
-            return `${title}\n${subtitle}`;
+            const titleEl = document.getElementById('page-top-title');
+            const subtitleEl = document.getElementById('top-section-bg-text');
+            return `${titleEl ? titleEl.textContent : 'Sang Min Lee'}\n${subtitleEl ? subtitleEl.textContent : ''}`;
         },
-        'cat bio.txt': () => bio,
+        'cat bio.txt': () => {
+            const bioEl = document.querySelector('#home-md p');
+            return bioEl ? bioEl.textContent : '';
+        },
     };
 
     function runCommand(raw) {
@@ -267,121 +244,66 @@ function initHeroTerminal() {
     });
 }
 
-function renderStatsFromConfig(yml) {
-    const grid = document.getElementById('stats-grid');
-    if (!grid || !yml.stats) return;
-    grid.innerHTML = yml.stats.map(s =>
-        `<div class="stat-item">
-            <span class="stat-num" data-target="${s.value}">0</span>
-            <span class="stat-label">${s.label}</span>
-        </div>`
-    ).join('');
+// Vanilla ScrollSpy — highlights nav link for the visible section
+function initScrollSpy() {
+    const navLinks = document.querySelectorAll('#mainNav .nav-link');
+    const sectionEls = [];
+
+    navLinks.forEach(link => {
+        const id = link.getAttribute('href').replace('#', '');
+        const el = document.getElementById(id);
+        if (el) sectionEls.push({ el, link });
+    });
+
+    function update() {
+        const scrollY = window.scrollY + 80;
+        let current = sectionEls[0];
+        for (const s of sectionEls) {
+            if (s.el.offsetTop <= scrollY) current = s;
+        }
+        navLinks.forEach(l => l.classList.remove('active'));
+        if (current) current.link.classList.add('active');
+    }
+
+    window.addEventListener('scroll', update, { passive: true });
+    update();
 }
 
-function renderContactFromConfig(yml) {
-    const grid = document.getElementById('contact-grid');
-    if (!grid || !yml.contact) return;
-    grid.innerHTML = yml.contact.map(c => {
-        const isExternal = !c.url.startsWith('mailto:') && c.url !== '/blog/';
-        const attrs = isExternal ? ' target="_blank" rel="noopener noreferrer"' : '';
-        return `<a class="contact-card" href="${c.url}"${attrs}>
-            <span class="contact-icon" aria-hidden="true">[${c.code}]</span>
-            <span class="contact-label">${c.label}</span>
-            <span class="contact-val">${c.value}</span>
-        </a>`;
-    }).join('');
-}
+// Vanilla navbar collapse toggle
+function initNavbarToggle() {
+    const toggler = document.querySelector('.navbar-toggler');
+    const collapse = document.getElementById('navbarResponsive');
+    if (!toggler || !collapse) return;
 
-function renderFeaturedPaperFromConfig(yml) {
-    const el = document.getElementById('featured-paper');
-    if (!el || !yml.featured_paper) return;
-    const fp = yml.featured_paper;
-    el.innerHTML = `
-        <div class="featured-label">// FEATURED PAPER</div>
-        <div class="featured-venue">${fp.venue}</div>
-        <div class="featured-title">${fp.title}</div>
-        <div class="featured-authors">${fp.authors}</div>`;
-}
+    toggler.addEventListener('click', () => {
+        collapse.classList.toggle('show');
+        toggler.setAttribute('aria-expanded', collapse.classList.contains('show'));
+    });
 
-window.addEventListener('DOMContentLoaded', event => {
-    initMatrixRain();
-    initTypingAnimation();
-
-    // Activate Bootstrap scrollspy on the main nav element
-    const mainNav = document.body.querySelector('#mainNav');
-    if (mainNav) {
-        new bootstrap.ScrollSpy(document.body, {
-            target: '#mainNav',
-            offset: 74,
-        });
-    };
-
-    // Collapse responsive navbar when toggler is visible
-    const navbarToggler = document.body.querySelector('.navbar-toggler');
-    const responsiveNavItems = [].slice.call(
-        document.querySelectorAll('#navbarResponsive .nav-link')
-    );
-    responsiveNavItems.map(function (responsiveNavItem) {
-        responsiveNavItem.addEventListener('click', () => {
-            if (window.getComputedStyle(navbarToggler).display !== 'none') {
-                navbarToggler.click();
+    // Close on nav link click (mobile)
+    collapse.querySelectorAll('.nav-link').forEach(link => {
+        link.addEventListener('click', () => {
+            if (collapse.classList.contains('show')) {
+                collapse.classList.remove('show');
+                toggler.setAttribute('aria-expanded', 'false');
             }
         });
     });
+}
 
+window.addEventListener('DOMContentLoaded', () => {
+    initMatrixRain();
+    initTypingAnimation();
+    initHeroTerminal();
+    initScrollSpy();
+    initNavbarToggle();
+    initScrollAnimations();
+    initStatsCounter();
+    addCopyButtons();
+    initPublicationFilter();
 
-    // Yaml — load config and render dynamic sections
-    fetch(content_dir + config_file)
-        .then(response => response.text())
-        .then(text => {
-            const yml = jsyaml.load(text);
-            siteConfig = yml;
-
-            // Simple key-value config (title, copyright, etc.)
-            Object.keys(yml).forEach(key => {
-                if (typeof yml[key] === 'string') {
-                    try {
-                        document.getElementById(key).innerHTML = yml[key];
-                    } catch {
-                        // No matching element for this key
-                    }
-                }
-            });
-
-            // Render config-driven sections
-            renderStatsFromConfig(yml);
-            renderContactFromConfig(yml);
-            renderFeaturedPaperFromConfig(yml);
-
-            // Init hero terminal after config is loaded
-            initHeroTerminal();
-        })
-        .catch(error => console.log(error));
-
-
-    // Marked
-    marked.use({ mangle: false, headerIds: false })
-    const sectionPromises = section_names.map((name) => {
-        return fetch(content_dir + name + '.md')
-            .then(response => response.text())
-            .then(markdown => {
-                const html = marked.parse(markdown);
-                document.getElementById(name + '-md').innerHTML = html;
-                if (name !== 'home') {
-                    wrapInTerminal(name);
-                }
-            }).then(() => {
-                MathJax.typeset();
-                if (name === 'publications') {
-                    if (typeof addCopyButtons === 'function') addCopyButtons();
-                    if (typeof initPublicationFilter === 'function') initPublicationFilter();
-                }
-            })
-            .catch(error => console.log(error));
-    });
-    Promise.all(sectionPromises).then(() => {
-        initScrollAnimations();
-        if (typeof initStatsCounter === 'function') initStatsCounter();
-    }).catch(error => console.log('Post-load init failed:', error));
-
+    // MathJax — typeset pre-rendered content
+    if (typeof MathJax !== 'undefined' && MathJax.typeset) {
+        MathJax.typeset();
+    }
 });

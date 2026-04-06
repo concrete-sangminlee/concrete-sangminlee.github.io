@@ -1,0 +1,21 @@
+{
+  "name": "concrete-sangminlee.github.io",
+  "version": "1.0.0",
+  "description": "Personal academic website for Sang Min Lee, Ph.D. Candidate in Artificial Intelligence at Seoul National University.",
+  "main": "build.js",
+  "type": "module",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "build": "node build.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "js-yaml": "^4.1.1",
+    "marked": "^17.0.6"
+  }
+}
