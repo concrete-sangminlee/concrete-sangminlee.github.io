@@ -66,7 +66,7 @@
 
 #### Early Publications
 
-1. **Lee, S. M.**, & Jeon, Y. C. (2016). *GeoGebra를 활용한 Cycloid 곡선의 응용과 일반화에 대한 연구* [Graduation research]. Korea Science Academy of KAIST.
+1. **Lee, S. M.**, & Jeon, Y. C. (2016). GeoGebra를 활용한 Cycloid 곡선의 응용과 일반화에 대한 연구 *[Graduation research]*. Korea Science Academy of KAIST.
 
 2. **Lee, S. M.**, & Jeon, Y. C. (2015). A research on generalization and applications of cycloid. *Geogebra Global Gathering 2015*. Linz, Austria.
 
