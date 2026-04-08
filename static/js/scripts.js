@@ -248,7 +248,11 @@ function initHeroTerminal() {
             '  contact       — contact info\n' +
             '  grep <word>   — search publications\n' +
             '  open <url>    — open link\n' +
+            '  echo <text>   — print text\n' +
             '  tree          — site structure\n' +
+            '  history       — command history\n' +
+            '  neofetch      — system info\n' +
+            '  skills        — tech stack\n' +
             '  clear         — clear output',
         ls: { rich: true, fn: () => {
             const active = document.querySelector('#mainNav .nav-link.active');
@@ -426,7 +430,7 @@ function initHeroTerminal() {
     });
 
     // Cycle placeholder text
-    const hints = ['help', 'ls', 'cat bio.txt', 'cd education', 'whoami', 'grep wind', 'neofetch'];
+    const hints = ['help', 'ls', 'cat bio.txt', 'cd education', 'whoami', 'grep wind', 'neofetch', 'skills', 'tree'];
     let hintIdx = 0;
     function cyclePlaceholder() {
         const h = hints[hintIdx++ % hints.length];
