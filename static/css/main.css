@@ -391,10 +391,41 @@ section:last-of-type::after { display: none; }
 /* Alternate section backgrounds */
 #home               { background: var(--bg)  !important; }
 #education          { background: var(--bg2) !important; }
+#education .main-body p {
+  position: relative;
+  padding-left: 1.6rem;
+  border-left: 2px solid var(--border2);
+  margin-left: 0.5rem;
+}
+#education .main-body p::before {
+  content: '';
+  position: absolute;
+  left: -5px;
+  top: 0.5rem;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 6px var(--green-glow);
+}
+#education .main-body ul {
+  margin-left: 0.5rem;
+  padding-left: 1.6rem !important;
+  border-left: 2px solid var(--border2);
+}
 #research-interests { background: var(--bg)  !important; }
 #publications       { background: var(--bg2) !important; }
 #projects           { background: var(--bg)  !important; }
 #patents            { background: var(--bg2) !important; }
+#patents .main-body li::before {
+  content: '⚙';
+  position: absolute;
+  left: -1.5rem;
+  color: var(--green);
+  font-size: 0.7rem;
+}
+#patents .main-body li { position: relative; margin-left: 1.5rem; }
+
 #awards             { background: var(--bg)  !important; }
 #awards .main-body li { border-left-color: var(--green-border); }
 #awards .main-body li:hover { border-left-color: #d1a654; background: rgba(209, 166, 84, 0.04); }
@@ -824,8 +855,12 @@ footer a:hover {
 }
 .contact-icon {
   font-family: var(--mono);
-  font-size: 0.85rem;
+  font-size: 0.72rem;
   color: var(--green);
+  background: rgba(57, 211, 83, 0.08);
+  padding: 0.2rem 0.4rem;
+  border-radius: 3px;
+  border: 1px solid var(--green-border);
 }
 .contact-label {
   font-family: var(--mono);

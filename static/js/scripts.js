@@ -164,6 +164,11 @@ function initPublicationFilter() {
 
     const bar = document.createElement('div');
     bar.className = 'pub-filter-bar';
+    function countItems(key) {
+        if (key === 'all') return sections.reduce((n, s) => n + s.els.filter(e => e.tagName === 'LI' || e.tagName === 'OL' || e.tagName === 'UL').length, 0);
+        const sec = sections.find(s => s.key === key);
+        return sec ? sec.els.filter(e => e.tagName === 'LI').length : 0;
+    }
     const filters = [
         { key: 'all', label: 'ALL' },
         ...sections.map(s => ({ key: s.key, label: s.key.toUpperCase() }))
@@ -171,7 +176,8 @@ function initPublicationFilter() {
     filters.forEach(f => {
         const btn = document.createElement('button');
         btn.className = 'pub-filter-btn' + (f.key === 'all' ? ' active' : '');
-        btn.textContent = f.label;
+        const count = countItems(f.key);
+        btn.textContent = count > 0 ? `${f.label} (${count})` : f.label;
         btn.addEventListener('click', () => {
             bar.querySelectorAll('.pub-filter-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
@@ -298,6 +304,9 @@ function initHeroTerminal() {
             'languages:\n  Python, MATLAB, JavaScript, C\n' +
             'frameworks:\n  PyTorch, TensorFlow, scikit-learn\n' +
             'domains:\n  SHM, Wind Eng, NDT, LLM/RAG',
+        history: () => history.length
+            ? history.slice(0, 10).map((c, i) => `  ${i + 1}  ${c}`).join('\n')
+            : '  (empty)',
         tree: () =>
             '.\n' +
             '├── home/\n' +
