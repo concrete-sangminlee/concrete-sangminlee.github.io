@@ -1,5 +1,5 @@
 
-#### Journal Articles
+### Journal Articles
 
 1. **Lee, S. M.**, Hong, J., Choi, H., & Kang, T. H.-K. (2025). Machine learning assisted method for automated impact-echo testing of concrete structures. *Journal of Nondestructive Evaluation, 44*(4), 121.
 	[link](https://link.springer.com/article/10.1007/s10921-025-01260-3)
@@ -18,11 +18,11 @@
 
 ---
 
-#### Conference Proceedings
+### Conference Proceedings
 
 1. **Lee, S. M.**, & Kang, T. H.-K. (2026). 콘크리트 내부결함 탐사를 위한 엣지AI 임팩트에코 시스템 개발 연구. *한국콘크리트학회 학술대회 논문집, 38*(1).
 
-2. Park, H. G., **Lee, S. M.**, & Kang, T. H.-K. (2026). 원전 격납건물 라이너플레이트 배면 콘크리트 내부 결함 모사를 통함 임팩트 에코 검사 적용 연구. *한국콘크리트학회 학술대회 논문집, 38*(1).
+2. Park, H. G., **Lee, S. M.**, & Kang, T. H.-K. (2026). 원전 격납건물 라이너플레이트 배면 콘크리트 내부 결함 모사를 통한 임팩트 에코 검사 적용 연구. *한국콘크리트학회 학술대회 논문집, 38*(1).
 
 3. **Lee, S. M.**, & Kang, T. H.-K. (2025). Retrieval augmented generation for assistance of using wind load design codes. *The 10th Asia-Pacific Conference on Wind Engineering (APCWE10)*.
 
@@ -50,11 +50,11 @@
 
 15. **Lee, S. M.**, & Kang, T. H.-K. (2021). 장단기기억 순환신경망 기반 콘크리트 건물 벽면 풍압계수 예측 연구. *한국콘크리트학회 학술대회 논문집, 33*(2), 155-156.
 
-14. **Lee, S. M.**, & Kang, T. H.-K. (2021). LSTM 네트워크를 활용한 콘크리트 건물의 벽면 풍압계수 예측 연구. *한국콘크리트학회 학술대회 논문집, 33*(1), 189-190.
+16. **Lee, S. M.**, & Kang, T. H.-K. (2021). LSTM 네트워크를 활용한 콘크리트 건물의 벽면 풍압계수 예측 연구. *한국콘크리트학회 학술대회 논문집, 33*(1), 189-190.
 
 ---
 
-#### Theses
+### Theses
 
 1. **Lee, S. M.** (2023). Machine learning application to automated impact-echo test for concrete structures *[Master's thesis]*. Seoul National University.
 
@@ -64,7 +64,7 @@
 
 ---
 
-#### Early Publications
+### Early Publications
 
 1. **Lee, S. M.**, & Jeon, Y. C. (2016). GeoGebra를 활용한 Cycloid 곡선의 응용과 일반화에 대한 연구 *[Graduation research]*. Korea Science Academy of KAIST.
 

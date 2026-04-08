@@ -1,5 +1,5 @@
 
-#### Memberships
+### Memberships
 
 - ASCE (American Society of Civil Engineers)
 - ACI (American Concrete Institute)
@@ -10,7 +10,7 @@
 
 ---
 
-#### Conference Organization
+### Conference Organization
 
 - **WEIK Annual Conference** (2025) — Organizing Committee, Seoul National University
 

@@ -53,7 +53,7 @@ function buildStats() {
 function buildContact() {
     if (!config.contact) return '';
     return config.contact.map(c => {
-        const isExternal = !c.url.startsWith('mailto:') && c.url !== '/blog/';
+        const isExternal = !c.url.startsWith('mailto:') && !c.url.startsWith('/');
         const attrs = isExternal ? ' target="_blank" rel="noopener noreferrer"' : '';
         return `<a class="contact-card" href="${c.url}"${attrs}>
                     <span class="contact-icon" aria-hidden="true">[${c.code}]</span>
