@@ -515,6 +515,10 @@ section:last-of-type::after { display: none; }
 section header h2 .sec-num {
   color: var(--text-dim);
   font-weight: 400;
+  transition: color 0.3s;
+}
+section.in-view header h2 .sec-num {
+  color: var(--green);
 }
 section header h2 {
   font-family: var(--mono) !important;

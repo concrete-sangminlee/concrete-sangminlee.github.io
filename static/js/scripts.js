@@ -355,9 +355,14 @@ function initHeroTerminal() {
             } else {
                 const pubs = document.querySelectorAll('#publications-md li');
                 const matches = Array.from(pubs).filter(li => li.textContent.toLowerCase().includes(keyword));
-                const out = matches.length
-                    ? matches.map(li => '  ' + li.textContent.trim().replace(/\n/g, ' ').substring(0, 100) + '...').join('\n')
-                    : `No results for "${escapeHtml(keyword)}"`;
+                const maxShow = 8;
+                let out;
+                if (!matches.length) {
+                    out = `No results for "${keyword}"`;
+                } else {
+                    out = matches.slice(0, maxShow).map(li => '  ' + li.textContent.trim().replace(/\n/g, ' ').substring(0, 100) + '...').join('\n');
+                    if (matches.length > maxShow) out += `\n  ...and ${matches.length - maxShow} more`;
+                }
                 resultHtml = `<span class="g">$</span> ${escapeHtml(cmd)}\n${escapeHtml(out)}`;
             }
         } else if (cmd.startsWith('open ')) {
@@ -368,6 +373,9 @@ function initHeroTerminal() {
             } else {
                 resultHtml = `<span class="g">$</span> ${escapeHtml(cmd)}\n<span class="err">open: invalid URL — must start with http(s)://</span>`;
             }
+        } else if (cmd.startsWith('echo ')) {
+            const text = cmd.slice(5);
+            resultHtml = `<span class="g">$</span> ${escapeHtml(cmd)}\n${escapeHtml(text)}`;
         } else if (cmd.startsWith('cd ')) {
             const target = cmd.slice(3).trim().replace(/\/$/, '');
             const el = document.getElementById(target === 'home' ? 'page-top' : target);
