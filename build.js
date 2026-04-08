@@ -173,7 +173,7 @@ for (const f of toRemove) {
 }
 
 // Copy root-level files to dist
-for (const f of ['robots.txt', 'sitemap.xml']) {
+for (const f of ['robots.txt', 'sitemap.xml', '404.html', 'manifest.json']) {
     if (fs.existsSync(f)) fs.copyFileSync(f, path.join(DIST_DIR, f));
 }
 

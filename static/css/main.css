@@ -141,6 +141,10 @@ h1, h2, h3, h4, h5, h6 {
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   z-index: 1000;
+  transition: box-shadow 0.3s;
+}
+.header.scrolled {
+  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.4);
 }
 
 .navbar-brand,
@@ -173,7 +177,8 @@ h1, h2, h3, h4, h5, h6 {
   height: 1px;
   background: var(--green);
   transform: scaleX(0);
-  transition: transform 0.2s;
+  transform-origin: left;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .nav-link:hover { color: var(--green) !important; }
@@ -284,7 +289,7 @@ h1, h2, h3, h4, h5, h6 {
   margin-left: 6px;
   vertical-align: middle;
   box-shadow: 0 0 8px var(--green-glow);
-  animation: blink 1s step-end infinite;
+  animation: blink 0.7s step-end infinite;
 }
 
 #top-section-bg-text {

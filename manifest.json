@@ -1,0 +1,17 @@
+{
+  "name": "Sang Min Lee — AI for Resilient Infrastructure",
+  "short_name": "S.M. Lee",
+  "description": "Ph.D. Candidate in AI at Seoul National University",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "theme_color": "#050505",
+  "background_color": "#050505",
+  "icons": [
+    {
+      "src": "static/assets/favicon-32.png",
+      "sizes": "32x32",
+      "type": "image/png"
+    }
+  ]
+}

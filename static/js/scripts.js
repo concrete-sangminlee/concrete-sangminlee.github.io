@@ -77,7 +77,7 @@ function initScrollAnimations() {
             if (!entry.isIntersecting) return;
             const items = entry.target.querySelectorAll('li');
             items.forEach((li, i) => {
-                li.style.transitionDelay = (i * 0.04) + 's';
+                li.style.transitionDelay = (i * 0.025) + 's';
                 li.classList.add('li-visible');
             });
             liObserver.unobserve(entry.target);
@@ -169,24 +169,22 @@ function initPublicationFilter() {
 function initStatsCounter() {
     const bar = document.querySelector('.stats-bar');
     if (!bar) return;
+    function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
     const observer = new IntersectionObserver(entries => {
         entries.forEach(entry => {
             if (!entry.isIntersecting) return;
             entry.target.querySelectorAll('.stat-num').forEach(el => {
                 const target = parseInt(el.dataset.target, 10);
-                const duration = 900;
-                const stepTime = 16;
-                const steps = duration / stepTime;
-                const increment = target / steps;
-                let current = 0;
-                const timer = setInterval(() => {
-                    current = Math.min(current + increment, target);
-                    el.textContent = Math.floor(current);
-                    if (current >= target) {
-                        el.textContent = target;
-                        clearInterval(timer);
-                    }
-                }, stepTime);
+                const duration = 1200;
+                const start = performance.now();
+                function tick(now) {
+                    const elapsed = now - start;
+                    const progress = Math.min(elapsed / duration, 1);
+                    el.textContent = Math.floor(target * easeOutCubic(progress));
+                    if (progress < 1) requestAnimationFrame(tick);
+                    else el.textContent = target;
+                }
+                requestAnimationFrame(tick);
             });
             observer.unobserve(entry.target);
         });
@@ -371,14 +369,38 @@ function initNavbarToggle() {
 function initScrollProgress() {
     const bar = document.querySelector('.scroll-progress');
     const btn = document.querySelector('.back-to-top');
+    const nav = document.getElementById('mainNav');
     if (!bar && !btn) return;
     window.addEventListener('scroll', () => {
         const h = document.documentElement.scrollHeight - window.innerHeight;
         const pct = h > 0 ? (window.scrollY / h) * 100 : 0;
         if (bar) bar.style.width = pct + '%';
         if (btn) btn.classList.toggle('visible', window.scrollY > 400);
+        if (nav) nav.classList.toggle('scrolled', window.scrollY > 60);
     }, { passive: true });
     if (btn) btn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+}
+
+function initKeyboardNav() {
+    const ids = ['page-top', 'education', 'research-interests', 'publications', 'projects', 'patents', 'awards', 'services', 'contact'];
+    function currentIdx() {
+        const y = window.scrollY + 100;
+        for (let i = ids.length - 1; i >= 0; i--) {
+            const el = document.getElementById(ids[i]);
+            if (el && el.offsetTop <= y) return i;
+        }
+        return 0;
+    }
+    document.addEventListener('keydown', e => {
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+        if (e.key === 'j') {
+            const next = Math.min(currentIdx() + 1, ids.length - 1);
+            document.getElementById(ids[next])?.scrollIntoView({ behavior: 'smooth' });
+        } else if (e.key === 'k') {
+            const prev = Math.max(currentIdx() - 1, 0);
+            document.getElementById(ids[prev])?.scrollIntoView({ behavior: 'smooth' });
+        }
+    });
 }
 
 window.addEventListener('DOMContentLoaded', () => {
@@ -392,6 +414,7 @@ window.addEventListener('DOMContentLoaded', () => {
     addCopyButtons();
     initPublicationFilter();
     initScrollProgress();
+    initKeyboardNav();
 
     // MathJax — typeset pre-rendered content
     if (typeof MathJax !== 'undefined' && MathJax.typeset) {

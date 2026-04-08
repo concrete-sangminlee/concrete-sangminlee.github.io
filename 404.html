@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>404 — Page Not Found</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #050505;
+            color: #c8c8c8;
+            font-family: 'JetBrains Mono', 'Courier New', monospace;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 2rem;
+        }
+        .container { max-width: 480px; text-align: center; }
+        .code {
+            font-size: 5rem;
+            font-weight: 700;
+            color: #39d353;
+            line-height: 1;
+            margin-bottom: 0.5rem;
+        }
+        .msg {
+            font-size: 0.85rem;
+            color: #888;
+            margin-bottom: 2rem;
+        }
+        .term {
+            background: #0a0a0a;
+            border: 1px solid #222;
+            border-radius: 6px;
+            padding: 1.2rem;
+            text-align: left;
+            font-size: 0.8rem;
+            line-height: 1.8;
+            margin-bottom: 2rem;
+        }
+        .g { color: #39d353; }
+        .err { color: #ff5f57; }
+        .dim { color: #555; }
+        a {
+            color: #39d353;
+            text-decoration: none;
+            border-bottom: 1px solid transparent;
+            transition: border-color 0.2s;
+        }
+        a:hover { border-color: #39d353; }
+        .nav-links { display: flex; gap: 1.5rem; justify-content: center; flex-wrap: wrap; font-size: 0.75rem; }
+    </style>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <div class="code">404</div>
+        <div class="msg">Page not found</div>
+        <div class="term">
+            <span class="g">$</span> cd /unknown<br>
+            <span class="err">cd: /unknown: no such directory</span><br>
+            <span class="g">$</span> <span class="dim">try 'cd /' to go home</span>
+        </div>
+        <div class="nav-links">
+            <a href="/">HOME</a>
+            <a href="/#publications">PUBLICATIONS</a>
+            <a href="/#projects">PROJECTS</a>
+            <a href="https://github.com/concrete-sangminlee">GITHUB</a>
+        </div>
+    </div>
+</body>
+</html>
