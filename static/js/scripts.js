@@ -70,6 +70,30 @@ function initScrollAnimations() {
         el.classList.add('anim-target');
         observer.observe(el);
     });
+
+    // Stagger list items within each section
+    const liObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (!entry.isIntersecting) return;
+            const items = entry.target.querySelectorAll('li');
+            items.forEach((li, i) => {
+                li.style.transitionDelay = (i * 0.04) + 's';
+                li.classList.add('li-visible');
+            });
+            liObserver.unobserve(entry.target);
+        });
+    }, { threshold: 0.05 });
+
+    document.querySelectorAll('.main-body').forEach(el => liObserver.observe(el));
+}
+
+function showToast(msg) {
+    const t = document.createElement('div');
+    t.className = 'toast-msg';
+    t.textContent = msg;
+    document.body.appendChild(t);
+    requestAnimationFrame(() => t.classList.add('show'));
+    setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 300); }, 1500);
 }
 
 function addCopyButtons() {
@@ -87,6 +111,7 @@ function addCopyButtons() {
             navigator.clipboard.writeText(citationText).then(() => {
                 btn.textContent = '✓';
                 btn.classList.add('copied');
+                showToast('Citation copied');
                 setTimeout(() => {
                     btn.textContent = '⎘';
                     btn.classList.remove('copied');
@@ -281,10 +306,17 @@ function initHeroTerminal() {
             else { histIdx = -1; input.value = ''; }
         } else if (e.key === 'Tab') {
             e.preventDefault();
-            const partial = input.value.trim();
-            if (!partial) return;
-            const match = cmdNames.find(c => c.startsWith(partial));
-            if (match) input.value = match === 'cd' ? 'cd ' : match;
+            const val = input.value;
+            if (!val) return;
+            if (val.startsWith('cd ')) {
+                const partial = val.slice(3).trim();
+                const match = allSections.find(s => s.startsWith(partial));
+                if (match) input.value = 'cd ' + match;
+            } else {
+                const partial = val.trim();
+                const match = cmdNames.find(c => c.startsWith(partial));
+                if (match) input.value = match === 'cd' ? 'cd ' : match;
+            }
         }
     });
 }
