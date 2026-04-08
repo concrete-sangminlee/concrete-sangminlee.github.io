@@ -412,7 +412,7 @@ function initHeroTerminal() {
             } else {
                 const partial = val.trim();
                 const match = cmdNames.find(c => c.startsWith(partial));
-                if (match) input.value = (match === 'cd' || match === 'grep') ? match + ' ' : match;
+                if (match) input.value = (match === 'cd' || match === 'grep' || match === 'open') ? match + ' ' : match;
             }
         }
     });
@@ -455,8 +455,8 @@ function initScrollSpy() {
         for (const s of sectionEls) {
             if (s.el.offsetTop <= scrollY) current = s;
         }
-        navLinks.forEach(l => l.classList.remove('active'));
-        if (current) current.link.classList.add('active');
+        navLinks.forEach(l => { l.classList.remove('active'); l.removeAttribute('aria-current'); });
+        if (current) { current.link.classList.add('active'); current.link.setAttribute('aria-current', 'true'); }
     }
 
     window.addEventListener('scroll', update, { passive: true });

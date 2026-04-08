@@ -51,7 +51,7 @@ stats:
     suffix: '+'
     label: CONFERENCE PAPERS
   - value: 13
-    suffix: 'yrs'
+    suffix: ''
     label: YEARS IN RESEARCH
   - value: 6
     suffix: ''
