@@ -43,7 +43,7 @@ function buildStats() {
     if (!config.stats) return '';
     return config.stats.map(s =>
         `<div class="stat-item">
-                    <span class="stat-num" data-target="${s.value}">0</span>
+                    <span class="stat-num" data-target="${s.value}"${s.suffix ? ` data-suffix="${s.suffix}"` : ''}>0</span>
                     <span class="stat-label">${s.label}</span>
                 </div>`
     ).join('\n');

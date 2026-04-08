@@ -366,6 +366,7 @@ section {
   padding: 2.8rem 0 !important;
   border-bottom: none;
   position: relative;
+  contain: layout style;
 }
 section::after {
   content: '';
@@ -416,6 +417,12 @@ section header h2::after {
   height: 1px;
   background: linear-gradient(to right, var(--green-border), transparent);
   display: block;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+section.in-view header h2::after {
+  transform: scaleX(1);
 }
 
 /* Hide Bootstrap icons in section headers */
@@ -496,6 +503,10 @@ section header h2 i { display: none; }
 
 .main-body a:hover {
   border-bottom-color: var(--green) !important;
+  background: var(--green-dim);
+  padding: 0 0.2rem;
+  margin: 0 -0.2rem;
+  border-radius: 2px;
 }
 
 /* Left-border items — applied to li inside terminal sections */

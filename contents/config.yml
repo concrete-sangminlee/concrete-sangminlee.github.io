@@ -45,12 +45,16 @@ contact:
 # Stats bar
 stats:
   - value: 6
+    suffix: '+'
     label: JOURNAL PAPERS
   - value: 16
+    suffix: '+'
     label: CONFERENCE PAPERS
   - value: 13
+    suffix: 'yrs'
     label: YEARS IN RESEARCH
   - value: 6
+    suffix: ''
     label: AWARDS
 
 # Featured paper

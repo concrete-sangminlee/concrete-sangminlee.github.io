@@ -76,6 +76,17 @@ function initScrollAnimations() {
         observer.observe(el);
     });
 
+    // Section header underline animation
+    const secObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('in-view');
+                secObserver.unobserve(entry.target);
+            }
+        });
+    }, { threshold: 0.1 });
+    document.querySelectorAll('section').forEach(el => secObserver.observe(el));
+
     // Stagger list items within each section
     const liObserver = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
@@ -180,14 +191,15 @@ function initStatsCounter() {
             if (!entry.isIntersecting) return;
             entry.target.querySelectorAll('.stat-num').forEach(el => {
                 const target = parseInt(el.dataset.target, 10);
+                const suffix = el.dataset.suffix || '';
                 const duration = 1200;
                 const start = performance.now();
                 function tick(now) {
                     const elapsed = now - start;
                     const progress = Math.min(elapsed / duration, 1);
-                    el.textContent = Math.floor(target * easeOutCubic(progress));
+                    el.textContent = Math.floor(target * easeOutCubic(progress)) + suffix;
                     if (progress < 1) requestAnimationFrame(tick);
-                    else el.textContent = target;
+                    else el.textContent = target + suffix;
                 }
                 requestAnimationFrame(tick);
             });
