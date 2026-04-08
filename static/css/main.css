@@ -512,11 +512,9 @@ section:last-of-type::after { display: none; }
 }
 
 /* ── SECTION HEADER (h2 override) ── */
-body { counter-reset: sections; }
-section header h2::before {
-  counter-increment: sections;
-  content: counter(sections, decimal-leading-zero) ". ";
+section header h2 .sec-num {
   color: var(--text-dim);
+  font-weight: 400;
 }
 section header h2 {
   font-family: var(--mono) !important;

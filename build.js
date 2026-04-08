@@ -95,6 +95,15 @@ for (const [key, val] of Object.entries(config)) {
     }
 }
 
+// Section numbering (inject into h2 text)
+const allSectionIds = [...SECTIONS, 'contact'];
+allSectionIds.forEach((name, i) => {
+    const num = String(i + 1).padStart(2, '0');
+    const idAttr = `id="${name}-subtitle"`;
+    const re = new RegExp(`(${idAttr}>)([^<]*)`);
+    output = output.replace(re, `$1<span class="sec-num">${num}.</span> $2`);
+});
+
 // Section content
 for (const name of SECTIONS) {
     output = output.replace(
