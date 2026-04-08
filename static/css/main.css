@@ -109,6 +109,11 @@ a { color: inherit; text-decoration: none; }
   --text-bright:  #eeeeee;
   --mono: 'JetBrains Mono', 'Courier New', monospace;
   --sans: 'Inter', system-ui, -apple-system, sans-serif;
+
+  /* Animation durations */
+  --anim-fast: 0.2s;
+  --anim-base: 0.4s;
+  --anim-slow: 0.6s;
 }
 
 /* ── GLOBAL RESET ── */
@@ -345,8 +350,19 @@ h1, h2, h3, h4, h5, h6 {
 /* ── SECTION WRAPPERS ── */
 section {
   padding: 2.8rem 0 !important;
-  border-bottom: 1px solid var(--border);
+  border-bottom: none;
+  position: relative;
 }
+section::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(to right, transparent, var(--border2) 20%, var(--border2) 80%, transparent);
+}
+section:last-of-type::after { display: none; }
 
 .bg-gradient-primary-to-secondary-light,
 .bg-gradient-primary-to-secondary-gray {

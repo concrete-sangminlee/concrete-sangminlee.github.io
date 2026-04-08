@@ -66,7 +66,7 @@ function initScrollAnimations() {
         });
     }, { threshold: 0.07 });
 
-    document.querySelectorAll('.term').forEach(el => {
+    document.querySelectorAll('.term, .featured-paper').forEach(el => {
         el.classList.add('anim-target');
         observer.observe(el);
     });
@@ -218,6 +218,7 @@ function initHeroTerminal() {
             '  date          — current date/time\n' +
             '  stats         — publication stats\n' +
             '  contact       — contact info\n' +
+            '  grep <word>   — search publications\n' +
             '  clear         — clear output',
         ls: () => allSections.map(s => `  ${s}/`).join('\n'),
         whoami: () => {
@@ -253,7 +254,7 @@ function initHeroTerminal() {
         },
     };
 
-    const cmdNames = [...Object.keys(commands), 'clear', 'cd'];
+    const cmdNames = [...Object.keys(commands), 'clear', 'cd', 'grep'];
     const history = [];
     let histIdx = -1;
 
@@ -269,6 +270,18 @@ function initHeroTerminal() {
         } else if (commands[cmd]) {
             const result = typeof commands[cmd] === 'function' ? commands[cmd]() : commands[cmd];
             resultHtml = `<span class="g">$</span> ${escapeHtml(cmd)}\n${escapeHtml(result)}`;
+        } else if (cmd.startsWith('grep ')) {
+            const keyword = cmd.slice(5).trim().toLowerCase();
+            if (!keyword) {
+                resultHtml = `<span class="g">$</span> ${escapeHtml(cmd)}\nUsage: grep &lt;keyword&gt;`;
+            } else {
+                const pubs = document.querySelectorAll('#publications-md li');
+                const matches = Array.from(pubs).filter(li => li.textContent.toLowerCase().includes(keyword));
+                const out = matches.length
+                    ? matches.map(li => '  ' + li.textContent.trim().replace(/\n/g, ' ').substring(0, 100) + '...').join('\n')
+                    : `No results for "${escapeHtml(keyword)}"`;
+                resultHtml = `<span class="g">$</span> ${escapeHtml(cmd)}\n${escapeHtml(out)}`;
+            }
         } else if (cmd.startsWith('cd ')) {
             const target = cmd.slice(3).trim().replace(/\/$/, '');
             const el = document.getElementById(target === 'home' ? 'page-top' : target);
@@ -313,7 +326,7 @@ function initHeroTerminal() {
             } else {
                 const partial = val.trim();
                 const match = cmdNames.find(c => c.startsWith(partial));
-                if (match) input.value = match === 'cd' ? 'cd ' : match;
+                if (match) input.value = (match === 'cd' || match === 'grep') ? match + ' ' : match;
             }
         }
     });
@@ -415,6 +428,10 @@ window.addEventListener('DOMContentLoaded', () => {
     initPublicationFilter();
     initScrollProgress();
     initKeyboardNav();
+
+    // Auto-update copyright year
+    const crEl = document.getElementById('copyright-text');
+    if (crEl) crEl.innerHTML = crEl.innerHTML.replace(/\d{4}/, new Date().getFullYear());
 
     // MathJax — typeset pre-rendered content
     if (typeof MathJax !== 'undefined' && MathJax.typeset) {
