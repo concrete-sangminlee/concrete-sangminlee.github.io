@@ -107,7 +107,7 @@ function initPublicationFilter() {
     const sections = [];
     let cur = null;
     children.forEach(el => {
-        if (el.tagName === 'H4') {
+        if (el.tagName === 'H3') {
             cur = { key: el.textContent.trim().split(' ')[0].toLowerCase(), els: [el] };
             sections.push(cur);
         } else if (cur) {
