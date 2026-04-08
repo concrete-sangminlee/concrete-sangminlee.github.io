@@ -901,3 +901,84 @@ footer a:hover {
 .hero-cmd-line:last-child { border-bottom: none; margin-bottom: 0; }
 .hero-cmd-line .g { color: var(--green); }
 .hero-cmd-line .err { color: #ff5f57; }
+
+/* ── SCROLL PROGRESS BAR ── */
+.scroll-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 2px;
+  background: var(--green);
+  z-index: 9999;
+  width: 0%;
+  transition: width 0.1s linear;
+}
+
+/* ── BACK TO TOP ── */
+.back-to-top {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  width: 36px;
+  height: 36px;
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 4px;
+  color: var(--green);
+  font-size: 1rem;
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s, transform 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 900;
+}
+.back-to-top.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+.back-to-top:hover {
+  border-color: var(--green);
+  transform: translateY(-2px);
+}
+
+/* ── SKIP LINK ── */
+.skip-link {
+  position: absolute;
+  top: -100%;
+  left: 0;
+  background: var(--green);
+  color: var(--bg);
+  padding: 0.5rem 1rem;
+  z-index: 10000;
+  font-family: var(--mono);
+  font-size: 0.75rem;
+}
+.skip-link:focus { top: 0; }
+
+/* ── FOCUS VISIBLE ── */
+:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 2px;
+}
+
+/* ── PRINT ── */
+@media print {
+  .header, footer, .top-section, .scroll-progress, .back-to-top,
+  .hero-corners, .cite-copy-btn, .pub-filter-bar { display: none !important; }
+  body { background: #fff !important; color: #000 !important; font-size: 11pt; }
+  section { padding: 1rem 0 !important; border: none !important; background: #fff !important; }
+  .container { max-width: 100%; }
+  .main-body, .main-body p, .main-body li, .main-body strong { color: #000 !important; }
+  .main-body a { color: #000 !important; text-decoration: underline !important; }
+  .main-body a[href]::after { content: " (" attr(href) ")"; font-size: 0.8em; color: #555; }
+  .term { border: 1px solid #ccc !important; background: #fff !important; }
+  .term-bar { display: none !important; }
+  .term-body { padding: 0.5rem !important; }
+  section header h2 { color: #000 !important; font-size: 0.8rem !important; }
+  .contact-grid { grid-template-columns: repeat(3, 1fr); }
+  .contact-card { border-color: #ccc !important; background: #fff !important; }
+  .contact-label, .contact-val, .contact-icon { color: #000 !important; }
+}

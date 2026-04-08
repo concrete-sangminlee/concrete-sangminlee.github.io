@@ -191,6 +191,10 @@ function initHeroTerminal() {
             '  cd <section>  — navigate to section\n' +
             '  whoami        — who is this?\n' +
             '  cat bio.txt   — research bio\n' +
+            '  pwd           — current page\n' +
+            '  date          — current date/time\n' +
+            '  stats         — publication stats\n' +
+            '  contact       — contact info\n' +
             '  clear         — clear output',
         ls: () => allSections.map(s => `  ${s}/`).join('\n'),
         whoami: () => {
@@ -206,7 +210,29 @@ function initHeroTerminal() {
             }
             return '';
         },
+        pwd: () => window.location.href,
+        date: () => new Date().toLocaleString(),
+        stats: () => {
+            const items = document.querySelectorAll('.stat-item');
+            return Array.from(items).map(el => {
+                const num = el.querySelector('.stat-num');
+                const label = el.querySelector('.stat-label');
+                return `  ${num ? num.dataset.target : '?'} ${label ? label.textContent : ''}`;
+            }).join('\n');
+        },
+        contact: () => {
+            const cards = document.querySelectorAll('.contact-card');
+            return Array.from(cards).map(c => {
+                const label = c.querySelector('.contact-label');
+                const val = c.querySelector('.contact-val');
+                return `  ${label ? label.textContent : ''}: ${val ? val.textContent : ''}`;
+            }).join('\n');
+        },
     };
+
+    const cmdNames = [...Object.keys(commands), 'clear', 'cd'];
+    const history = [];
+    let histIdx = -1;
 
     function runCommand(raw) {
         const cmd = raw.trim();
@@ -242,8 +268,23 @@ function initHeroTerminal() {
 
     input.addEventListener('keydown', e => {
         if (e.key === 'Enter') {
+            const val = input.value.trim();
+            if (val) { history.unshift(val); histIdx = -1; }
             runCommand(input.value);
             input.value = '';
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            if (histIdx < history.length - 1) { histIdx++; input.value = history[histIdx]; }
+        } else if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            if (histIdx > 0) { histIdx--; input.value = history[histIdx]; }
+            else { histIdx = -1; input.value = ''; }
+        } else if (e.key === 'Tab') {
+            e.preventDefault();
+            const partial = input.value.trim();
+            if (!partial) return;
+            const match = cmdNames.find(c => c.startsWith(partial));
+            if (match) input.value = match === 'cd' ? 'cd ' : match;
         }
     });
 }
@@ -295,6 +336,19 @@ function initNavbarToggle() {
     });
 }
 
+function initScrollProgress() {
+    const bar = document.querySelector('.scroll-progress');
+    const btn = document.querySelector('.back-to-top');
+    if (!bar && !btn) return;
+    window.addEventListener('scroll', () => {
+        const h = document.documentElement.scrollHeight - window.innerHeight;
+        const pct = h > 0 ? (window.scrollY / h) * 100 : 0;
+        if (bar) bar.style.width = pct + '%';
+        if (btn) btn.classList.toggle('visible', window.scrollY > 400);
+    }, { passive: true });
+    if (btn) btn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+}
+
 window.addEventListener('DOMContentLoaded', () => {
     initMatrixRain();
     initTypingAnimation();
@@ -305,6 +359,7 @@ window.addEventListener('DOMContentLoaded', () => {
     initStatsCounter();
     addCopyButtons();
     initPublicationFilter();
+    initScrollProgress();
 
     // MathJax — typeset pre-rendered content
     if (typeof MathJax !== 'undefined' && MathJax.typeset) {

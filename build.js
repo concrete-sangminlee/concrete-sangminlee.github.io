@@ -172,4 +172,9 @@ for (const f of toRemove) {
     if (fs.existsSync(p)) fs.unlinkSync(p);
 }
 
+// Copy root-level files to dist
+for (const f of ['robots.txt', 'sitemap.xml']) {
+    if (fs.existsSync(f)) fs.copyFileSync(f, path.join(DIST_DIR, f));
+}
+
 console.log('Build complete → dist/');
