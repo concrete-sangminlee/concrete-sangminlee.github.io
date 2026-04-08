@@ -237,14 +237,16 @@ function initHeroTerminal() {
             '  contact       — contact info\n' +
             '  grep <word>   — search publications\n' +
             '  clear         — clear output',
-        ls: () => {
+        ls: { rich: true, fn: () => {
             const active = document.querySelector('#mainNav .nav-link.active');
             const activeId = active ? active.getAttribute('href').replace('#', '') : '';
             return allSections.map(s => {
                 const id = s === 'home' ? 'page-top' : s;
-                return id === activeId ? `  ${s}/ ← here` : `  ${s}/`;
+                return id === activeId
+                    ? `  <span class="g">${escapeHtml(s)}/</span> <span class="dim">← here</span>`
+                    : `  ${escapeHtml(s)}/`;
             }).join('\n');
-        },
+        }},
         whoami: () => {
             const titleEl = document.getElementById('page-top-title');
             const subtitleEl = document.getElementById('top-section-bg-text');
@@ -306,8 +308,13 @@ function initHeroTerminal() {
             output.innerHTML = '';
             return;
         } else if (commands[cmd]) {
-            const result = typeof commands[cmd] === 'function' ? commands[cmd]() : commands[cmd];
-            resultHtml = `<span class="g">$</span> ${escapeHtml(cmd)}\n${escapeHtml(result)}`;
+            const entry = commands[cmd];
+            if (entry && entry.rich) {
+                resultHtml = `<span class="g">$</span> ${escapeHtml(cmd)}\n${entry.fn()}`;
+            } else {
+                const result = typeof entry === 'function' ? entry() : entry;
+                resultHtml = `<span class="g">$</span> ${escapeHtml(cmd)}\n${escapeHtml(result)}`;
+            }
         } else if (cmd.startsWith('grep ')) {
             const keyword = cmd.slice(5).trim().toLowerCase();
             if (!keyword) {
@@ -392,7 +399,13 @@ function initScrollSpy() {
     navLinks.forEach(link => {
         const id = link.getAttribute('href').replace('#', '');
         const el = document.getElementById(id);
-        if (el) sectionEls.push({ el, link });
+        if (el) {
+            sectionEls.push({ el, link });
+            link.addEventListener('click', e => {
+                e.preventDefault();
+                scrollToEl(el);
+            });
+        }
     });
 
     function update() {

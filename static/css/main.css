@@ -983,6 +983,7 @@ footer a:hover {
 .hero-cmd-line:last-child { border-bottom: none; margin-bottom: 0; }
 .hero-cmd-line .g { color: var(--green); }
 .hero-cmd-line .err { color: #ff5f57; }
+.hero-cmd-line .dim { color: var(--text-dim); }
 
 /* ── TOAST NOTIFICATION ── */
 .toast-msg {
