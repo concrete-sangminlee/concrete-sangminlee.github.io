@@ -45,10 +45,10 @@ contact:
 # Stats bar
 stats:
   - value: 6
-    suffix: '+'
+    suffix: ''
     label: JOURNAL PAPERS
   - value: 16
-    suffix: '+'
+    suffix: ''
     label: CONFERENCE PAPERS
   - value: 13
     suffix: ''

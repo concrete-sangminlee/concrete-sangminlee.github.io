@@ -135,6 +135,7 @@ body, html {
 }
 body {
   animation: pageIn 0.6s ease;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
 }
 @keyframes pageIn {
   from { opacity: 0; }
@@ -208,6 +209,24 @@ h1, h2, h3, h4, h5, h6 {
   color: var(--text-dim) !important;
   font-family: var(--mono) !important;
   font-size: 0.7rem !important;
+  padding: 0.4rem 0.5rem !important;
+}
+.hamburger { display: flex; flex-direction: column; gap: 4px; width: 18px; }
+.hamburger span {
+  display: block;
+  height: 2px;
+  background: var(--text-dim);
+  border-radius: 1px;
+  transition: transform 0.3s, opacity 0.3s;
+}
+.navbar-toggler[aria-expanded="true"] .hamburger span:nth-child(1) {
+  transform: translateY(6px) rotate(45deg);
+}
+.navbar-toggler[aria-expanded="true"] .hamburger span:nth-child(2) {
+  opacity: 0;
+}
+.navbar-toggler[aria-expanded="true"] .hamburger span:nth-child(3) {
+  transform: translateY(-6px) rotate(-45deg);
 }
 
 /* ── HERO SECTION ── */
@@ -445,6 +464,26 @@ section:last-of-type::after { display: none; }
 }
 #publications       { background: var(--bg2) !important; }
 #projects           { background: var(--bg)  !important; }
+#projects .main-body ul {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+}
+#projects .main-body li {
+  background: var(--surface) !important;
+  border: 1px solid var(--border2) !important;
+  border-left: 3px solid var(--green-border) !important;
+  border-radius: 6px;
+  padding: 0.8rem 1rem !important;
+}
+#projects .main-body li:hover {
+  border-left-color: var(--green) !important;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+  transform: translateY(-2px);
+}
+@media (max-width: 576px) {
+  #projects .main-body ul { grid-template-columns: 1fr; }
+}
 #patents            { background: var(--bg2) !important; }
 #patents .main-body li::before {
   content: '⚙';
@@ -511,10 +550,19 @@ section header h2 i { display: none; }
 .term {
   background: var(--bg3);
   border: 1px solid var(--border2);
-  border-top: 2px solid;
-  border-image: linear-gradient(to right, var(--green), var(--green-border), transparent) 1;
   border-radius: 6px;
   overflow: hidden;
+  position: relative;
+}
+.term::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(to right, var(--green), var(--green-border), transparent);
+  border-radius: 6px 6px 0 0;
 }
 
 .term-bar {
@@ -716,6 +764,12 @@ footer .text-white-50 {
   font-family: var(--mono) !important;
   font-size: 0.62rem;
   margin-bottom: 0.4rem;
+}
+.footer-tech {
+  margin-top: 0.6rem;
+  font-size: 0.54rem;
+  color: var(--border2);
+  letter-spacing: 1px;
 }
 
 footer a {
