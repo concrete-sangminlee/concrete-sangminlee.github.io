@@ -165,7 +165,7 @@ function initPublicationFilter() {
     const bar = document.createElement('div');
     bar.className = 'pub-filter-bar';
     function countItems(key) {
-        if (key === 'all') return sections.reduce((n, s) => n + s.els.filter(e => e.tagName === 'LI' || e.tagName === 'OL' || e.tagName === 'UL').length, 0);
+        if (key === 'all') return sections.reduce((n, s) => n + s.els.filter(e => e.tagName === 'LI').length, 0);
         const sec = sections.find(s => s.key === key);
         return sec ? sec.els.filter(e => e.tagName === 'LI').length : 0;
     }
@@ -247,6 +247,7 @@ function initHeroTerminal() {
             '  stats         — publication stats\n' +
             '  contact       — contact info\n' +
             '  grep <word>   — search publications\n' +
+            '  open <url>    — open link\n' +
             '  tree          — site structure\n' +
             '  clear         — clear output',
         ls: { rich: true, fn: () => {
@@ -326,7 +327,7 @@ function initHeroTerminal() {
             '└── contact/',
     };
 
-    const cmdNames = [...Object.keys(commands), 'clear', 'cd', 'grep'];
+    const cmdNames = [...Object.keys(commands), 'clear', 'cd', 'grep', 'open'];
     const history = [];
     let histIdx = -1;
 
@@ -358,6 +359,14 @@ function initHeroTerminal() {
                     ? matches.map(li => '  ' + li.textContent.trim().replace(/\n/g, ' ').substring(0, 100) + '...').join('\n')
                     : `No results for "${escapeHtml(keyword)}"`;
                 resultHtml = `<span class="g">$</span> ${escapeHtml(cmd)}\n${escapeHtml(out)}`;
+            }
+        } else if (cmd.startsWith('open ')) {
+            const url = cmd.slice(5).trim();
+            if (url.startsWith('http://') || url.startsWith('https://')) {
+                window.open(url, '_blank', 'noopener');
+                resultHtml = `<span class="g">$</span> ${escapeHtml(cmd)}\nopened ${escapeHtml(url)}`;
+            } else {
+                resultHtml = `<span class="g">$</span> ${escapeHtml(cmd)}\n<span class="err">open: invalid URL — must start with http(s)://</span>`;
             }
         } else if (cmd.startsWith('cd ')) {
             const target = cmd.slice(3).trim().replace(/\/$/, '');

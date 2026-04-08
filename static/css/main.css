@@ -397,11 +397,15 @@ section:last-of-type::after { display: none; }
   border-left: 2px solid var(--border2);
   margin-left: 0.5rem;
 }
-#education .main-body p::before {
+#education .main-body p strong:first-child {
+  position: relative;
+}
+#education .main-body p strong:first-child::before {
   content: '';
   position: absolute;
-  left: -5px;
-  top: 0.5rem;
+  left: -2.1rem;
+  top: 50%;
+  transform: translateY(-50%);
   width: 8px;
   height: 8px;
   border-radius: 50%;
@@ -414,6 +418,23 @@ section:last-of-type::after { display: none; }
   border-left: 2px solid var(--border2);
 }
 #research-interests { background: var(--bg)  !important; }
+#research-interests .main-body ul { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+#research-interests .main-body li {
+  display: inline-block !important;
+  border-left: none !important;
+  background: rgba(57, 211, 83, 0.08);
+  border: 1px solid var(--green-border) !important;
+  border-radius: 20px;
+  padding: 0.35rem 0.85rem !important;
+  margin-bottom: 0 !important;
+  font-size: 0.82rem;
+  transition: background 0.2s, transform 0.2s;
+}
+#research-interests .main-body li:hover {
+  background: rgba(57, 211, 83, 0.15);
+  transform: translateY(-2px);
+  padding-left: 0.85rem !important;
+}
 #publications       { background: var(--bg2) !important; }
 #projects           { background: var(--bg)  !important; }
 #patents            { background: var(--bg2) !important; }
