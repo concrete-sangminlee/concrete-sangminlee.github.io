@@ -156,6 +156,10 @@ a { color: inherit; text-decoration: none; }
   box-shadow: 0 0 16px var(--green-glow), 0 0 32px rgba(26,127,55,0.1);
 }
 /* Light mode: hero terminal */
+[data-theme="light"] .hero-terminal-input {
+  background: rgba(255, 255, 255, 0.7);
+  border-color: var(--border);
+}
 [data-theme="light"] .hero-cmd-field { color: var(--text-bright); caret-color: var(--green); }
 [data-theme="light"] .hero-cmd-field::placeholder { color: var(--text-dim); }
 [data-theme="light"] .hero-cmd-output {
