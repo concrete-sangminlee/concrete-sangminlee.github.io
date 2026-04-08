@@ -919,7 +919,8 @@ footer a:hover {
     padding: 0.5rem 0;
   }
 
-  .back-to-top { bottom: 1rem; right: 1rem; width: 32px; height: 32px; font-size: 0.85rem; }
+  .back-to-top { bottom: 4rem; right: 1rem; width: 32px; height: 32px; font-size: 0.85rem; }
+  .theme-toggle { bottom: 1rem; right: 1rem; width: 32px; height: 32px; font-size: 0.85rem; }
 }
 
 /* ── SCROLL ANIMATIONS ── */
@@ -1253,7 +1254,7 @@ footer a:hover {
 /* ── BACK TO TOP ── */
 .back-to-top {
   position: fixed;
-  bottom: 2rem;
+  bottom: 5rem;
   right: 2rem;
   width: 36px;
   height: 36px;
@@ -1284,7 +1285,7 @@ footer a:hover {
 .theme-toggle {
   position: fixed;
   bottom: 2rem;
-  left: 2rem;
+  right: 2rem;
   width: 36px;
   height: 36px;
   background: var(--surface);
