@@ -116,6 +116,13 @@ a { color: inherit; text-decoration: none; }
   --anim-slow: 0.6s;
 }
 
+/* ── SELECTION & SCROLLBAR ── */
+::selection { background: var(--green); color: var(--bg); }
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--green); }
+
 /* ── GLOBAL RESET ── */
 html { scroll-behavior: smooth; }
 
@@ -125,6 +132,13 @@ body, html {
   color: var(--text) !important;
   font-size: 15px;
   line-height: 1.7;
+}
+body {
+  animation: pageIn 0.6s ease;
+}
+@keyframes pageIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -364,11 +378,6 @@ section::after {
 }
 section:last-of-type::after { display: none; }
 
-.bg-gradient-primary-to-secondary-light,
-.bg-gradient-primary-to-secondary-gray {
-  background: transparent !important;
-}
-
 /* Alternate section backgrounds */
 #home               { background: var(--bg)  !important; }
 #education          { background: var(--bg2) !important; }
@@ -382,9 +391,9 @@ section:last-of-type::after { display: none; }
 /* ── SECTION HEADER (h2 override) ── */
 section header h2 {
   font-family: var(--mono) !important;
-  font-size: 0.65rem !important;
+  font-size: clamp(0.55rem, 1.2vw, 0.65rem) !important;
   color: var(--green) !important;
-  letter-spacing: 3px !important;
+  letter-spacing: clamp(2px, 0.5vw, 3px) !important;
   font-weight: 400 !important;
   border-bottom: none !important;
   padding-bottom: 0 !important;
@@ -457,7 +466,7 @@ section header h2 i { display: none; }
 
 /* ── CONTENT ITEMS (inside terminal windows + home) ── */
 .main-body {
-  font-size: 0.9rem;
+  font-size: clamp(0.82rem, 1.5vw, 0.9rem);
   line-height: 1.8;
   color: var(--text);
 }
@@ -848,10 +857,12 @@ footer a:hover {
   border-left-color: var(--green);
   border-radius: 0 6px 6px 0;
   background: var(--green-dim);
-  transition: background 0.2s;
+  transition: background 0.3s, box-shadow 0.3s, transform 0.3s;
 }
 .featured-paper:hover {
   background: rgba(57, 211, 83, 0.07);
+  box-shadow: 0 0 20px rgba(57, 211, 83, 0.12);
+  transform: translateX(4px);
 }
 .featured-label {
   font-family: var(--mono);
@@ -912,6 +923,11 @@ footer a:hover {
   font-size: 0.78rem;
   caret-color: var(--green);
   min-width: 0;
+}
+.hero-cmd-field:focus-visible {
+  outline: 1px solid var(--green);
+  outline-offset: 2px;
+  border-radius: 2px;
 }
 .hero-cmd-field::placeholder {
   color: var(--text-dim);

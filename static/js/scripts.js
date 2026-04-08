@@ -252,6 +252,20 @@ function initHeroTerminal() {
                 return `  ${label ? label.textContent : ''}: ${val ? val.textContent : ''}`;
             }).join('\n');
         },
+        neofetch: () =>
+            '  ┌──────────────────────┐\n' +
+            '  │  SANG MIN LEE        │\n' +
+            '  ├──────────────────────┤\n' +
+            '  │  OS:    SNU AI Ph.D. │\n' +
+            '  │  Host:  Seoul, Korea │\n' +
+            '  │  Shell: portfolio/zsh│\n' +
+            '  │  Theme: matrix-dark  │\n' +
+            '  │  Uptime: 13y research│\n' +
+            '  └──────────────────────┘',
+        skills: () =>
+            'languages:\n  Python, MATLAB, JavaScript, C\n' +
+            'frameworks:\n  PyTorch, TensorFlow, scikit-learn\n' +
+            'domains:\n  SHM, Wind Eng, NDT, LLM/RAG',
     };
 
     const cmdNames = [...Object.keys(commands), 'clear', 'cd', 'grep'];
