@@ -440,7 +440,8 @@ section:last-of-type::after { display: none; }
   padding-left: 1.6rem !important;
   border-left: 2px solid var(--border2);
 }
-#research-interests { background: var(--bg)  !important; }
+#experiences        { background: var(--bg)  !important; }
+#research-interests { background: var(--bg2) !important; }
 #research-interests .main-body ul { display: flex; flex-wrap: wrap; gap: 0.5rem; }
 #research-interests .main-body li {
   display: inline-block !important;
@@ -466,8 +467,8 @@ section:last-of-type::after { display: none; }
   transform: translateY(-2px);
   padding-left: 0.85rem !important;
 }
-#publications       { background: var(--bg2) !important; }
-#projects           { background: var(--bg)  !important; }
+#publications       { background: var(--bg)  !important; }
+#projects           { background: var(--bg2) !important; }
 #projects .main-body ul {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -488,7 +489,7 @@ section:last-of-type::after { display: none; }
 @media (max-width: 576px) {
   #projects .main-body ul { grid-template-columns: 1fr; }
 }
-#patents            { background: var(--bg2) !important; }
+#patents            { background: var(--bg)  !important; }
 #patents .main-body li::before {
   content: '⚙';
   position: absolute;
@@ -498,10 +499,10 @@ section:last-of-type::after { display: none; }
 }
 #patents .main-body li { position: relative; margin-left: 1.5rem; }
 
-#awards             { background: var(--bg)  !important; }
+#awards             { background: var(--bg2) !important; }
 #awards .main-body li { border-left-color: var(--green-border); }
 #awards .main-body li:hover { border-left-color: #d1a654; background: rgba(209, 166, 84, 0.04); }
-#services           { background: var(--bg2) !important; }
+#services           { background: var(--bg)  !important; }
 #services .main-body ul {
   display: grid;
   grid-template-columns: 1fr 1fr;

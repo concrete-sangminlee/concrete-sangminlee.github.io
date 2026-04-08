@@ -1,5 +1,5 @@
 
-const section_names = ['home', 'education', 'research-interests', 'publications', 'projects', 'patents', 'awards', 'services'];
+const section_names = ['home', 'education', 'experiences', 'research-interests', 'publications', 'projects', 'patents', 'awards', 'services'];
 
 function scrollToEl(el) {
     const top = el.getBoundingClientRect().top + window.scrollY - 60;
@@ -319,6 +319,7 @@ function initHeroTerminal() {
             '│   ├── Ph.D. (AI, SNU)\n' +
             '│   ├── M.S. (Structural Eng, SNU)\n' +
             '│   └── B.S. (Architecture + ECE, SNU)\n' +
+            '├── experiences/\n' +
             '├── research-interests/\n' +
             '├── publications/\n' +
             '│   ├── journal/ (6)\n' +
@@ -513,7 +514,7 @@ function initScrollProgress() {
 }
 
 function initKeyboardNav() {
-    const ids = ['page-top', 'education', 'research-interests', 'publications', 'projects', 'patents', 'awards', 'services', 'contact'];
+    const ids = ['page-top', 'education', 'experiences', 'research-interests', 'publications', 'projects', 'patents', 'awards', 'services', 'contact'];
     function currentIdx() {
         const y = window.scrollY + 65;
         for (let i = ids.length - 1; i >= 0; i--) {
