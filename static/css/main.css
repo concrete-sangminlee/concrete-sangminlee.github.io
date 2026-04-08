@@ -145,31 +145,66 @@ a { color: inherit; text-decoration: none; }
   background: rgba(255, 255, 255, 0.92) !important;
   border-bottom-color: var(--border) !important;
 }
-[data-theme="light"] .matrix-canvas { opacity: 0.03; }
-[data-theme="light"] .top-section {
-  background: #0a0a0a !important;
-  color: #c8c8c8;
-}
-[data-theme="light"] .top-section * { color: inherit; }
-[data-theme="light"] .hero-name {
-  -webkit-text-fill-color: transparent;
-}
-[data-theme="light"] .hero-prompt { color: #505050 !important; }
-[data-theme="light"] #top-section-bg-text { color: rgba(200,200,200,0.6) !important; }
-[data-theme="light"] .hero-cmd-field { color: #eeeeee; caret-color: #39d353; }
-[data-theme="light"] .hero-cmd-field::placeholder { color: #505050; }
-[data-theme="light"] .hero-cmd-output { color: #c8c8c8; background: rgba(5,5,5,0.7); }
-[data-theme="light"] .hero-cmd-line .g { color: #39d353; }
-[data-theme="light"] .hero-cmd-line .err { color: #ff5f57; }
-[data-theme="light"] .hero-cmd-line .dim { color: #505050; }
-[data-theme="light"] .hero-cursor { color: #39d353; }
+/* Light mode: hero section */
+[data-theme="light"] .matrix-canvas { opacity: 0.015; filter: hue-rotate(90deg); }
+[data-theme="light"] .top-section { background: var(--bg2) !important; }
+[data-theme="light"] .hero-prompt { color: var(--text-dim) !important; }
+[data-theme="light"] #top-section-bg-text { color: var(--text-dim) !important; }
+[data-theme="light"] .hero-corners { border-color: var(--green-border); }
 [data-theme="light"] .hero-photo-wrap {
-  box-shadow: 0 0 24px rgba(57,211,83,0.5), 0 0 48px rgba(57,211,83,0.15);
+  background: linear-gradient(135deg, var(--green) 0%, transparent 70%);
+  box-shadow: 0 0 16px var(--green-glow), 0 0 32px rgba(26,127,55,0.1);
 }
-[data-theme="light"] .hero-corners { border-color: rgba(57,211,83,0.15); }
-[data-theme="light"] .stats-bar { background: #0e0e0e !important; border-color: #1f1f1f !important; }
-[data-theme="light"] .stat-num { color: #39d353 !important; }
-[data-theme="light"] .stat-label { color: #505050 !important; }
+/* Light mode: hero terminal */
+[data-theme="light"] .hero-cmd-field { color: var(--text-bright); caret-color: var(--green); }
+[data-theme="light"] .hero-cmd-field::placeholder { color: var(--text-dim); }
+[data-theme="light"] .hero-cmd-output {
+  color: var(--text);
+  background: rgba(255,255,255,0.6);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+[data-theme="light"] .hero-cmd-line .g { color: var(--green); }
+[data-theme="light"] .hero-cmd-line .err { color: #cf222e; }
+[data-theme="light"] .hero-cmd-line .dim { color: var(--text-dim); }
+[data-theme="light"] .hero-cursor { color: var(--green); }
+/* Light mode: stats bar */
+[data-theme="light"] .stats-bar { background: var(--bg) !important; border-color: var(--border) !important; }
+[data-theme="light"] .stat-num { color: var(--green) !important; }
+[data-theme="light"] .stat-label { color: var(--text-dim) !important; }
+/* Light mode: terminal windows */
+[data-theme="light"] .term { background: var(--bg); border-color: var(--border); }
+[data-theme="light"] .term::before { background: linear-gradient(to right, var(--green), var(--green-border), transparent); }
+[data-theme="light"] .term-bar { background: var(--bg2); border-bottom-color: var(--border); }
+[data-theme="light"] .term-body { color: var(--text); }
+[data-theme="light"] .term-cmd .g { color: var(--green); }
+[data-theme="light"] .term-title { color: var(--text-dim); }
+/* Light mode: featured paper */
+[data-theme="light"] .featured-paper {
+  background: linear-gradient(135deg, var(--green-dim) 0%, transparent 60%);
+  border-color: var(--green-border);
+}
+/* Light mode: back-to-top & theme toggle */
+[data-theme="light"] .back-to-top,
+[data-theme="light"] .theme-toggle {
+  background: var(--bg);
+  border-color: var(--border);
+}
+/* Light mode: contact cards */
+[data-theme="light"] .contact-card {
+  background: var(--bg);
+  border-color: var(--border);
+}
+[data-theme="light"] .contact-card:hover {
+  border-color: var(--green) !important;
+  background: var(--green-dim);
+  box-shadow: 0 4px 12px rgba(26,127,55,0.08);
+}
+/* Light mode: footer */
+[data-theme="light"] footer.bg-bottom {
+  background: var(--bg2) !important;
+  border-top-color: var(--border);
+}
 [data-theme="light"] .navbar-collapse {
   background: rgba(255, 255, 255, 0.96) !important;
 }
