@@ -1,6 +1,11 @@
 
 const section_names = ['home', 'education', 'research-interests', 'publications', 'projects', 'patents', 'awards', 'services'];
 
+function scrollToEl(el) {
+    const top = el.getBoundingClientRect().top + window.scrollY - 60;
+    window.scrollTo({ top, behavior: 'smooth' });
+}
+
 function initMatrixRain() {
     const canvas = document.getElementById('matrix-canvas');
     if (!canvas) return;
@@ -220,7 +225,14 @@ function initHeroTerminal() {
             '  contact       — contact info\n' +
             '  grep <word>   — search publications\n' +
             '  clear         — clear output',
-        ls: () => allSections.map(s => `  ${s}/`).join('\n'),
+        ls: () => {
+            const active = document.querySelector('#mainNav .nav-link.active');
+            const activeId = active ? active.getAttribute('href').replace('#', '') : '';
+            return allSections.map(s => {
+                const id = s === 'home' ? 'page-top' : s;
+                return id === activeId ? `  ${s}/ ← here` : `  ${s}/`;
+            }).join('\n');
+        },
         whoami: () => {
             const titleEl = document.getElementById('page-top-title');
             const subtitleEl = document.getElementById('top-section-bg-text');
@@ -300,7 +312,7 @@ function initHeroTerminal() {
             const target = cmd.slice(3).trim().replace(/\/$/, '');
             const el = document.getElementById(target === 'home' ? 'page-top' : target);
             if (el) {
-                el.scrollIntoView({ behavior: 'smooth' });
+                scrollToEl(el);
                 resultHtml = `<span class="g">$</span> ${escapeHtml(cmd)}\nnavigating to /${escapeHtml(target)}/`;
             } else {
                 resultHtml = `<span class="g">$</span> ${escapeHtml(cmd)}\n<span class="err">cd: ${escapeHtml(target)}: no such section</span>`;
@@ -344,6 +356,20 @@ function initHeroTerminal() {
             }
         }
     });
+
+    // Cycle placeholder text
+    const hints = ['help', 'ls', 'cat bio.txt', 'cd education', 'whoami', 'grep wind', 'neofetch'];
+    let hintIdx = 0;
+    function cyclePlaceholder() {
+        const h = hints[hintIdx++ % hints.length];
+        let i = 0;
+        input.placeholder = '';
+        const t = setInterval(() => {
+            input.placeholder = h.slice(0, ++i);
+            if (i >= h.length) { clearInterval(t); setTimeout(cyclePlaceholder, 2500); }
+        }, 60);
+    }
+    setTimeout(cyclePlaceholder, 3000);
 }
 
 // Vanilla ScrollSpy — highlights nav link for the visible section
@@ -358,7 +384,7 @@ function initScrollSpy() {
     });
 
     function update() {
-        const scrollY = window.scrollY + 80;
+        const scrollY = window.scrollY + 65;
         let current = sectionEls[0];
         for (const s of sectionEls) {
             if (s.el.offsetTop <= scrollY) current = s;
@@ -411,7 +437,7 @@ function initScrollProgress() {
 function initKeyboardNav() {
     const ids = ['page-top', 'education', 'research-interests', 'publications', 'projects', 'patents', 'awards', 'services', 'contact'];
     function currentIdx() {
-        const y = window.scrollY + 100;
+        const y = window.scrollY + 65;
         for (let i = ids.length - 1; i >= 0; i--) {
             const el = document.getElementById(ids[i]);
             if (el && el.offsetTop <= y) return i;
@@ -422,10 +448,12 @@ function initKeyboardNav() {
         if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
         if (e.key === 'j') {
             const next = Math.min(currentIdx() + 1, ids.length - 1);
-            document.getElementById(ids[next])?.scrollIntoView({ behavior: 'smooth' });
+            const el = document.getElementById(ids[next]);
+            if (el) scrollToEl(el);
         } else if (e.key === 'k') {
             const prev = Math.max(currentIdx() - 1, 0);
-            document.getElementById(ids[prev])?.scrollIntoView({ behavior: 'smooth' });
+            const el = document.getElementById(ids[prev]);
+            if (el) scrollToEl(el);
         }
     });
 }
