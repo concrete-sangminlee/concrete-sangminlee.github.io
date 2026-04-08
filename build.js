@@ -96,7 +96,7 @@ for (const [key, val] of Object.entries(config)) {
 }
 
 // Section numbering (inject into h2 text)
-const allSectionIds = [...SECTIONS, 'contact'];
+const allSectionIds = [...SECTIONS.filter(s => s !== 'home'), 'contact'];
 allSectionIds.forEach((name, i) => {
     const num = String(i + 1).padStart(2, '0');
     const idAttr = `id="${name}-subtitle"`;
