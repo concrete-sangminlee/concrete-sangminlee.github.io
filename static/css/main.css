@@ -392,7 +392,7 @@ section {
   padding: 2.8rem 0 !important;
   border-bottom: none;
   position: relative;
-  contain: layout style;
+  contain: layout;
   content-visibility: auto;
   contain-intrinsic-size: auto 400px;
 }
