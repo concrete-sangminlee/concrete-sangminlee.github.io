@@ -537,6 +537,25 @@ function initKeyboardNav() {
     });
 }
 
+function initThemeToggle() {
+    const btn = document.querySelector('.theme-toggle');
+    if (!btn) return;
+    const saved = localStorage.getItem('theme');
+    if (saved) document.documentElement.setAttribute('data-theme', saved);
+    function updateIcon() {
+        const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
+        btn.textContent = isDark ? '\u263D' : '\u2600';
+    }
+    updateIcon();
+    btn.addEventListener('click', () => {
+        const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
+        const next = isDark ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        localStorage.setItem('theme', next);
+        updateIcon();
+    });
+}
+
 window.addEventListener('DOMContentLoaded', () => {
     initMatrixRain();
     initTypingAnimation();
@@ -549,6 +568,7 @@ window.addEventListener('DOMContentLoaded', () => {
     initPublicationFilter();
     initScrollProgress();
     initKeyboardNav();
+    initThemeToggle();
 
     // Auto-update copyright year
     const crEl = document.getElementById('copyright-text');
