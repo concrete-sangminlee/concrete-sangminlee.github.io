@@ -64,7 +64,7 @@ a { color: inherit; text-decoration: none; }
   display: inline-block;
   padding: 0.5rem 0.8rem;
 }
-.nav-link.active { color: var(--green) !important; }
+.nav-link.active { color: var(--green) !important; text-shadow: 0 0 8px rgba(57, 211, 83, 0.4); }
 .nav-link.active::after { transform: scaleX(1); }
 .navbar-toggler {
   display: none;
@@ -291,11 +291,14 @@ h1, h2, h3, h4, h5, h6 {
   font-family: var(--mono) !important;
   font-size: clamp(2rem, 5vw, 3.2rem);
   font-weight: 700;
-  color: var(--green);
+  background: linear-gradient(135deg, var(--green) 0%, #7cf89e 50%, var(--green) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
   letter-spacing: 4px;
   line-height: 1;
   margin-bottom: 0.6rem;
-  text-shadow: 0 0 30px var(--green-glow), 0 0 60px rgba(57, 211, 83, 0.2);
+  filter: drop-shadow(0 0 20px var(--green-glow));
   opacity: 0;
   animation: fadein 0.4s 0.5s forwards;
 }
@@ -393,6 +396,8 @@ section:last-of-type::after { display: none; }
 #projects           { background: var(--bg)  !important; }
 #patents            { background: var(--bg2) !important; }
 #awards             { background: var(--bg)  !important; }
+#awards .main-body li { border-left-color: var(--green-border); }
+#awards .main-body li:hover { border-left-color: #d1a654; background: rgba(209, 166, 84, 0.04); }
 #services           { background: var(--bg2) !important; }
 
 /* ── SECTION HEADER (h2 override) ── */

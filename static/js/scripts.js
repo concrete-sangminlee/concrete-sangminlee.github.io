@@ -241,6 +241,7 @@ function initHeroTerminal() {
             '  stats         — publication stats\n' +
             '  contact       — contact info\n' +
             '  grep <word>   — search publications\n' +
+            '  tree          — site structure\n' +
             '  clear         — clear output',
         ls: { rich: true, fn: () => {
             const active = document.querySelector('#mainNav .nav-link.active');
@@ -297,6 +298,23 @@ function initHeroTerminal() {
             'languages:\n  Python, MATLAB, JavaScript, C\n' +
             'frameworks:\n  PyTorch, TensorFlow, scikit-learn\n' +
             'domains:\n  SHM, Wind Eng, NDT, LLM/RAG',
+        tree: () =>
+            '.\n' +
+            '├── home/\n' +
+            '├── education/\n' +
+            '│   ├── Ph.D. (AI, SNU)\n' +
+            '│   ├── M.S. (Structural Eng, SNU)\n' +
+            '│   └── B.S. (Architecture + ECE, SNU)\n' +
+            '├── research-interests/\n' +
+            '├── publications/\n' +
+            '│   ├── journal/ (6)\n' +
+            '│   ├── conference/ (16)\n' +
+            '│   └── theses/ (3)\n' +
+            '├── projects/ (4)\n' +
+            '├── patents/ (2)\n' +
+            '├── awards/ (6)\n' +
+            '├── services/\n' +
+            '└── contact/',
     };
 
     const cmdNames = [...Object.keys(commands), 'clear', 'cd', 'grep'];

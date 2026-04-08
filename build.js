@@ -42,7 +42,7 @@ function wrapInTerminal(name, html) {
 function buildStats() {
     if (!config.stats) return '';
     return config.stats.map(s =>
-        `<div class="stat-item">
+        `<div class="stat-item" title="${s.value}${s.suffix || ''} ${s.label.toLowerCase()}">
                     <span class="stat-num" data-target="${s.value}"${s.suffix ? ` data-suffix="${s.suffix}"` : ''}>0</span>
                     <span class="stat-label">${s.label}</span>
                 </div>`
