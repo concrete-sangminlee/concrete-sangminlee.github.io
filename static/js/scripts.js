@@ -46,7 +46,12 @@ function initMatrixRain() {
         }
     }
 
-    setInterval(draw, 40);
+    let lastDraw = 0;
+    function loop(now) {
+        if (now - lastDraw > 40) { draw(); lastDraw = now; }
+        requestAnimationFrame(loop);
+    }
+    requestAnimationFrame(loop);
 }
 
 function initTypingAnimation() {
@@ -500,8 +505,9 @@ window.addEventListener('DOMContentLoaded', () => {
     const crEl = document.getElementById('copyright-text');
     if (crEl) crEl.innerHTML = crEl.innerHTML.replace(/\d{4}/, new Date().getFullYear());
 
-    // MathJax — typeset pre-rendered content
-    if (typeof MathJax !== 'undefined' && MathJax.typeset) {
+    // MathJax — typeset only if math content exists
+    const bodyText = document.body.textContent;
+    if ((bodyText.includes('$$') || bodyText.includes('\\[')) && typeof MathJax !== 'undefined' && MathJax.typeset) {
         MathJax.typeset();
     }
 });

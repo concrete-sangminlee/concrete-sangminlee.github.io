@@ -667,6 +667,13 @@ footer a:hover {
   }
 }
 
+@media screen and (max-width: 768px) {
+  body, html { font-size: 15.5px; }
+  .stat-label { font-size: 0.6rem; }
+  .contact-label { font-size: 0.62rem; }
+  .contact-val { font-size: 0.75rem; }
+}
+
 @media screen and (max-width: 576px) {
   .top-section { min-height: 260px; }
 
@@ -879,12 +886,13 @@ footer a:hover {
   display: block;
   text-decoration: none !important;
   margin-top: 2rem;
-  padding: 1.2rem 1.5rem;
+  padding: 1.5rem 2rem;
   border: 1px solid var(--green-border);
   border-left-width: 3px;
   border-left-color: var(--green);
   border-radius: 0 6px 6px 0;
-  background: var(--green-dim);
+  background: linear-gradient(135deg, var(--green-dim) 0%, transparent 60%);
+  box-shadow: 0 0 30px rgba(57, 211, 83, 0.08);
   transition: background 0.3s, box-shadow 0.3s, transform 0.3s;
 }
 .featured-paper:hover {
@@ -964,7 +972,7 @@ footer a:hover {
 .hero-cmd-output {
   margin-top: 0.5rem;
   max-width: min(480px, 100%);
-  max-height: 140px;
+  max-height: 120px;
   overflow-y: auto;
   font-family: var(--mono);
   font-size: 0.7rem;
