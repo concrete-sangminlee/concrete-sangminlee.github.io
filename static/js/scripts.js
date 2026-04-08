@@ -143,6 +143,35 @@ function addCopyButtons() {
     });
 }
 
+function addShareButtons() {
+    const container = document.getElementById('publications-md');
+    if (!container) return;
+    container.querySelectorAll('li').forEach(li => {
+        const text = li.textContent.trim().replace(/\s+/g, ' ').substring(0, 200);
+        const link = li.querySelector('a[href]');
+        const url = link ? link.href : window.location.href;
+        const wrap = document.createElement('span');
+        wrap.className = 'share-btns';
+        const twBtn = document.createElement('button');
+        twBtn.className = 'share-btn';
+        twBtn.title = 'Share on X';
+        twBtn.textContent = '𝕏';
+        twBtn.addEventListener('click', () => {
+            window.open(`https://x.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank', 'noopener,width=550,height=420');
+        });
+        const liBtn = document.createElement('button');
+        liBtn.className = 'share-btn';
+        liBtn.title = 'Share on LinkedIn';
+        liBtn.textContent = 'in';
+        liBtn.addEventListener('click', () => {
+            window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`, '_blank', 'noopener,width=550,height=420');
+        });
+        wrap.appendChild(twBtn);
+        wrap.appendChild(liBtn);
+        li.appendChild(wrap);
+    });
+}
+
 function initPublicationFilter() {
     const md = document.getElementById('publications-md');
     if (!md) return;
@@ -312,6 +341,13 @@ function initHeroTerminal() {
         history: () => history.length
             ? history.slice(0, 10).map((c, i) => `  ${i + 1}  ${c}`).join('\n')
             : '  (empty)',
+        cite: () => {
+            const pubs = document.querySelectorAll('#publications-md li');
+            if (!pubs.length) return 'No publications found';
+            const first = pubs[0].textContent.trim().replace(/\s+/g, ' ').replace(/⎘.*$/, '').replace(/𝕏.*$/, '').trim();
+            if (navigator.clipboard) navigator.clipboard.writeText(first);
+            return `Copied first publication to clipboard:\n  ${first.substring(0, 120)}...`;
+        },
         tree: () =>
             '.\n' +
             '├── home/\n' +
@@ -525,6 +561,38 @@ function initKeyboardNav() {
     }
     document.addEventListener('keydown', e => {
         if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+        if (e.key === '?') {
+            e.preventDefault();
+            let overlay = document.getElementById('kbd-overlay');
+            if (overlay) { overlay.remove(); return; }
+            overlay = document.createElement('div');
+            overlay.id = 'kbd-overlay';
+            overlay.innerHTML =
+                '<div class="kbd-box">' +
+                '<h3>Keyboard Shortcuts</h3>' +
+                '<div><kbd>j</kbd> / <kbd>k</kbd> — next / prev section</div>' +
+                '<div><kbd>t</kbd> — toggle theme</div>' +
+                '<div><kbd>?</kbd> — this help</div>' +
+                '<div><kbd>Esc</kbd> — close</div>' +
+                '</div>';
+            overlay.addEventListener('click', () => overlay.remove());
+            document.body.appendChild(overlay);
+            return;
+        }
+        if (e.key === 'Escape') {
+            const overlay = document.getElementById('kbd-overlay');
+            if (overlay) overlay.remove();
+            return;
+        }
+        if (e.key === 't') {
+            document.querySelector('.theme-toggle')?.click();
+            return;
+        }
+        if (e.key === '/') {
+            e.preventDefault();
+            document.querySelector('.search-toggle')?.click();
+            return;
+        }
         if (e.key === 'j') {
             const next = Math.min(currentIdx() + 1, ids.length - 1);
             const el = document.getElementById(ids[next]);
@@ -537,11 +605,87 @@ function initKeyboardNav() {
     });
 }
 
+function initContactForm() {
+    const form = document.getElementById('contactForm');
+    const status = document.getElementById('formStatus');
+    if (!form || !status) return;
+    form.addEventListener('submit', async e => {
+        e.preventDefault();
+        status.textContent = 'Sending...';
+        status.className = 'form-status';
+        try {
+            const res = await fetch(form.action, { method: 'POST', body: new FormData(form), headers: { Accept: 'application/json' } });
+            if (res.ok) {
+                status.textContent = 'Message sent. Thank you!';
+                status.className = 'form-status success';
+                form.reset();
+            } else {
+                status.textContent = 'Failed to send. Please try email instead.';
+                status.className = 'form-status error';
+            }
+        } catch {
+            status.textContent = 'Network error. Please try email instead.';
+            status.className = 'form-status error';
+        }
+    });
+}
+
+function initSearch() {
+    const toggle = document.querySelector('.search-toggle');
+    const bar = document.getElementById('searchBar');
+    const input = document.getElementById('searchInput');
+    const results = document.getElementById('searchResults');
+    if (!toggle || !bar || !input) return;
+
+    // Build index
+    const index = [];
+    const sectionNames = ['home','education','experiences','research-interests','publications','projects','patents','awards','services','contact'];
+    sectionNames.forEach(name => {
+        const el = document.getElementById(name === 'home' ? 'page-top' : name);
+        const md = document.getElementById(name + '-md');
+        if (!md) return;
+        md.querySelectorAll('li, p').forEach(item => {
+            const text = item.textContent.trim();
+            if (text.length > 10) index.push({ text, section: name, el: el || md });
+        });
+    });
+
+    toggle.addEventListener('click', () => {
+        bar.classList.toggle('open');
+        if (bar.classList.contains('open')) input.focus();
+    });
+
+    input.addEventListener('input', () => {
+        const q = input.value.trim().toLowerCase();
+        results.innerHTML = '';
+        if (q.length < 2) return;
+        const matches = index.filter(i => i.text.toLowerCase().includes(q)).slice(0, 10);
+        matches.forEach(m => {
+            const div = document.createElement('div');
+            div.className = 'search-result-item';
+            div.innerHTML = `<span class="sr-section">${m.section}</span> ${m.text.substring(0, 120)}...`;
+            div.addEventListener('click', () => {
+                bar.classList.remove('open');
+                input.value = '';
+                results.innerHTML = '';
+                scrollToEl(m.el);
+            });
+            results.appendChild(div);
+        });
+    });
+
+    input.addEventListener('keydown', e => { if (e.key === 'Escape') { bar.classList.remove('open'); input.value = ''; results.innerHTML = ''; } });
+}
+
 function initThemeToggle() {
     const btn = document.querySelector('.theme-toggle');
     if (!btn) return;
     const saved = localStorage.getItem('theme');
-    if (saved) document.documentElement.setAttribute('data-theme', saved);
+    if (saved) {
+        document.documentElement.setAttribute('data-theme', saved);
+    } else if (window.matchMedia('(prefers-color-scheme: light)').matches) {
+        document.documentElement.setAttribute('data-theme', 'light');
+    }
     function updateIcon() {
         const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
         btn.textContent = isDark ? '\u263D' : '\u2600';
@@ -565,10 +709,13 @@ window.addEventListener('DOMContentLoaded', () => {
     initScrollAnimations();
     initStatsCounter();
     addCopyButtons();
+    addShareButtons();
     initPublicationFilter();
     initScrollProgress();
     initKeyboardNav();
     initThemeToggle();
+    initSearch();
+    initContactForm();
 
     // Auto-update copyright year
     const crEl = document.getElementById('copyright-text');
