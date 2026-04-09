@@ -4,6 +4,9 @@ import fs from 'fs';
 import path from 'path';
 import { marked } from 'marked';
 import yaml from 'js-yaml';
+import sharp from 'sharp';
+import esbuild from 'esbuild';
+import { minify as minifyHTML } from 'html-minifier-terser';
 
 const CONTENT_DIR = 'contents';
 const DIST_DIR = 'dist';
@@ -145,6 +148,25 @@ output = output.replace(/\s*<script[^>]*polyfill\.io[^>]*><\/script>\s*/g, '\n')
 output = output.replace(/\s*<link[^>]*href="static\/css\/styles\.css"[^>]*\/>\s*/g, '\n');
 output = output.replace(/\s*<!-- Core theme CSS \(includes Bootstrap\)-->\s*/g, '\n');
 
+// Inject <picture> tag for WebP with JFIF fallback
+output = output.replace(
+    '<img src="static/assets/img/photo.jfif" alt="Sang Min Lee" class="hero-photo" loading="lazy">',
+    '<picture><source srcset="static/assets/img/photo.webp" type="image/webp"><img src="static/assets/img/photo.jfif" alt="Sang Min Lee" class="hero-photo" loading="lazy"></picture>'
+);
+
+// Minify HTML
+output = await minifyHTML(output, {
+    collapseWhitespace: true,
+    removeComments: true,
+    removeRedundantAttributes: true,
+    removeEmptyAttributes: true,
+    minifyCSS: true,
+    minifyJS: true,
+    collapseBooleanAttributes: true,
+    removeScriptTypeAttributes: true,
+    removeStyleLinkTypeAttributes: true,
+});
+
 // Ensure dist directory exists
 if (!fs.existsSync(DIST_DIR)) fs.mkdirSync(DIST_DIR, { recursive: true });
 
@@ -167,6 +189,32 @@ function copyRecursive(src, dest) {
 
 copyRecursive('static', path.join(DIST_DIR, 'static'));
 
+// Optimize images
+const photoSrc = path.join(DIST_DIR, 'static/assets/img/photo.jfif');
+const photoDest = path.join(DIST_DIR, 'static/assets/img/photo.webp');
+await sharp(photoSrc).webp({ quality: 80 }).toFile(photoDest);
+
+const faviconPath = path.join(DIST_DIR, 'static/assets/favicon-32.png');
+const faviconTmp = faviconPath + '.tmp';
+await sharp(faviconPath).png({ compressionLevel: 9 }).toFile(faviconTmp);
+fs.renameSync(faviconTmp, faviconPath);
+
+// Minify CSS and JS in parallel
+await Promise.all([
+    (async () => {
+        const cssPath = path.join(DIST_DIR, 'static/css/main.css');
+        const css = fs.readFileSync(cssPath, 'utf8');
+        const result = await esbuild.transform(css, { loader: 'css', minify: true });
+        fs.writeFileSync(cssPath, result.code);
+    })(),
+    (async () => {
+        const jsPath = path.join(DIST_DIR, 'static/js/scripts.js');
+        const js = fs.readFileSync(jsPath, 'utf8');
+        const result = await esbuild.transform(js, { loader: 'js', minify: true, target: 'es2020' });
+        fs.writeFileSync(jsPath, result.code);
+    })(),
+]);
+
 // Remove libraries from dist that are no longer needed client-side
 const toRemove = [
     'static/js/marked.min.js',
@@ -175,6 +223,7 @@ const toRemove = [
     'static/js/bootstrap.bundle.min.js.map',
     'static/js/tex-svg.js',
     'static/css/styles.css',
+    'static/assets/leonard_round.png',
 ];
 for (const f of toRemove) {
     const p = path.join(DIST_DIR, f);
