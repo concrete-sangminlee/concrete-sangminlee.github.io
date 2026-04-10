@@ -15,9 +15,14 @@ const PRECACHE = [
 ];
 
 self.addEventListener('install', e => {
+    // Use individual put() so a single missing file doesn't fail the whole install
     e.waitUntil(
         caches.open(CACHE_NAME)
-            .then(c => c.addAll(PRECACHE))
+            .then(cache => Promise.all(
+                PRECACHE.map(url => fetch(url).then(res => {
+                    if (res.ok) return cache.put(url, res);
+                }).catch(() => {})) // swallow individual failures
+            ))
             .then(() => self.skipWaiting())
     );
 });

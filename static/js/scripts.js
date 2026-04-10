@@ -500,6 +500,9 @@ function initHeroTerminal() {
             e.preventDefault();
             if (histIdx > 0) { histIdx--; input.value = history[histIdx]; }
             else { histIdx = -1; input.value = ''; }
+        } else if (e.key.length === 1) {
+            // Reset history index when user starts typing fresh
+            histIdx = -1;
         } else if (e.key === 'Tab') {
             e.preventDefault();
             const val = input.value;
@@ -711,30 +714,33 @@ function initSearch() {
         if (searchTimer) clearTimeout(searchTimer);
         searchTimer = setTimeout(() => doSearch(), 120);
     });
+    results.setAttribute('role', 'listbox');
     function doSearch() {
         const q = input.value.trim().toLowerCase();
         results.innerHTML = '';
         if (q.length < 2) return;
         const matches = index.filter(i => i.text.toLowerCase().includes(q)).slice(0, 10);
         matches.forEach(m => {
-            const div = document.createElement('div');
-            div.className = 'search-result-item';
-            // Use textContent to avoid HTML injection from publication titles
+            // <button> instead of <div> so keyboard users can Tab + Enter
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'search-result-item';
+            btn.setAttribute('role', 'option');
             const sectionSpan = document.createElement('span');
             sectionSpan.className = 'sr-section';
             sectionSpan.textContent = section_labels[m.section] || m.section;
             const textSpan = document.createElement('span');
             const snippet = m.text.length > 120 ? m.text.substring(0, 120) + '...' : m.text;
             textSpan.textContent = ' ' + snippet;
-            div.appendChild(sectionSpan);
-            div.appendChild(textSpan);
-            div.addEventListener('click', () => {
+            btn.appendChild(sectionSpan);
+            btn.appendChild(textSpan);
+            btn.addEventListener('click', () => {
                 bar.classList.remove('open');
                 input.value = '';
                 results.innerHTML = '';
                 scrollToEl(m.el);
             });
-            results.appendChild(div);
+            results.appendChild(btn);
         });
     }
 
