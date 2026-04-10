@@ -228,11 +228,16 @@ function initPublicationFilter() {
 function initStatsCounter() {
     const bar = document.querySelector('.stats-bar');
     if (!bar) return;
+    // Respect reduced motion + skip if already animated (HTML pre-renders final value
+    // so LCP doesn't wait, but we still want a count-up flourish on first scroll-in)
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
     const observer = new IntersectionObserver(entries => {
         entries.forEach(entry => {
             if (!entry.isIntersecting) return;
             entry.target.querySelectorAll('.stat-num').forEach(el => {
+                if (el.dataset.animated === 'true') return;
+                el.dataset.animated = 'true';
                 const target = parseInt(el.dataset.target, 10);
                 const suffix = el.dataset.suffix || '';
                 const duration = 1200;

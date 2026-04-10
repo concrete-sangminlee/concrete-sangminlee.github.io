@@ -41,12 +41,12 @@ function wrapInTerminal(name, html) {
         </div>`;
 }
 
-// Generate stats HTML
+// Generate stats HTML — pre-render final value (no "0" start) so LCP fires immediately
 function buildStats() {
     if (!config.stats) return '';
     return config.stats.map(s =>
         `<div class="stat-item" title="${s.value}${s.suffix || ''} ${s.label.toLowerCase()}">
-                    <span class="stat-num" data-target="${s.value}"${s.suffix ? ` data-suffix="${s.suffix}"` : ''}>0</span>
+                    <span class="stat-num" data-target="${s.value}"${s.suffix ? ` data-suffix="${s.suffix}"` : ''}>${s.value}${s.suffix || ''}</span>
                     <span class="stat-label">${s.label}</span>
                 </div>`
     ).join('\n');
@@ -150,8 +150,8 @@ output = output.replace(/\s*<!-- Core theme CSS \(includes Bootstrap\)-->\s*/g, 
 
 // Inject <picture> tag for WebP with JFIF fallback
 output = output.replace(
-    '<img src="static/assets/img/photo.jfif" alt="Sang Min Lee" class="hero-photo" loading="lazy" width="200" height="200">',
-    '<picture><source srcset="static/assets/img/photo.webp" type="image/webp"><img src="static/assets/img/photo.jfif" alt="Sang Min Lee" class="hero-photo" loading="lazy" width="200" height="200"></picture>'
+    '<img src="static/assets/img/photo.jfif" alt="Sang Min Lee" class="hero-photo" loading="eager" fetchpriority="high" width="200" height="200">',
+    '<picture><source srcset="static/assets/img/photo.webp" type="image/webp"><img src="static/assets/img/photo.jfif" alt="Sang Min Lee" class="hero-photo" loading="eager" fetchpriority="high" width="200" height="200"></picture>'
 );
 
 // Minify HTML
