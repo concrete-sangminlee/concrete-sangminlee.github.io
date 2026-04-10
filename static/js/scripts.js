@@ -47,17 +47,29 @@ function initMatrixRain() {
     }
 
     let lastDraw = 0;
+    let inView = true;
+    let rafId = null;
     function loop(now) {
         if (now - lastDraw > 40) { draw(); lastDraw = now; }
-        requestAnimationFrame(loop);
+        if (inView) rafId = requestAnimationFrame(loop);
     }
-    requestAnimationFrame(loop);
+    rafId = requestAnimationFrame(loop);
+
+    // Pause rain when canvas scrolls out of viewport (saves CPU/battery)
+    const observer = new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+            inView = entry.isIntersecting;
+            if (inView && rafId === null) {
+                rafId = requestAnimationFrame(loop);
+            } else if (!inView && rafId !== null) {
+                cancelAnimationFrame(rafId);
+                rafId = null;
+            }
+        });
+    });
+    observer.observe(canvas);
 }
 
-function initTypingAnimation() {
-    // Hero name is pre-rendered in HTML for LCP. Cursor still blinks via CSS.
-    // (Previously typed char-by-char, but that was the LCP element and tanked perf.)
-}
 
 function initScrollAnimations() {
     const observer = new IntersectionObserver((entries) => {
@@ -250,6 +262,7 @@ function initHeroTerminal() {
             '  stats         — publication stats\n' +
             '  contact       — contact info\n' +
             '  grep <word>   — search publications\n' +
+            '  cite          — copy first publication to clipboard\n' +
             '  open <url>    — open link\n' +
             '  echo <text>   — print text\n' +
             '  tree          — site structure\n' +
@@ -678,7 +691,6 @@ function initThemeToggle() {
 
 window.addEventListener('DOMContentLoaded', () => {
     initMatrixRain();
-    initTypingAnimation();
     initHeroTerminal();
     initScrollSpy();
     initNavbarToggle();

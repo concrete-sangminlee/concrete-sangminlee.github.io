@@ -12,9 +12,18 @@ Personal academic website for Sang Min Lee, Ph.D. Candidate in Artificial Intell
 
 ## Publications
 
-- 5 Journal Articles (JNDE, ACI Structural Journal, ASCE J. Structural Engineering, etc.)
-- 10 Conference Proceedings (APCWE, ACEM, EACWE, Structures Congress, etc.)
-- 2 Registered Patents (Korea, PCT)
+- 6 Journal Articles (JNDE, ACI Structural Journal, ASCE J. Structural Engineering, etc.)
+- 16 Conference Proceedings (APCWE, ACEM, EACWE, Structures Congress, etc.)
+- 2 Registered Patents (Korea)
+
+## Build
+
+```sh
+npm ci
+npm run build  # outputs to dist/
+```
+
+Auto-deploys to GitHub Pages on push to `master` via `.github/workflows/deploy.yml`.
 
 ## License
 

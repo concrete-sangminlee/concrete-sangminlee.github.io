@@ -15,8 +15,7 @@ const SECTIONS = ['home', 'education', 'experiences', 'research-interests', 'pub
 // Read and parse config
 const config = yaml.load(fs.readFileSync(path.join(CONTENT_DIR, 'config.yml'), 'utf8'));
 
-// Configure marked
-marked.use({ mangle: false, headerIds: false });
+// (marked v17 dropped mangle/headerIds options — defaults are now safe)
 
 // Read all markdown sections
 const sections = {};
