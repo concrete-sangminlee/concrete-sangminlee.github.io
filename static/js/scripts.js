@@ -328,10 +328,13 @@ function initHeroTerminal() {
             return `${titleEl ? titleEl.textContent : 'Sang Min Lee'}\n${subtitleEl ? subtitleEl.textContent : ''}`;
         },
         'cat bio.txt': () => {
+            // Skip the badge-link paragraph; return the first paragraph that's
+            // actual prose (doesn't contain .home-badges, has more than 30 chars).
             const paragraphs = document.querySelectorAll('#home-md p');
             for (const p of paragraphs) {
+                if (p.querySelector('.home-badges')) continue;
                 const text = p.textContent.trim();
-                if (text) return text;
+                if (text.length > 30) return text;
             }
             return '';
         },
