@@ -240,10 +240,19 @@ function initPublicationFilter() {
 
     const bar = document.createElement('div');
     bar.className = 'pub-filter-bar';
+    function countLI(els) {
+        // Section els are typically [h3, ol] — the LI items live INSIDE the ol/ul,
+        // not as direct children, so filter(tagName === 'LI') always returned 0.
+        return els.reduce((n, e) => {
+            if (e.tagName === 'LI') return n + 1;
+            if (e.tagName === 'OL' || e.tagName === 'UL') return n + e.querySelectorAll('li').length;
+            return n;
+        }, 0);
+    }
     function countItems(key) {
-        if (key === 'all') return sections.reduce((n, s) => n + s.els.filter(e => e.tagName === 'LI').length, 0);
+        if (key === 'all') return sections.reduce((n, s) => n + countLI(s.els), 0);
         const sec = sections.find(s => s.key === key);
-        return sec ? sec.els.filter(e => e.tagName === 'LI').length : 0;
+        return sec ? countLI(sec.els) : 0;
     }
     const filters = [
         { key: 'all', label: 'ALL' },
