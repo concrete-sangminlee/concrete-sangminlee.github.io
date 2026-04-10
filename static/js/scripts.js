@@ -126,6 +126,7 @@ function addCopyButtons() {
         const btn = document.createElement('button');
         btn.className = 'cite-copy-btn';
         btn.title = 'Copy citation';
+        btn.setAttribute('aria-label', 'Copy citation');
         btn.textContent = '⎘';
         btn.addEventListener('click', () => {
             if (!navigator.clipboard) return;
@@ -155,6 +156,7 @@ function addShareButtons() {
         const twBtn = document.createElement('button');
         twBtn.className = 'share-btn';
         twBtn.title = 'Share on X';
+        twBtn.setAttribute('aria-label', 'Share on X');
         twBtn.textContent = '𝕏';
         twBtn.addEventListener('click', () => {
             window.open(`https://x.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank', 'noopener,width=550,height=420');
@@ -162,6 +164,7 @@ function addShareButtons() {
         const liBtn = document.createElement('button');
         liBtn.className = 'share-btn';
         liBtn.title = 'Share on LinkedIn';
+        liBtn.setAttribute('aria-label', 'Share on LinkedIn');
         liBtn.textContent = 'in';
         liBtn.addEventListener('click', () => {
             window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`, '_blank', 'noopener,width=550,height=420');
