@@ -230,6 +230,17 @@ output = output.replace(
     '<a href="$1"$2 target="_blank" rel="noopener noreferrer">'
 );
 
+// Wrap (YYYY) year mentions in publications/awards/patents in <time> elements
+// Only inside .term-body contexts that contain actual list items, so we don't
+// catch random years in body text or 4-digit numbers that aren't years.
+function wrapYearsInSection(html, sectionId) {
+    const re = new RegExp(`(<div class="main-body" id="${sectionId}-md">[\\s\\S]*?</div>\\s*</section>)`, 'g');
+    return html.replace(re, block =>
+        block.replace(/\((20\d{2})\)/g, '(<time datetime="$1">$1</time>)')
+    );
+}
+['publications', 'awards', 'patents'].forEach(s => { output = wrapYearsInSection(output, s); });
+
 // Minify HTML
 output = await minifyHTML(output, {
     collapseWhitespace: true,

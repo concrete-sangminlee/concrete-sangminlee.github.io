@@ -720,6 +720,13 @@ function initSearch() {
         results.innerHTML = '';
         if (q.length < 2) return;
         const matches = index.filter(i => i.text.toLowerCase().includes(q)).slice(0, 10);
+        if (!matches.length) {
+            const empty = document.createElement('div');
+            empty.className = 'search-result-item search-result-empty';
+            empty.textContent = `No results for "${q}"`;
+            results.appendChild(empty);
+            return;
+        }
         matches.forEach(m => {
             // <button> instead of <div> so keyboard users can Tab + Enter
             const btn = document.createElement('button');
