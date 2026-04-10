@@ -55,16 +55,8 @@ function initMatrixRain() {
 }
 
 function initTypingAnimation() {
-    const el = document.getElementById('hero-typed-name');
-    if (!el) return;
-    const name = 'SANG MIN LEE';
-    let i = 0;
-    setTimeout(() => {
-        const interval = setInterval(() => {
-            el.textContent = name.slice(0, ++i);
-            if (i >= name.length) clearInterval(interval);
-        }, 80);
-    }, 600);
+    // Hero name is pre-rendered in HTML for LCP. Cursor still blinks via CSS.
+    // (Previously typed char-by-char, but that was the LCP element and tanked perf.)
 }
 
 function initScrollAnimations() {
@@ -226,35 +218,9 @@ function initPublicationFilter() {
 }
 
 function initStatsCounter() {
-    const bar = document.querySelector('.stats-bar');
-    if (!bar) return;
-    // Respect reduced motion + skip if already animated (HTML pre-renders final value
-    // so LCP doesn't wait, but we still want a count-up flourish on first scroll-in)
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
-    const observer = new IntersectionObserver(entries => {
-        entries.forEach(entry => {
-            if (!entry.isIntersecting) return;
-            entry.target.querySelectorAll('.stat-num').forEach(el => {
-                if (el.dataset.animated === 'true') return;
-                el.dataset.animated = 'true';
-                const target = parseInt(el.dataset.target, 10);
-                const suffix = el.dataset.suffix || '';
-                const duration = 1200;
-                const start = performance.now();
-                function tick(now) {
-                    const elapsed = now - start;
-                    const progress = Math.min(elapsed / duration, 1);
-                    el.textContent = Math.floor(target * easeOutCubic(progress)) + suffix;
-                    if (progress < 1) requestAnimationFrame(tick);
-                    else el.textContent = target + suffix;
-                }
-                requestAnimationFrame(tick);
-            });
-            observer.unobserve(entry.target);
-        });
-    }, { threshold: 0.3 });
-    observer.observe(bar);
+    // Stats values are pre-rendered in HTML for LCP. No JS animation.
+    // (Previously animated 0 → target, but that made the stat-num the LCP
+    // element and tanked Performance score. CSS handles any visual flourish.)
 }
 
 function escapeHtml(str) {
