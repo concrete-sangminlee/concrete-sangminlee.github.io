@@ -1,8 +1,5 @@
 
-[![GitHub](https://img.shields.io/badge/GitHub-181717?logo=github)](https://github.com/concrete-sangminlee)
-[![Google Scholar](https://img.shields.io/badge/Google_Scholar-4285F4?logo=google-scholar&logoColor=white)](https://scholar.google.com/citations?user=ogvd_LsAAAAJ&hl=en)
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?logo=linkedin&logoColor=white)](https://www.linkedin.com/in/sang-min-lee-3a2568174/)
-[![ORCID](https://img.shields.io/badge/ORCID-A6CE39?logo=orcid&logoColor=white)](https://orcid.org/0000-0002-6822-5252)
+<span class="home-badges"><a href="https://github.com/concrete-sangminlee">[GH] GitHub</a> <a href="https://scholar.google.com/citations?user=ogvd_LsAAAAJ&hl=en">[GS] Scholar</a> <a href="https://www.linkedin.com/in/sang-min-lee-3a2568174/">[IN] LinkedIn</a> <a href="https://orcid.org/0000-0002-6822-5252">[ID] ORCID</a></span>
 
 Ph.D. Candidate in Artificial Intelligence at **Seoul National University**, researching **AI for resilient infrastructure and wind engineering**.
 

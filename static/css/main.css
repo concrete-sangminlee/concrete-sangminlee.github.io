@@ -555,6 +555,33 @@ section:last-of-type::after { display: none; }
   border-left: 2px solid var(--border2);
 }
 
+/* Home badges (inline text replacement for shields.io) */
+.home-badges {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.6rem;
+}
+.home-badges a {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  padding: 0.25rem 0.6rem;
+  color: var(--green);
+  background: rgba(57, 211, 83, 0.06);
+  border: 1px solid var(--green-border);
+  border-radius: 3px;
+  text-decoration: none;
+  letter-spacing: 0.04em;
+  transition: background 0.15s, box-shadow 0.15s;
+}
+.home-badges a:hover,
+.home-badges a:focus {
+  background: rgba(57, 211, 83, 0.15);
+  box-shadow: 0 0 6px var(--green-glow);
+  color: var(--green);
+  outline: none;
+}
+
 /* Screen-reader-only utility */
 .visually-hidden {
   position: absolute;
@@ -1591,19 +1618,41 @@ kbd {
 
 /* ── PRINT ── */
 @media print {
-  .header, footer, .top-section, .scroll-progress, .back-to-top, .theme-toggle,
-  .hero-corners, .cite-copy-btn, .pub-filter-bar, .stats-bar { display: none !important; }
-  body { background: #fff !important; color: #000 !important; font-size: 11pt; }
-  section { padding: 1rem 0 !important; border: none !important; background: #fff !important; }
+  .header, footer, .scroll-progress, .back-to-top, .theme-toggle, .hero-corners,
+  .cite-copy-btn, .pub-filter-bar, .stats-bar, .share-btns, .bib-download,
+  #matrix-canvas, .hero-overlay, .hero-scanlines, .hero-terminal-input,
+  #hero-cmd-output, .contact-form, .skip-link { display: none !important; }
+  body { background: #fff !important; color: #000 !important; font-size: 10.5pt; }
+  /* Keep hero (name + photo) visible — that's the CV header */
+  .top-section { background: #fff !important; padding: 0 !important; min-height: auto !important; }
+  .top-section-content { padding: 0.5rem 0 !important; }
+  .hero-prompt, .hero-cursor { display: none !important; }
+  .hero-name {
+    color: #000 !important;
+    -webkit-text-fill-color: #000 !important;
+    background: none !important;
+    filter: none !important;
+    font-size: 1.5rem !important;
+    letter-spacing: 1px !important;
+  }
+  #top-section-bg-text { color: #555 !important; font-size: 0.75rem !important; animation: none !important; }
+  .hero-photo-wrap { box-shadow: none !important; background: none !important; padding: 0 !important; animation: none !important; }
+  .hero-photo { border: 1px solid #ccc !important; }
+  section { padding: 0.6rem 0 !important; border: none !important; background: #fff !important; }
+  section::after { display: none !important; }
   .container { max-width: 100%; }
   .main-body, .main-body p, .main-body li, .main-body strong { color: #000 !important; }
   .main-body a { color: #000 !important; text-decoration: underline !important; }
   .main-body a[href]::after { content: " (" attr(href) ")"; font-size: 0.8em; color: #555; }
   .term { border: 1px solid #ccc !important; background: #fff !important; }
-  .term-bar { display: none !important; }
+  .term-bar, .term-cmd { display: none !important; }
   .term-body { padding: 0.5rem !important; }
-  section header h2 { color: #000 !important; font-size: 0.8rem !important; }
+  section header h2 { color: #000 !important; font-size: 0.85rem !important; }
+  .sec-num { color: #555 !important; }
   .contact-grid { grid-template-columns: repeat(3, 1fr); }
   .contact-card { border-color: #ccc !important; background: #fff !important; }
   .contact-label, .contact-val, .contact-icon { color: #000 !important; }
+  /* Avoid orphaned section headers */
+  section header h2 { break-after: avoid; }
+  .term { break-inside: avoid; }
 }

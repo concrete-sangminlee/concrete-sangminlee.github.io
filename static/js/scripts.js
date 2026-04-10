@@ -1,4 +1,12 @@
 
+// Global error handlers — log to console without breaking the page
+window.addEventListener('error', e => {
+    console.warn('[scripts.js] runtime error:', e.message, 'at', e.filename + ':' + e.lineno);
+});
+window.addEventListener('unhandledrejection', e => {
+    console.warn('[scripts.js] unhandled promise rejection:', e.reason);
+});
+
 const section_names = ['home', 'education', 'experiences', 'research-interests', 'publications', 'projects', 'patents', 'awards', 'services'];
 
 function scrollToEl(el) {
