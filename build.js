@@ -12,16 +12,39 @@ const CONTENT_DIR = 'contents';
 const DIST_DIR = 'dist';
 const SECTIONS = ['home', 'education', 'experiences', 'research-interests', 'publications', 'projects', 'patents', 'awards', 'services'];
 
-// Read and parse config
-const config = yaml.load(fs.readFileSync(path.join(CONTENT_DIR, 'config.yml'), 'utf8'));
+// Validate content dir + parse config with helpful errors
+if (!fs.existsSync(CONTENT_DIR)) {
+    console.error(`build.js: content directory not found: ${CONTENT_DIR}/`);
+    process.exit(1);
+}
+const configPath = path.join(CONTENT_DIR, 'config.yml');
+if (!fs.existsSync(configPath)) {
+    console.error(`build.js: missing ${configPath}`);
+    process.exit(1);
+}
+let config;
+try {
+    config = yaml.load(fs.readFileSync(configPath, 'utf8'));
+} catch (err) {
+    console.error(`build.js: failed to parse ${configPath}: ${err.message}`);
+    process.exit(1);
+}
+if (!config || typeof config !== 'object') {
+    console.error(`build.js: ${configPath} is empty or not an object`);
+    process.exit(1);
+}
 
 // (marked v17 dropped mangle/headerIds options — defaults are now safe)
 
 // Read all markdown sections
 const sections = {};
 for (const name of SECTIONS) {
-    const md = fs.readFileSync(path.join(CONTENT_DIR, `${name}.md`), 'utf8');
-    sections[name] = marked.parse(md);
+    const mdPath = path.join(CONTENT_DIR, `${name}.md`);
+    if (!fs.existsSync(mdPath)) {
+        console.error(`build.js: missing content file ${mdPath}`);
+        process.exit(1);
+    }
+    sections[name] = marked.parse(fs.readFileSync(mdPath, 'utf8'));
 }
 
 // Wrap content in terminal window (all sections except home)

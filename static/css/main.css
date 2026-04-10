@@ -1112,6 +1112,8 @@ footer a:hover {
 
 #publications .main-body li {
   padding-right: 2.6rem !important;
+  overflow-wrap: break-word;
+  word-break: keep-all; /* CJK-friendly: don't break inside Korean phrases */
 }
 
 /* ── PUBLICATION FILTER BAR ── */

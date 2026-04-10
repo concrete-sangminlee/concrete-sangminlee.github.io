@@ -220,11 +220,14 @@ function initPublicationFilter() {
 
     const children = Array.from(termBody.children);
     const sections = [];
+    const hrEls = []; // tracked separately so they can be hidden when filtering
     let cur = null;
     children.forEach(el => {
         if (el.tagName === 'H3') {
             cur = { key: el.textContent.trim().split(' ')[0].toLowerCase(), els: [el] };
             sections.push(cur);
+        } else if (el.tagName === 'HR') {
+            hrEls.push(el);
         } else if (cur) {
             cur.els.push(el);
         }
@@ -254,6 +257,8 @@ function initPublicationFilter() {
                 const show = f.key === 'all' || s.key === f.key;
                 s.els.forEach(el => { el.style.display = show ? '' : 'none'; });
             });
+            // Hide separators when filtering to a single section
+            hrEls.forEach(el => { el.style.display = f.key === 'all' ? '' : 'none'; });
         });
         bar.appendChild(btn);
     });
@@ -437,14 +442,19 @@ function initHeroTerminal() {
         } else if (cmd.startsWith('echo ')) {
             const text = cmd.slice(5);
             resultHtml = `<span class="g">$</span> ${escapeHtml(cmd)}\n${escapeHtml(text)}`;
-        } else if (cmd.startsWith('cd ')) {
-            const target = cmd.slice(3).trim().replace(/\/$/, '');
-            const el = document.getElementById(target === 'home' ? 'page-top' : target);
-            if (el) {
-                scrollToEl(el);
-                resultHtml = `<span class="g">$</span> ${escapeHtml(cmd)}\nnavigating to /${escapeHtml(target)}/`;
+        } else if (cmd.startsWith('cd ') || cmd === 'cd') {
+            const target = cmd.slice(2).trim().replace(/\/$/, '');
+            if (!target) {
+                // bare 'cd' → list available targets
+                resultHtml = `<span class="g">$</span> ${escapeHtml(cmd)}\nusage: cd &lt;section&gt;\navailable: ${allSections.join(', ')}`;
             } else {
-                resultHtml = `<span class="g">$</span> ${escapeHtml(cmd)}\n<span class="err">cd: ${escapeHtml(target)}: no such section</span>`;
+                const el = document.getElementById(target === 'home' ? 'page-top' : target);
+                if (el) {
+                    scrollToEl(el);
+                    resultHtml = `<span class="g">$</span> ${escapeHtml(cmd)}\nnavigating to /${escapeHtml(target)}/`;
+                } else {
+                    resultHtml = `<span class="g">$</span> ${escapeHtml(cmd)}\n<span class="err">cd: ${escapeHtml(target)}: no such section</span>`;
+                }
             }
         } else {
             resultHtml = `<span class="g">$</span> ${escapeHtml(cmd)}\n<span class="err">${escapeHtml(cmd)}: command not found — try 'help'</span>`;
@@ -676,7 +686,12 @@ function initSearch() {
         if (bar.classList.contains('open')) input.focus();
     });
 
+    let searchTimer = null;
     input.addEventListener('input', () => {
+        if (searchTimer) clearTimeout(searchTimer);
+        searchTimer = setTimeout(() => doSearch(), 120);
+    });
+    function doSearch() {
         const q = input.value.trim().toLowerCase();
         results.innerHTML = '';
         if (q.length < 2) return;
@@ -701,7 +716,7 @@ function initSearch() {
             });
             results.appendChild(div);
         });
-    });
+    }
 
     input.addEventListener('keydown', e => { if (e.key === 'Escape') { bar.classList.remove('open'); input.value = ''; results.innerHTML = ''; } });
 }
