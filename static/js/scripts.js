@@ -730,6 +730,12 @@ function initThemeToggle() {
     } else if (window.matchMedia('(prefers-color-scheme: light)').matches) {
         document.documentElement.setAttribute('data-theme', 'light');
     }
+    // React to system theme changes (only when user hasn't picked a manual override)
+    window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', e => {
+        if (localStorage.getItem('theme')) return; // user picked, don't override
+        document.documentElement.setAttribute('data-theme', e.matches ? 'light' : 'dark');
+        updateIcon();
+    });
     function updateIcon() {
         const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
         btn.textContent = isDark ? '\u263D' : '\u2600';

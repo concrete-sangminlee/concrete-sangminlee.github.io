@@ -104,11 +104,56 @@ function buildSection(name) {
     return name === 'home' ? html : wrapInTerminal(name, html);
 }
 
+// Parse publications.bib into a JSON-LD @graph of ScholarlyArticle entries
+function parseBibToJsonLd(bibPath) {
+    if (!fs.existsSync(bibPath)) return [];
+    const bib = fs.readFileSync(bibPath, 'utf8');
+    const entries = [];
+    const re = /@(\w+)\{([^,]+),\s*([\s\S]*?)\n\}/g;
+    let m;
+    while ((m = re.exec(bib))) {
+        const fields = {};
+        const fieldRe = /(\w+)\s*=\s*\{([^}]*)\}/g;
+        let f;
+        while ((f = fieldRe.exec(m[3]))) fields[f[1].toLowerCase()] = f[2].trim();
+        const authors = (fields.author || '').split(/\s+and\s+/).map(name => {
+            const parts = name.split(',').map(s => s.trim());
+            return parts.length === 2 ? { '@type': 'Person', name: parts[1] + ' ' + parts[0] } : { '@type': 'Person', name };
+        });
+        const article = {
+            '@type': 'ScholarlyArticle',
+            headline: fields.title,
+            author: authors,
+            datePublished: fields.year,
+            isPartOf: fields.journal ? { '@type': 'Periodical', name: fields.journal, volumeNumber: fields.volume, issueNumber: fields.number } : undefined,
+            pageStart: fields.pages ? fields.pages.split('--')[0] : undefined,
+            pageEnd: fields.pages && fields.pages.includes('--') ? fields.pages.split('--')[1] : undefined,
+        };
+        if (fields.doi) {
+            article.identifier = { '@type': 'PropertyValue', propertyID: 'DOI', value: fields.doi };
+            article.sameAs = 'https://doi.org/' + fields.doi;
+        }
+        if (fields.url && !article.sameAs) article.sameAs = fields.url;
+        // strip undefined
+        Object.keys(article).forEach(k => article[k] === undefined && delete article[k]);
+        entries.push(article);
+    }
+    return entries;
+}
+const articleEntries = parseBibToJsonLd(path.join(CONTENT_DIR, 'publications.bib'));
+
 // Read template
 const template = fs.readFileSync('index.html', 'utf8');
 
 // Replace all placeholders
 let output = template;
+
+// Inject ScholarlyArticle JSON-LD graph
+const articlesJson = JSON.stringify({ '@context': 'https://schema.org', '@graph': articleEntries });
+output = output.replace(
+    /<script type="application\/ld\+json" id="json-ld-articles">.*?<\/script>/,
+    `<script type="application/ld+json" id="json-ld-articles">${articlesJson}</script>`
+);
 
 // Config string values
 for (const [key, val] of Object.entries(config)) {
