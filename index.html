@@ -39,6 +39,7 @@
     <link rel="canonical" href="https://concrete-sangminlee.github.io/" />
     <meta name="theme-color" content="#050505" media="(prefers-color-scheme: dark)" />
     <meta name="theme-color" content="#fafafa" media="(prefers-color-scheme: light)" />
+    <meta name="color-scheme" content="dark light" />
     <link rel="manifest" href="manifest.json" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -330,7 +331,7 @@
             <header>
                 <h2 id="contact-subtitle">CONTACT</h2>
             </header>
-            <div class="contact-grid" id="contact-grid"></div>
+            <address class="contact-grid" id="contact-grid"></address>
             <form class="contact-form" id="contactForm" action="https://formspree.io/f/xzdkqgao" method="POST">
                 <h3 class="contact-form-title">Send a Message</h3>
                 <div class="form-row">
@@ -346,7 +347,7 @@
                 <label for="contact-gotcha" class="visually-hidden">Leave this field empty</label>
                 <input type="text" id="contact-gotcha" name="_gotcha" style="display:none" tabindex="-1" autocomplete="off" />
                 <button type="submit" class="form-submit">Send</button>
-                <div class="form-status" id="formStatus" aria-live="polite"></div>
+                <output class="form-status" id="formStatus" for="contact-name contact-email contact-subject contact-message" aria-live="polite"></output>
             </form>
         </div>
     </section>

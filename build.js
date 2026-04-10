@@ -190,8 +190,8 @@ output = output.replace(
 
 // Contact
 output = output.replace(
-    '<div class="contact-grid" id="contact-grid"></div>',
-    `<div class="contact-grid" id="contact-grid">${buildContact()}</div>`
+    '<address class="contact-grid" id="contact-grid"></address>',
+    `<address class="contact-grid" id="contact-grid">${buildContact()}</address>`
 );
 
 // Featured paper

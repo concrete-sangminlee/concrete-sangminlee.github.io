@@ -775,7 +775,19 @@ window.addEventListener('DOMContentLoaded', () => {
     // Register service worker for repeat-visit cache + offline fallback
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-            navigator.serviceWorker.register('/sw.js').catch(err => {
+            navigator.serviceWorker.register('/sw.js').then(reg => {
+                // Notify when a new SW takes over (repeat visit after deploy)
+                reg.addEventListener('updatefound', () => {
+                    const newSw = reg.installing;
+                    if (!newSw) return;
+                    newSw.addEventListener('statechange', () => {
+                        if (newSw.state === 'installed' && navigator.serviceWorker.controller) {
+                            // There's an old controller — this is an update, not first install
+                            showToast('New version available — refresh to update');
+                        }
+                    });
+                });
+            }).catch(err => {
                 console.warn('[sw] registration failed:', err);
             });
         });
