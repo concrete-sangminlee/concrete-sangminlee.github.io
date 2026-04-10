@@ -765,4 +765,13 @@ window.addEventListener('DOMContentLoaded', () => {
     // Auto-update copyright year
     const crEl = document.getElementById('copyright-text');
     if (crEl) crEl.innerHTML = crEl.innerHTML.replace(/\d{4}/, new Date().getFullYear());
+
+    // Register service worker for repeat-visit cache + offline fallback
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/sw.js').catch(err => {
+                console.warn('[sw] registration failed:', err);
+            });
+        });
+    }
 });

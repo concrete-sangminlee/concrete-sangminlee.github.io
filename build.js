@@ -279,6 +279,15 @@ if (fs.existsSync('sitemap.xml')) {
     fs.writeFileSync(path.join(DIST_DIR, 'sitemap.xml'), sitemap);
 }
 
+// Service Worker: stamp CACHE_NAME with current build timestamp so old caches are evicted on every deploy
+if (fs.existsSync('sw.js')) {
+    const cacheVersion = 'sml-' + Date.now();
+    const sw = fs.readFileSync('sw.js', 'utf8').replace('__CACHE_VERSION__', cacheVersion);
+    // Minify the SW too
+    const minified = await esbuild.transform(sw, { loader: 'js', minify: true, target: 'es2020' });
+    fs.writeFileSync(path.join(DIST_DIR, 'sw.js'), minified.code);
+}
+
 // Copy publications.bib from contents to dist
 const bibSrc = path.join(CONTENT_DIR, 'publications.bib');
 if (fs.existsSync(bibSrc)) fs.copyFileSync(bibSrc, path.join(DIST_DIR, 'publications.bib'));
