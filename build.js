@@ -12,6 +12,12 @@ const buildStart = Date.now();
 
 const CONTENT_DIR = 'contents';
 const DIST_DIR = 'dist';
+
+// Clean dist before build to avoid stale files (e.g. removed assets,
+// renamed paths, leftover .well-known/ from prior builds).
+if (fs.existsSync(DIST_DIR)) {
+    fs.rmSync(DIST_DIR, { recursive: true, force: true });
+}
 const SECTIONS = ['home', 'education', 'experiences', 'research-interests', 'publications', 'projects', 'patents', 'awards', 'services'];
 
 // Validate content dir + parse config with helpful errors
