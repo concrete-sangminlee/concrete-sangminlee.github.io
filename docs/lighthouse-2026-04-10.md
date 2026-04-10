@@ -2,16 +2,38 @@
 
 URL: https://concrete-sangminlee.github.io/
 Run: `npx lighthouse` (mobile, headless Chrome)
-Context: Right after build optimization (656KB → 128KB dist).
+Context: After build optimization (656KB → 128KB dist) and MathJax removal.
 
-## Scores
+## Score Progression
+
+| Category | Initial | After MathJax Removal | Δ |
+|----------|---------|------------------------|---|
+| Performance | 61 | **78** | +17 |
+| Accessibility | 100 | **100** | — |
+| Best Practices | 100 | **100** | — |
+| SEO | 100 | **100** | — |
+
+## Final Core Web Vitals (after MathJax removal)
+
+| Metric | Before | After | Δ |
+|--------|--------|-------|---|
+| FCP | 3.5 s | 3.6 s | ~ |
+| LCP | 6.5 s | **3.6 s** | -2.9 s |
+| TBT | 160 ms | **0 ms** | -160 |
+| CLS | 0 | 0 | — |
+| Speed Index | 8.1 s | 5.8 s | -2.3 s |
+| TTI | 6.6 s | **3.6 s** | -3.0 s |
+| Network bytes | 745 KB | **128 KB** | -617 KB |
+| Network reqs | 14 | 13 | -1 |
+
+## Initial Scores (before MathJax removal)
 
 | Category | Score |
 |----------|-------|
-| Performance | **61** |
-| Accessibility | **100** |
-| Best Practices | **100** |
-| SEO | **100** |
+| Performance | 61 |
+| Accessibility | 100 |
+| Best Practices | 100 |
+| SEO | 100 |
 
 ## Core Web Vitals
 
@@ -75,9 +97,9 @@ Hero photo `<img>` lacks `width`/`height` attributes — causes minor layout shi
 
 ## Recommended Follow-up Actions (Priority Order)
 
-1. **[CRITICAL] Remove MathJax** — single biggest win, no functionality lost
-2. **[HIGH] Defer/preload Google Fonts** — recover ~1s of FCP
-3. **[MEDIUM] Pre-render stats values** — fix LCP element
+1. ~~**[CRITICAL] Remove MathJax**~~ — ✅ DONE (commit `bd5391b`), Performance 61→78
+2. **[HIGH] Defer/preload Google Fonts** — still ~1s of FCP blocking remaining
+3. **[MEDIUM] Pre-render stats values** — animate-from-zero counter still causes some delay
 4. **[LOW] Add image dimensions** — minor CLS prevention
 5. **[LOW] Inline critical CSS** — recover ~150ms FCP
 
