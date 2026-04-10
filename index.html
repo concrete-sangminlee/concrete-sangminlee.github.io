@@ -166,7 +166,7 @@
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
             </button>
             <div class="search-bar" id="searchBar">
-                <input type="text" class="search-input" id="searchInput" placeholder="Search all content..." aria-label="Search content" />
+                <input type="search" class="search-input" id="searchInput" placeholder="Search all content..." aria-label="Search content" enterkeyhint="search" />
                 <div class="search-results" id="searchResults"></div>
             </div>
         </div>
@@ -334,14 +334,14 @@
                 <h3 class="contact-form-title">Send a Message</h3>
                 <div class="form-row">
                     <label for="contact-name" class="visually-hidden">Name</label>
-                    <input type="text" id="contact-name" name="name" placeholder="Name" required class="form-field" />
+                    <input type="text" id="contact-name" name="name" placeholder="Name" required class="form-field" autocomplete="name" enterkeyhint="next" />
                     <label for="contact-email" class="visually-hidden">Email</label>
-                    <input type="email" id="contact-email" name="email" placeholder="Email" required class="form-field" />
+                    <input type="email" id="contact-email" name="email" placeholder="Email" required class="form-field" autocomplete="email" enterkeyhint="next" />
                 </div>
                 <label for="contact-subject" class="visually-hidden">Subject</label>
-                <input type="text" id="contact-subject" name="subject" placeholder="Subject" required class="form-field form-full" />
+                <input type="text" id="contact-subject" name="subject" placeholder="Subject" required class="form-field form-full" enterkeyhint="next" />
                 <label for="contact-message" class="visually-hidden">Message</label>
-                <textarea id="contact-message" name="message" placeholder="Message" required rows="4" class="form-field form-full"></textarea>
+                <textarea id="contact-message" name="message" placeholder="Message" required rows="4" class="form-field form-full" enterkeyhint="send"></textarea>
                 <label for="contact-gotcha" class="visually-hidden">Leave this field empty</label>
                 <input type="text" id="contact-gotcha" name="_gotcha" style="display:none" tabindex="-1" autocomplete="off" />
                 <button type="submit" class="form-submit">Send</button>

@@ -626,6 +626,7 @@ function initKeyboardNav() {
                 '<div class="kbd-box">' +
                 '<h3>Keyboard Shortcuts</h3>' +
                 '<div><kbd>j</kbd> / <kbd>k</kbd> — next / prev section</div>' +
+                '<div><kbd>/</kbd> — open search</div>' +
                 '<div><kbd>t</kbd> — toggle theme</div>' +
                 '<div><kbd>?</kbd> — this help</div>' +
                 '<div><kbd>Esc</kbd> — close</div>' +
