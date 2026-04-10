@@ -41,7 +41,7 @@
     <meta name="theme-color" content="#fafafa" media="(prefers-color-scheme: light)" />
     <link rel="manifest" href="manifest.json" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 
     <!-- JSON-LD Structured Data -->
     <script type="application/ld+json" id="json-ld-articles">{"@context":"https://schema.org","@graph":[]}</script>
@@ -66,7 +66,44 @@
             "https://orcid.org/0000-0002-6822-5252",
             "https://www.linkedin.com/in/sang-min-lee-3a2568174/"
         ],
-        "knowsAbout": ["Machine Learning", "Wind Engineering", "Structural Health Monitoring", "Concrete", "Non-Destructive Testing", "Artificial Intelligence", "Deep Learning"]
+        "knowsAbout": ["Machine Learning", "Wind Engineering", "Structural Health Monitoring", "Concrete", "Non-Destructive Testing", "Artificial Intelligence", "Deep Learning"],
+        "award": [
+            "SNU AI Fellowship (2025, 2026)",
+            "SNU AI Paper Competition Excellence Award (2025)",
+            "SNU AI Graduate School Scholarship (2023, 2024)",
+            "SNU Outstanding Teaching Assistant Award (2022)",
+            "Korea Concrete Institute Outstanding Presentation Award (2022)",
+            "Big Data Analysis Engineer Certification (2025)"
+        ]
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@graph": [
+            {
+                "@type": "CreativeWork",
+                "additionalType": "Patent",
+                "name": "AI-based defect detection system inside concrete members",
+                "author": [
+                    { "@type": "Person", "name": "Sang Min Lee" },
+                    { "@type": "Person", "name": "Thomas H.-K. Kang" }
+                ],
+                "datePublished": "2023",
+                "identifier": { "@type": "PropertyValue", "propertyID": "KR Patent", "value": "1,026,114,570,000" }
+            },
+            {
+                "@type": "CreativeWork",
+                "additionalType": "Patent",
+                "name": "Wind load estimation system based on artificial intelligence",
+                "author": [
+                    { "@type": "Person", "name": "Sang Min Lee" },
+                    { "@type": "Person", "name": "Thomas H.-K. Kang" }
+                ],
+                "datePublished": "2022",
+                "identifier": { "@type": "PropertyValue", "propertyID": "KR Patent", "value": "1,024,803,820,000" }
+            }
+        ]
     }
     </script>
 

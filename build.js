@@ -337,4 +337,9 @@ if (fs.existsSync('sw.js')) {
 const bibSrc = path.join(CONTENT_DIR, 'publications.bib');
 if (fs.existsSync(bibSrc)) fs.copyFileSync(bibSrc, path.join(DIST_DIR, 'publications.bib'));
 
+// Copy .well-known directory (security.txt etc.)
+if (fs.existsSync('.well-known')) {
+    copyRecursive('.well-known', path.join(DIST_DIR, '.well-known'));
+}
+
 console.log('Build complete → dist/');

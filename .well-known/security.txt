@@ -1,0 +1,4 @@
+Contact: mailto:201612445@snu.ac.kr
+Expires: 2027-04-10T00:00:00.000Z
+Preferred-Languages: en, ko
+Canonical: https://concrete-sangminlee.github.io/.well-known/security.txt
