@@ -357,14 +357,15 @@ if (fs.existsSync('sw.js')) {
 const bibSrc = path.join(CONTENT_DIR, 'publications.bib');
 if (fs.existsSync(bibSrc)) fs.copyFileSync(bibSrc, path.join(DIST_DIR, 'publications.bib'));
 
-// Copy .well-known directory (security.txt etc.)
-if (fs.existsSync('.well-known')) {
-    copyRecursive('.well-known', path.join(DIST_DIR, '.well-known'));
+// security.txt: copy to dist root.
+// Cannot use /.well-known/security.txt because actions/upload-pages-artifact
+// excludes dot-prefixed root paths via 'tar --exclude=".[^/]*"'.
+// /security.txt is the RFC 9116 legacy location and accepted by all major
+// security scanners (GitHub, Microsoft, Mozilla observatory, etc.).
+const securityTxt = '.well-known/security.txt';
+if (fs.existsSync(securityTxt)) {
+    fs.copyFileSync(securityTxt, path.join(DIST_DIR, 'security.txt'));
 }
-
-// .nojekyll: tell GitHub Pages to skip Jekyll preprocessing entirely.
-// Without this, Pages strips dot-prefixed paths like .well-known/.
-fs.writeFileSync(path.join(DIST_DIR, '.nojekyll'), '');
 
 // Build size summary
 function fmtKB(b) { return (b / 1024).toFixed(1) + ' KB'; }
