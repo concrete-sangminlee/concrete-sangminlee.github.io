@@ -692,6 +692,8 @@ function initThemeToggle() {
     function updateIcon() {
         const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
         btn.textContent = isDark ? '\u263D' : '\u2600';
+        btn.setAttribute('aria-pressed', isDark ? 'false' : 'true');
+        btn.setAttribute('aria-label', isDark ? 'Switch to light mode' : 'Switch to dark mode');
     }
     updateIcon();
     btn.addEventListener('click', () => {

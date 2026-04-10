@@ -150,8 +150,8 @@ output = output.replace(/\s*<!-- Core theme CSS \(includes Bootstrap\)-->\s*/g, 
 
 // Inject <picture> tag for WebP with JFIF fallback
 output = output.replace(
-    '<img src="static/assets/img/photo.jfif" alt="Sang Min Lee" class="hero-photo" loading="lazy">',
-    '<picture><source srcset="static/assets/img/photo.webp" type="image/webp"><img src="static/assets/img/photo.jfif" alt="Sang Min Lee" class="hero-photo" loading="lazy"></picture>'
+    '<img src="static/assets/img/photo.jfif" alt="Sang Min Lee" class="hero-photo" loading="lazy" width="200" height="200">',
+    '<picture><source srcset="static/assets/img/photo.webp" type="image/webp"><img src="static/assets/img/photo.jfif" alt="Sang Min Lee" class="hero-photo" loading="lazy" width="200" height="200"></picture>'
 );
 
 // Minify HTML
