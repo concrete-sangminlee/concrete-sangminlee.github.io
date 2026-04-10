@@ -506,6 +506,7 @@ section {
   contain: layout;
   content-visibility: auto;
   contain-intrinsic-size: auto 400px;
+  scroll-margin-top: 60px; /* offset fixed nav so anchor links land below it */
 }
 section::after {
   content: '';

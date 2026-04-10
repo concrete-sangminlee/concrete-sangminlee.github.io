@@ -7,7 +7,32 @@ window.addEventListener('unhandledrejection', e => {
     console.warn('[scripts.js] unhandled promise rejection:', e.reason);
 });
 
+// Single source of truth for section IDs (used by hero terminal, search, keyboard nav)
 const section_names = ['home', 'education', 'experiences', 'research-interests', 'publications', 'projects', 'patents', 'awards', 'services'];
+const all_section_ids = [...section_names, 'contact'];
+// Friendly labels for display (e.g. in search results)
+const section_labels = {
+    'home': 'Home',
+    'education': 'Education',
+    'experiences': 'Experiences',
+    'research-interests': 'Research',
+    'publications': 'Publications',
+    'projects': 'Projects',
+    'patents': 'Patents',
+    'awards': 'Awards',
+    'services': 'Services',
+    'contact': 'Contact',
+};
+
+// rAF throttling helper for scroll handlers
+function rafThrottle(fn) {
+    let queued = false;
+    return function() {
+        if (queued) return;
+        queued = true;
+        requestAnimationFrame(() => { queued = false; fn(); });
+    };
+}
 
 function scrollToEl(el) {
     const top = el.getBoundingClientRect().top + window.scrollY - 60;
@@ -503,7 +528,7 @@ function initScrollSpy() {
         if (current) { current.link.classList.add('active'); current.link.setAttribute('aria-current', 'true'); }
     }
 
-    window.addEventListener('scroll', update, { passive: true });
+    window.addEventListener('scroll', rafThrottle(update), { passive: true });
     update();
 }
 
@@ -534,18 +559,20 @@ function initScrollProgress() {
     const btn = document.querySelector('.back-to-top');
     const nav = document.getElementById('mainNav');
     if (!bar && !btn) return;
-    window.addEventListener('scroll', () => {
+    function update() {
         const h = document.documentElement.scrollHeight - window.innerHeight;
         const pct = h > 0 ? (window.scrollY / h) * 100 : 0;
         if (bar) bar.style.width = pct + '%';
         if (btn) btn.classList.toggle('visible', window.scrollY > 400);
         if (nav) nav.classList.toggle('scrolled', window.scrollY > 60);
-    }, { passive: true });
+    }
+    window.addEventListener('scroll', rafThrottle(update), { passive: true });
     if (btn) btn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
 }
 
 function initKeyboardNav() {
-    const ids = ['page-top', 'education', 'experiences', 'research-interests', 'publications', 'projects', 'patents', 'awards', 'services', 'contact'];
+    // home → page-top, others → same id
+    const ids = all_section_ids.map(s => s === 'home' ? 'page-top' : s);
     function currentIdx() {
         const y = window.scrollY + 65;
         for (let i = ids.length - 1; i >= 0; i--) {
@@ -632,10 +659,9 @@ function initSearch() {
     const results = document.getElementById('searchResults');
     if (!toggle || !bar || !input) return;
 
-    // Build index
+    // Build index from canonical section list
     const index = [];
-    const sectionNames = ['home','education','experiences','research-interests','publications','projects','patents','awards','services','contact'];
-    sectionNames.forEach(name => {
+    all_section_ids.forEach(name => {
         const el = document.getElementById(name === 'home' ? 'page-top' : name);
         const md = document.getElementById(name + '-md');
         if (!md) return;
@@ -658,7 +684,15 @@ function initSearch() {
         matches.forEach(m => {
             const div = document.createElement('div');
             div.className = 'search-result-item';
-            div.innerHTML = `<span class="sr-section">${m.section}</span> ${m.text.substring(0, 120)}...`;
+            // Use textContent to avoid HTML injection from publication titles
+            const sectionSpan = document.createElement('span');
+            sectionSpan.className = 'sr-section';
+            sectionSpan.textContent = section_labels[m.section] || m.section;
+            const textSpan = document.createElement('span');
+            const snippet = m.text.length > 120 ? m.text.substring(0, 120) + '...' : m.text;
+            textSpan.textContent = ' ' + snippet;
+            div.appendChild(sectionSpan);
+            div.appendChild(textSpan);
             div.addEventListener('click', () => {
                 bar.classList.remove('open');
                 input.value = '';
