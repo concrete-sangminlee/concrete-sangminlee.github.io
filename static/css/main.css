@@ -145,7 +145,7 @@ address { font-style: normal; } /* override browser default italic for semantic 
   border-bottom-color: var(--border) !important;
 }
 /* Light mode: hero section */
-[data-theme="light"] .matrix-canvas { opacity: 0.015; filter: hue-rotate(90deg); }
+[data-theme="light"] #matrix-canvas { opacity: 0.015; filter: hue-rotate(90deg); }
 [data-theme="light"] .top-section { background: var(--bg2) !important; }
 [data-theme="light"] .hero-prompt { color: var(--text-dim) !important; }
 [data-theme="light"] #top-section-bg-text { color: var(--text-dim) !important; }
