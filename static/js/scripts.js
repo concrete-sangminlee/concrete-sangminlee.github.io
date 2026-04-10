@@ -723,10 +723,4 @@ window.addEventListener('DOMContentLoaded', () => {
     // Auto-update copyright year
     const crEl = document.getElementById('copyright-text');
     if (crEl) crEl.innerHTML = crEl.innerHTML.replace(/\d{4}/, new Date().getFullYear());
-
-    // MathJax — typeset only if math content exists
-    const bodyText = document.body.textContent;
-    if ((bodyText.includes('$$') || bodyText.includes('\\[')) && typeof MathJax !== 'undefined' && MathJax.typeset) {
-        MathJax.typeset();
-    }
 });
