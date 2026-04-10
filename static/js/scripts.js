@@ -632,7 +632,7 @@ function initKeyboardNav() {
                 '<h3>Keyboard Shortcuts</h3>' +
                 '<div><kbd>j</kbd> / <kbd>k</kbd> — next / prev section</div>' +
                 '<div><kbd>/</kbd> — open search</div>' +
-                '<div><kbd>t</kbd> — toggle theme</div>' +
+                '<div><kbd>t</kbd> — cycle theme (dark/light/auto)</div>' +
                 '<div><kbd>?</kbd> — this help</div>' +
                 '<div><kbd>Esc</kbd> — close</div>' +
                 '</div>';

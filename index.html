@@ -120,6 +120,9 @@
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&amp;family=Inter:wght@300;400;500;600&amp;display=swap" onload="this.onload=null;this.rel='stylesheet'">
     <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&amp;family=Inter:wght@300;400;500;600&amp;display=swap"></noscript>
 
+    <!-- Inline theme bootstrap to avoid FOUT (must run before stylesheet) -->
+    <script>(function(){var s=null;try{s=localStorage.getItem('theme')}catch(e){}var t=(s==='dark'||s==='light')?s:(window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark');document.documentElement.setAttribute('data-theme',t)})();</script>
+
     <!-- Core theme CSS (preload for explicit critical hint) -->
     <link rel="preload" as="style" href="static/css/main.css" />
     <link type="text/css" href="static/css/main.css" rel="stylesheet" />
