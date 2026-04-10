@@ -816,31 +816,50 @@ function initSearch() {
 function initThemeToggle() {
     const btn = document.querySelector('.theme-toggle');
     if (!btn) return;
-    const saved = localStorage.getItem('theme');
-    if (saved) {
-        document.documentElement.setAttribute('data-theme', saved);
-    } else if (window.matchMedia('(prefers-color-scheme: light)').matches) {
-        document.documentElement.setAttribute('data-theme', 'light');
+
+    // Three states: 'dark' | 'light' | 'auto' (auto = follow system)
+    function getMode() {
+        const saved = localStorage.getItem('theme');
+        return (saved === 'dark' || saved === 'light') ? saved : 'auto';
     }
-    // React to system theme changes (only when user hasn't picked a manual override)
-    window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', e => {
-        if (localStorage.getItem('theme')) return; // user picked, don't override
-        document.documentElement.setAttribute('data-theme', e.matches ? 'light' : 'dark');
-        updateIcon();
+    function systemIsLight() {
+        return window.matchMedia('(prefers-color-scheme: light)').matches;
+    }
+    function applyMode(mode) {
+        if (mode === 'auto') {
+            localStorage.removeItem('theme');
+            document.documentElement.setAttribute('data-theme', systemIsLight() ? 'light' : 'dark');
+        } else {
+            localStorage.setItem('theme', mode);
+            document.documentElement.setAttribute('data-theme', mode);
+        }
+        updateIcon(mode);
+    }
+    function updateIcon(mode) {
+        // Icon shows the CURRENT state. Click cycles dark → light → auto → dark.
+        const labels = {
+            dark:  { icon: '\u263D', label: 'Theme: dark (click for light)' },
+            light: { icon: '\u2600', label: 'Theme: light (click for auto)' },
+            auto:  { icon: '\u25D1', label: 'Theme: auto (click for dark)' },
+        };
+        const cfg = labels[mode];
+        btn.textContent = cfg.icon;
+        btn.setAttribute('aria-label', cfg.label);
+        btn.setAttribute('title', cfg.label);
+    }
+
+    // Initial application
+    applyMode(getMode());
+
+    // React to system theme changes only when in auto mode
+    window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', () => {
+        if (getMode() === 'auto') applyMode('auto');
     });
-    function updateIcon() {
-        const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
-        btn.textContent = isDark ? '\u263D' : '\u2600';
-        btn.setAttribute('aria-pressed', isDark ? 'false' : 'true');
-        btn.setAttribute('aria-label', isDark ? 'Switch to light mode' : 'Switch to dark mode');
-    }
-    updateIcon();
+
     btn.addEventListener('click', () => {
-        const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
-        const next = isDark ? 'light' : 'dark';
-        document.documentElement.setAttribute('data-theme', next);
-        localStorage.setItem('theme', next);
-        updateIcon();
+        const cur = getMode();
+        const next = cur === 'dark' ? 'light' : cur === 'light' ? 'auto' : 'dark';
+        applyMode(next);
     });
 }
 
