@@ -573,6 +573,31 @@ section:last-of-type::after { display: none; }
   white-space: nowrap;
   border: 0;
 }
+
+/* BibTeX download link */
+.bib-download {
+  display: inline-block;
+  margin-left: 1rem;
+  padding: 0.25rem 0.7rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  font-weight: 400;
+  color: var(--green);
+  background: rgba(57, 211, 83, 0.06);
+  border: 1px solid var(--green-border);
+  border-radius: 3px;
+  text-decoration: none;
+  letter-spacing: 0.05em;
+  transition: background 0.15s, box-shadow 0.15s;
+  vertical-align: middle;
+}
+.bib-download:hover,
+.bib-download:focus {
+  background: rgba(57, 211, 83, 0.15);
+  box-shadow: 0 0 8px var(--green-glow);
+  color: var(--green);
+  outline: none;
+}
 #research-interests { background: var(--bg2) !important; }
 #research-interests .main-body ul { display: flex; flex-wrap: wrap; gap: 0.5rem; }
 #research-interests .main-body li {

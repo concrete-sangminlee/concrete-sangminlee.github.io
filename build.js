@@ -235,4 +235,8 @@ for (const f of ['robots.txt', 'sitemap.xml', '404.html', 'manifest.json']) {
     if (fs.existsSync(f)) fs.copyFileSync(f, path.join(DIST_DIR, f));
 }
 
+// Copy publications.bib from contents to dist
+const bibSrc = path.join(CONTENT_DIR, 'publications.bib');
+if (fs.existsSync(bibSrc)) fs.copyFileSync(bibSrc, path.join(DIST_DIR, 'publications.bib'));
+
 console.log('Build complete → dist/');
