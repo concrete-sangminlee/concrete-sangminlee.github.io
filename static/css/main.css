@@ -18,7 +18,6 @@ address { font-style: normal; } /* override browser default italic for semantic 
 .mb-2 { margin-bottom: 0.5rem !important; }
 .mx-1 { margin-left: 0.25rem !important; margin-right: 0.25rem !important; }
 .mt-4 { margin-top: 1.5rem !important; }
-.fw-bold { font-weight: 700 !important; }
 .text-center { text-align: center !important; }
 .small { font-size: 0.875rem !important; }
 .text-white-50 { color: var(--text-dim) !important; }

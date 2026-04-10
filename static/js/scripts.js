@@ -747,6 +747,8 @@ function initSearch() {
         if (!matches.length) {
             const empty = document.createElement('div');
             empty.className = 'search-result-item search-result-empty';
+            empty.setAttribute('role', 'status');
+            empty.setAttribute('aria-live', 'polite');
             empty.textContent = `No results for "${q}"`;
             results.appendChild(empty);
             return;
