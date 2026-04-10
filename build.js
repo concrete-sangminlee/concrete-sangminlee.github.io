@@ -223,6 +223,13 @@ output = output.replace(
     '<picture><source srcset="static/assets/img/photo.webp" type="image/webp"><img src="static/assets/img/photo.jfif" alt="Sang Min Lee" class="hero-photo" loading="eager" fetchpriority="high" width="200" height="200"></picture>'
 );
 
+// Add target=_blank + rel=noopener noreferrer to all external links
+// (skip if attrs are already present so we don't double-up)
+output = output.replace(
+    /<a\s+href="(https?:\/\/[^"]+)"((?![^>]*\btarget=)[^>]*)>/g,
+    '<a href="$1"$2 target="_blank" rel="noopener noreferrer">'
+);
+
 // Minify HTML
 output = await minifyHTML(output, {
     collapseWhitespace: true,
