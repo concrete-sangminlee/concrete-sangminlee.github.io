@@ -239,7 +239,7 @@ function wrapYearsInSection(html, sectionId) {
         block.replace(/\((20\d{2})\)/g, '(<time datetime="$1">$1</time>)')
     );
 }
-['publications', 'awards', 'patents'].forEach(s => { output = wrapYearsInSection(output, s); });
+['publications', 'awards', 'patents', 'projects', 'services'].forEach(s => { output = wrapYearsInSection(output, s); });
 
 // Minify HTML
 output = await minifyHTML(output, {
