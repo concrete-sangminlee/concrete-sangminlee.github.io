@@ -198,6 +198,20 @@ const faviconTmp = faviconPath + '.tmp';
 await sharp(faviconPath).png({ compressionLevel: 9 }).toFile(faviconTmp);
 fs.renameSync(faviconTmp, faviconPath);
 
+// Generate PWA / iOS icons from photo
+// Palette PNG drastically cuts file size for icons (these are install-only assets)
+const iconSizes = [
+    { size: 192, name: 'icon-192.png' },
+    { size: 512, name: 'icon-512.png' },
+    { size: 180, name: 'apple-touch-icon.png' },
+];
+await Promise.all(iconSizes.map(({ size, name }) =>
+    sharp(photoSrc)
+        .resize(size, size, { kernel: sharp.kernel.lanczos3 })
+        .png({ compressionLevel: 9, palette: true, quality: 80 })
+        .toFile(path.join(DIST_DIR, 'static/assets', name))
+));
+
 // Minify CSS and JS in parallel
 await Promise.all([
     (async () => {
@@ -229,9 +243,17 @@ for (const f of toRemove) {
     if (fs.existsSync(p)) fs.unlinkSync(p);
 }
 
-// Copy root-level files to dist
-for (const f of ['robots.txt', 'sitemap.xml', '404.html', 'manifest.json']) {
+// Copy root-level files to dist (sitemap.xml gets a fresh lastmod stamp)
+for (const f of ['robots.txt', '404.html', 'manifest.json']) {
     if (fs.existsSync(f)) fs.copyFileSync(f, path.join(DIST_DIR, f));
+}
+
+// Sitemap: stamp every <lastmod> with today's date in YYYY-MM-DD
+if (fs.existsSync('sitemap.xml')) {
+    const today = new Date().toISOString().slice(0, 10);
+    let sitemap = fs.readFileSync('sitemap.xml', 'utf8');
+    sitemap = sitemap.replace(/<lastmod>[^<]*<\/lastmod>/g, `<lastmod>${today}</lastmod>`);
+    fs.writeFileSync(path.join(DIST_DIR, 'sitemap.xml'), sitemap);
 }
 
 // Copy publications.bib from contents to dist
