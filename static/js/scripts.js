@@ -185,7 +185,10 @@ function addShareButtons() {
     const container = document.getElementById('publications-md');
     if (!container) return;
     container.querySelectorAll('li').forEach(li => {
-        const text = li.textContent.trim().replace(/\s+/g, ' ').substring(0, 200);
+        // Exclude already-added cite-copy-btn so its '⎘' glyph doesn't end up in shared text
+        const liClone = li.cloneNode(true);
+        liClone.querySelectorAll('.cite-copy-btn, .share-btns').forEach(b => b.remove());
+        const text = liClone.textContent.trim().replace(/\s+/g, ' ').substring(0, 200);
         const link = li.querySelector('a[href]');
         const url = link ? link.href : window.location.href;
         const wrap = document.createElement('span');
@@ -370,31 +373,43 @@ function initHeroTerminal() {
             const pubs = document.querySelectorAll('#publications-md li');
             if (!pubs.length) return 'No publications found';
             const first = pubs[0].textContent.trim().replace(/\s+/g, ' ').replace(/⎘.*$/, '').replace(/𝕏.*$/, '').trim();
-            if (navigator.clipboard) navigator.clipboard.writeText(first);
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(first).catch(() => {});
+            }
             return `Copied first publication to clipboard:\n  ${first.substring(0, 120)}...`;
         },
-        tree: () =>
-            '.\n' +
-            '├── home/\n' +
-            '├── education/\n' +
-            '│   ├── Ph.D. (AI, SNU)\n' +
-            '│   ├── M.S. (Structural Eng, SNU)\n' +
-            '│   └── B.S. (Architecture + ECE, SNU)\n' +
-            '├── experiences/\n' +
-            '├── research-interests/\n' +
-            '├── publications/\n' +
-            '│   ├── journal/ (6)\n' +
-            '│   ├── conference/ (16)\n' +
-            '│   └── theses/ (3)\n' +
-            '├── projects/ (4)\n' +
-            '├── patents/ (2)\n' +
-            '├── awards/ (6)\n' +
-            '├── services/\n' +
-            '└── contact/',
+        tree: () => {
+            // Build tree dynamically from current DOM so counts stay in sync
+            const count = id => document.querySelectorAll(`#${id}-md li`).length;
+            const pubs = document.querySelectorAll('#publications-md h3');
+            const pubCounts = {};
+            pubs.forEach(h3 => {
+                const key = h3.textContent.trim().split(' ')[0].toLowerCase();
+                let n = 0, sib = h3.nextElementSibling;
+                while (sib && sib.tagName !== 'H3') {
+                    if (sib.tagName === 'OL' || sib.tagName === 'UL') n += sib.querySelectorAll('li').length;
+                    sib = sib.nextElementSibling;
+                }
+                pubCounts[key] = n;
+            });
+            return '.\n' +
+                '├── home/\n' +
+                '├── education/\n' +
+                '├── experiences/\n' +
+                '├── research-interests/\n' +
+                '├── publications/\n' +
+                Object.entries(pubCounts).map(([k, n]) => `│   ├── ${k}/ (${n})\n`).join('').replace(/├──([^├]*)$/, '└──$1') +
+                `├── projects/ (${count('projects')})\n` +
+                `├── patents/ (${count('patents')})\n` +
+                `├── awards/ (${count('awards')})\n` +
+                '├── services/\n' +
+                '└── contact/';
+        },
     };
 
-    const cmdNames = [...Object.keys(commands), 'clear', 'cd', 'grep', 'open'];
+    const cmdNames = [...Object.keys(commands), 'clear', 'cd', 'grep', 'open', 'echo'];
     const history = [];
+    const HISTORY_MAX = 50;
     let histIdx = -1;
 
     function runCommand(raw) {
@@ -470,7 +485,11 @@ function initHeroTerminal() {
     input.addEventListener('keydown', e => {
         if (e.key === 'Enter') {
             const val = input.value.trim();
-            if (val) { history.unshift(val); histIdx = -1; }
+            if (val) {
+                history.unshift(val);
+                if (history.length > HISTORY_MAX) history.length = HISTORY_MAX;
+                histIdx = -1;
+            }
             runCommand(input.value);
             input.value = '';
         } else if (e.key === 'ArrowUp') {
