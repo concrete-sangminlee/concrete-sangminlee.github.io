@@ -415,8 +415,6 @@ h1, h2, h3, h4, h5, h6 {
   font-size: 0.72rem;
   color: var(--text-dim);
   margin-bottom: 1.2rem;
-  opacity: 0;
-  animation: fadein 0.4s 0.2s forwards;
 }
 
 .hero-name {
@@ -431,8 +429,6 @@ h1, h2, h3, h4, h5, h6 {
   line-height: 1;
   margin-bottom: 0.6rem;
   filter: drop-shadow(0 0 20px var(--green-glow));
-  opacity: 0;
-  animation: fadein 0.4s 0.5s forwards;
 }
 
 .hero-cursor {
@@ -454,8 +450,7 @@ h1, h2, h3, h4, h5, h6 {
   font-weight: 400 !important;
   text-transform: none !important;
   border: none !important;
-  opacity: 0;
-  animation: fadein 0.4s 0.9s forwards, subtitleGlow 3s 2s ease-in-out infinite;
+  animation: subtitleGlow 3s 2s ease-in-out infinite;
 }
 
 @keyframes blink {
@@ -474,8 +469,7 @@ h1, h2, h3, h4, h5, h6 {
   padding: 3px;
   background: linear-gradient(135deg, var(--green) 0%, transparent 70%);
   box-shadow: 0 0 24px var(--green-glow), 0 0 48px rgba(57, 211, 83, 0.15);
-  opacity: 0;
-  animation: fadein 0.4s 1.2s forwards, photoBreathe 4s 2s ease-in-out infinite;
+  animation: photoBreathe 4s 2s ease-in-out infinite;
 }
 @keyframes photoBreathe {
   0%, 100% { box-shadow: 0 0 24px var(--green-glow), 0 0 48px rgba(57, 211, 83, 0.15); }
@@ -1035,8 +1029,8 @@ footer a:hover {
   .hero-cursor { animation: none !important; }
   section header h2::after { transform: scaleX(1) !important; transition: none !important; }
   body { animation: none !important; }
-  #top-section-bg-text { animation: fadein 0.4s 0.9s forwards !important; }
-  .hero-photo-wrap { animation: fadein 0.4s 1.2s forwards !important; }
+  #top-section-bg-text { animation: none !important; }
+  .hero-photo-wrap { animation: none !important; }
 }
 
 /* ── COPY CITATION BUTTON ── */
@@ -1325,8 +1319,6 @@ textarea.form-field { resize: vertical; min-height: 80px; }
   padding: 0.4rem 0.9rem;
   background: rgba(5, 5, 5, 0.65);
   max-width: 480px;
-  opacity: 0;
-  animation: fadein 0.4s 1.6s forwards;
   transition: border-color 0.2s;
 }
 .hero-terminal-input:focus-within {
