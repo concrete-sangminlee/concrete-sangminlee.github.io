@@ -1558,7 +1558,8 @@ textarea.form-field { resize: vertical; min-height: 80px; }
   text-decoration: none;
 }
 .search-result-item:hover,
-.search-result-item:focus-visible {
+.search-result-item:focus-visible,
+.search-result-item.active {
   background: var(--green-dim);
   color: var(--green);
   outline: none;

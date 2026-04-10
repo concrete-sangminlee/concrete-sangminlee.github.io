@@ -715,9 +715,33 @@ function initSearch() {
         searchTimer = setTimeout(() => doSearch(), 120);
     });
     results.setAttribute('role', 'listbox');
+    results.id = results.id || 'searchResults';
+    input.setAttribute('role', 'combobox');
+    input.setAttribute('aria-controls', results.id);
+    input.setAttribute('aria-expanded', 'false');
+    input.setAttribute('aria-autocomplete', 'list');
+    let activeIdx = -1;
+
+    function selectActive(scroll) {
+        const items = results.querySelectorAll('.search-result-item:not(.search-result-empty)');
+        items.forEach((it, i) => {
+            const active = i === activeIdx;
+            it.classList.toggle('active', active);
+            it.setAttribute('aria-selected', active ? 'true' : 'false');
+            if (active && scroll) it.scrollIntoView({ block: 'nearest' });
+        });
+        if (activeIdx >= 0 && items[activeIdx] && items[activeIdx].id) {
+            input.setAttribute('aria-activedescendant', items[activeIdx].id);
+        } else {
+            input.removeAttribute('aria-activedescendant');
+        }
+    }
+
     function doSearch() {
         const q = input.value.trim().toLowerCase();
         results.innerHTML = '';
+        activeIdx = -1;
+        input.setAttribute('aria-expanded', q.length >= 2 ? 'true' : 'false');
         if (q.length < 2) return;
         const matches = index.filter(i => i.text.toLowerCase().includes(q)).slice(0, 10);
         if (!matches.length) {
@@ -727,12 +751,13 @@ function initSearch() {
             results.appendChild(empty);
             return;
         }
-        matches.forEach(m => {
-            // <button> instead of <div> so keyboard users can Tab + Enter
+        matches.forEach((m, i) => {
             const btn = document.createElement('button');
             btn.type = 'button';
+            btn.id = 'sr-opt-' + i;
             btn.className = 'search-result-item';
             btn.setAttribute('role', 'option');
+            btn.setAttribute('aria-selected', 'false');
             const sectionSpan = document.createElement('span');
             sectionSpan.className = 'sr-section';
             sectionSpan.textContent = section_labels[m.section] || m.section;
@@ -741,17 +766,42 @@ function initSearch() {
             textSpan.textContent = ' ' + snippet;
             btn.appendChild(sectionSpan);
             btn.appendChild(textSpan);
-            btn.addEventListener('click', () => {
-                bar.classList.remove('open');
-                input.value = '';
-                results.innerHTML = '';
-                scrollToEl(m.el);
-            });
+            btn.addEventListener('click', () => activate(m));
             results.appendChild(btn);
         });
     }
 
-    input.addEventListener('keydown', e => { if (e.key === 'Escape') { bar.classList.remove('open'); input.value = ''; results.innerHTML = ''; } });
+    function activate(m) {
+        bar.classList.remove('open');
+        input.value = '';
+        results.innerHTML = '';
+        input.setAttribute('aria-expanded', 'false');
+        scrollToEl(m.el);
+    }
+
+    input.addEventListener('keydown', e => {
+        if (e.key === 'Escape') {
+            bar.classList.remove('open');
+            input.value = '';
+            results.innerHTML = '';
+            input.setAttribute('aria-expanded', 'false');
+            return;
+        }
+        const items = results.querySelectorAll('.search-result-item:not(.search-result-empty)');
+        if (!items.length) return;
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            activeIdx = (activeIdx + 1) % items.length;
+            selectActive(true);
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            activeIdx = activeIdx <= 0 ? items.length - 1 : activeIdx - 1;
+            selectActive(true);
+        } else if (e.key === 'Enter' && activeIdx >= 0) {
+            e.preventDefault();
+            items[activeIdx].click();
+        }
+    });
 }
 
 function initThemeToggle() {
