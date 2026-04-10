@@ -35,6 +35,12 @@ if (!config || typeof config !== 'object') {
     console.error(`build.js: ${configPath} is empty or not an object`);
     process.exit(1);
 }
+const REQUIRED_CONFIG_KEYS = ['title', 'page-top-title', 'top-section-bg-text', 'home-subtitle', 'copyright-text'];
+const missingKeys = REQUIRED_CONFIG_KEYS.filter(k => typeof config[k] !== 'string');
+if (missingKeys.length) {
+    console.error(`build.js: ${configPath} missing required string keys: ${missingKeys.join(', ')}`);
+    process.exit(1);
+}
 
 // (marked v17 dropped mangle/headerIds options — defaults are now safe)
 
