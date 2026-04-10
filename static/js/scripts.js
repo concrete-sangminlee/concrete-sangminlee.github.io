@@ -715,6 +715,9 @@ function initSearch() {
         const md = document.getElementById(name + '-md');
         if (!md) return;
         md.querySelectorAll('li, p').forEach(item => {
+            // Skip the home badge paragraph — its text is just '[GH] GitHub [GS] Scholar ...'
+            // and would surface as a junk hit when users type 'github' or 'scholar'.
+            if (item.querySelector('.home-badges')) return;
             const text = item.textContent.trim();
             if (text.length > 10) index.push({ text, section: name, el: el || md });
         });
