@@ -124,7 +124,8 @@
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&amp;family=Inter:wght@300;400;500;600&amp;display=swap" onload="this.onload=null;this.rel='stylesheet'">
     <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&amp;family=Inter:wght@300;400;500;600&amp;display=swap"></noscript>
 
-    <!-- Core theme CSS -->
+    <!-- Core theme CSS (preload for explicit critical hint) -->
+    <link rel="preload" as="style" href="static/css/main.css" />
     <link type="text/css" href="static/css/main.css" rel="stylesheet" />
 
     <!-- Core JS-->

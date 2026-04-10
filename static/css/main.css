@@ -114,11 +114,6 @@ address { font-style: normal; } /* override browser default italic for semantic 
   --text-bright:  #eeeeee;
   --mono: 'JetBrains Mono', 'Courier New', monospace;
   --sans: 'Inter', system-ui, -apple-system, sans-serif;
-
-  /* Animation durations */
-  --anim-fast: 0.2s;
-  --anim-base: 0.4s;
-  --anim-slow: 0.6s;
 }
 
 /* ── LIGHT MODE ── */

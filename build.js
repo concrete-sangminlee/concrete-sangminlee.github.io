@@ -8,6 +8,8 @@ import sharp from 'sharp';
 import esbuild from 'esbuild';
 import { minify as minifyHTML } from 'html-minifier-terser';
 
+const buildStart = Date.now();
+
 const CONTENT_DIR = 'contents';
 const DIST_DIR = 'dist';
 const SECTIONS = ['home', 'education', 'experiences', 'research-interests', 'publications', 'projects', 'patents', 'awards', 'services'];
@@ -342,4 +344,19 @@ if (fs.existsSync('.well-known')) {
     copyRecursive('.well-known', path.join(DIST_DIR, '.well-known'));
 }
 
-console.log('Build complete → dist/');
+// Build size summary
+function fmtKB(b) { return (b / 1024).toFixed(1) + ' KB'; }
+function dirSize(dir) {
+    let total = 0;
+    if (!fs.existsSync(dir)) return 0;
+    for (const entry of fs.readdirSync(dir)) {
+        if (entry === '.DS_Store') continue;
+        const p = path.join(dir, entry);
+        const st = fs.statSync(p);
+        total += st.isDirectory() ? dirSize(p) : st.size;
+    }
+    return total;
+}
+const elapsed = ((Date.now() - buildStart) / 1000).toFixed(2);
+const total = dirSize(DIST_DIR);
+console.log(`Build complete → dist/ (${fmtKB(total)} in ${elapsed}s)`);

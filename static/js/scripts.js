@@ -35,8 +35,9 @@ function rafThrottle(fn) {
 }
 
 function scrollToEl(el) {
-    const top = el.getBoundingClientRect().top + window.scrollY - 60;
-    window.scrollTo({ top, behavior: 'smooth' });
+    // CSS html { scroll-behavior: smooth } handles smoothness; scroll-margin-top
+    // handles the nav offset. We just delegate to the element's scrollIntoView.
+    el.scrollIntoView({ block: 'start' });
 }
 
 function initMatrixRain() {
