@@ -619,9 +619,11 @@ function initKeyboardNav() {
         if (e.key === '?') {
             e.preventDefault();
             let overlay = document.getElementById('kbd-overlay');
-            if (overlay) { overlay.remove(); return; }
-            overlay = document.createElement('div');
+            if (overlay) { overlay.close(); overlay.remove(); return; }
+            // Native <dialog> gives focus trap, ::backdrop, and Esc handling for free
+            overlay = document.createElement('dialog');
             overlay.id = 'kbd-overlay';
+            overlay.setAttribute('aria-label', 'Keyboard shortcuts');
             overlay.innerHTML =
                 '<div class="kbd-box">' +
                 '<h3>Keyboard Shortcuts</h3>' +
@@ -631,13 +633,14 @@ function initKeyboardNav() {
                 '<div><kbd>?</kbd> — this help</div>' +
                 '<div><kbd>Esc</kbd> — close</div>' +
                 '</div>';
-            overlay.addEventListener('click', () => overlay.remove());
+            // Close only when clicking the backdrop (the dialog itself), not the inner box
+            overlay.addEventListener('click', e => {
+                if (e.target === overlay) { overlay.close(); overlay.remove(); }
+            });
+            // Also clean up the DOM after native Esc/close
+            overlay.addEventListener('close', () => overlay.remove());
             document.body.appendChild(overlay);
-            return;
-        }
-        if (e.key === 'Escape') {
-            const overlay = document.getElementById('kbd-overlay');
-            if (overlay) overlay.remove();
+            overlay.showModal();
             return;
         }
         if (e.key === 't') {

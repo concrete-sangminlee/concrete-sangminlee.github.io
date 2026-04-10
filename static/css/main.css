@@ -1569,9 +1569,16 @@ textarea.form-field { resize: vertical; min-height: 80px; }
 
 /* ── KEYBOARD SHORTCUT OVERLAY ── */
 #kbd-overlay {
-  position: fixed;
+  /* native <dialog> reset */
+  border: 0;
+  padding: 0;
+  background: transparent;
+  max-width: none;
+  max-height: none;
+  width: 100vw;
+  height: 100vh;
+  /* layout */
   inset: 0;
-  background: rgba(0,0,0,0.6);
   z-index: 10000;
   display: flex;
   align-items: center;
@@ -1605,7 +1612,8 @@ kbd {
   font-size: 0.72rem;
   color: var(--green);
 }
-[data-theme="light"] #kbd-overlay { background: rgba(255,255,255,0.6); }
+#kbd-overlay::backdrop { background: rgba(0,0,0,0.6); }
+[data-theme="light"] #kbd-overlay::backdrop { background: rgba(255,255,255,0.6); }
 [data-theme="light"] .kbd-box { background: var(--bg); }
 
 /* ── SKIP LINK ── */
