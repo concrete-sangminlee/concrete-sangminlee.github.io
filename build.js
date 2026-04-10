@@ -362,6 +362,10 @@ if (fs.existsSync('.well-known')) {
     copyRecursive('.well-known', path.join(DIST_DIR, '.well-known'));
 }
 
+// .nojekyll: tell GitHub Pages to skip Jekyll preprocessing entirely.
+// Without this, Pages strips dot-prefixed paths like .well-known/.
+fs.writeFileSync(path.join(DIST_DIR, '.nojekyll'), '');
+
 // Build size summary
 function fmtKB(b) { return (b / 1024).toFixed(1) + ' KB'; }
 function dirSize(dir) {
