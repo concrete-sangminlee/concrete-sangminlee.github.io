@@ -12,5 +12,5 @@
 
 ### Conference Organization
 
-- **WEIK Annual Conference** (2025) — Organizing Committee, Seoul National University
+- **WEIK Annual Conference** (2025) - Organizing Committee, Seoul National University
 

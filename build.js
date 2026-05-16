@@ -48,7 +48,7 @@ if (missingKeys.length) {
     process.exit(1);
 }
 
-// (marked v17 dropped mangle/headerIds options — defaults are now safe)
+// (marked v17 dropped mangle/headerIds options - defaults are now safe)
 
 // Read all markdown sections
 const sections = {};
@@ -181,7 +181,7 @@ output = output.replace(
     `<address class="contact-grid" id="contact-grid">${buildContact()}</address>`
 );
 
-// Inline main.css into <head> — eliminates one render-blocking same-origin
+// Inline main.css into <head> - eliminates one render-blocking same-origin
 // request, the bottleneck for mobile FCP on throttled 4G.
 {
     const rawCss = fs.readFileSync('static/css/main.css', 'utf8');

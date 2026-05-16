@@ -1,5 +1,5 @@
 
-// Global error handlers — log to console without breaking the page
+// Global error handlers - log to console without breaking the page
 window.addEventListener('error', e => {
     console.warn('[scripts.js] runtime error:', e.message, 'at', e.filename + ':' + e.lineno);
 });
@@ -233,24 +233,24 @@ function initHeroTerminal() {
     const commands = {
         help: () =>
             'available commands:\n' +
-            '  help          — show this message\n' +
-            '  ls            — list sections\n' +
-            '  cd <section>  — navigate to section\n' +
-            '  whoami        — who is this?\n' +
-            '  cat bio.txt   — research bio\n' +
-            '  pwd           — current page\n' +
-            '  date          — current date/time\n' +
-            '  stats         — publication stats\n' +
-            '  contact       — contact info\n' +
-            '  grep <word>   — search publications\n' +
-            '  cite          — copy first publication to clipboard\n' +
-            '  open <url>    — open link\n' +
-            '  echo <text>   — print text\n' +
-            '  tree          — site structure\n' +
-            '  history       — command history\n' +
-            '  neofetch      — system info\n' +
-            '  skills        — tech stack\n' +
-            '  clear         — clear output',
+            '  help          - show this message\n' +
+            '  ls            - list sections\n' +
+            '  cd <section>  - navigate to section\n' +
+            '  whoami        - who is this?\n' +
+            '  cat bio.txt   - research bio\n' +
+            '  pwd           - current page\n' +
+            '  date          - current date/time\n' +
+            '  stats         - publication stats\n' +
+            '  contact       - contact info\n' +
+            '  grep <word>   - search publications\n' +
+            '  cite          - copy first publication to clipboard\n' +
+            '  open <url>    - open link\n' +
+            '  echo <text>   - print text\n' +
+            '  tree          - site structure\n' +
+            '  history       - command history\n' +
+            '  neofetch      - system info\n' +
+            '  skills        - tech stack\n' +
+            '  clear         - clear output',
         ls: { rich: true, fn: () => {
             return allSections.map(s => {
                 const id = s === 'home' ? 'page-top' : s;
@@ -382,7 +382,7 @@ function initHeroTerminal() {
                 window.open(url, '_blank', 'noopener');
                 resultHtml = `<span class="g">$</span> ${escapeHtml(cmd)}\nopened ${escapeHtml(url)}`;
             } else {
-                resultHtml = `<span class="g">$</span> ${escapeHtml(cmd)}\n<span class="err">open: invalid URL — must start with http(s)://</span>`;
+                resultHtml = `<span class="g">$</span> ${escapeHtml(cmd)}\n<span class="err">open: invalid URL - must start with http(s)://</span>`;
             }
         } else if (cmd.startsWith('echo ')) {
             const text = cmd.slice(5);
@@ -402,7 +402,7 @@ function initHeroTerminal() {
                 }
             }
         } else {
-            resultHtml = `<span class="g">$</span> ${escapeHtml(cmd)}\n<span class="err">${escapeHtml(cmd)}: command not found — try 'help'</span>`;
+            resultHtml = `<span class="g">$</span> ${escapeHtml(cmd)}\n<span class="err">${escapeHtml(cmd)}: command not found - try 'help'</span>`;
         }
 
         const line = document.createElement('div');
@@ -501,9 +501,9 @@ function initKeyboardNav() {
             overlay.innerHTML =
                 '<div class="kbd-box">' +
                 '<h3>Keyboard Shortcuts</h3>' +
-                '<div><kbd>j</kbd> / <kbd>k</kbd> — next / prev section</div>' +
-                '<div><kbd>?</kbd> — this help</div>' +
-                '<div><kbd>Esc</kbd> — close</div>' +
+                '<div><kbd>j</kbd> / <kbd>k</kbd> - next / prev section</div>' +
+                '<div><kbd>?</kbd> - this help</div>' +
+                '<div><kbd>Esc</kbd> - close</div>' +
                 '</div>';
             // Close only when clicking the backdrop (the dialog itself), not the inner box
             overlay.addEventListener('click', e => {
@@ -527,31 +527,6 @@ function initKeyboardNav() {
     });
 }
 
-function initContactForm() {
-    const form = document.getElementById('contactForm');
-    const status = document.getElementById('formStatus');
-    if (!form || !status) return;
-    form.addEventListener('submit', async e => {
-        e.preventDefault();
-        status.textContent = 'Sending...';
-        status.className = 'form-status';
-        try {
-            const res = await fetch(form.action, { method: 'POST', body: new FormData(form), headers: { Accept: 'application/json' } });
-            if (res.ok) {
-                status.textContent = 'Message sent. Thank you!';
-                status.className = 'form-status success';
-                form.reset();
-            } else {
-                status.textContent = 'Failed to send. Please try email instead.';
-                status.className = 'form-status error';
-            }
-        } catch {
-            status.textContent = 'Network error. Please try email instead.';
-            status.className = 'form-status error';
-        }
-    });
-}
-
 window.addEventListener('DOMContentLoaded', () => {
     initMatrixRain();
     initHeroTerminal();
@@ -560,7 +535,6 @@ window.addEventListener('DOMContentLoaded', () => {
     addShareButtons();
     initScrollProgress();
     initKeyboardNav();
-    initContactForm();
 
     // Auto-update copyright year
     const crEl = document.getElementById('copyright-text');
@@ -576,8 +550,8 @@ window.addEventListener('DOMContentLoaded', () => {
                     if (!newSw) return;
                     newSw.addEventListener('statechange', () => {
                         if (newSw.state === 'installed' && navigator.serviceWorker.controller) {
-                            // There's an old controller — this is an update, not first install
-                            showToast('New version available — refresh to update');
+                            // There's an old controller - this is an update, not first install
+                            showToast('New version available - refresh to update');
                         }
                     });
                 });
