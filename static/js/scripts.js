@@ -641,7 +641,7 @@ function initKeyboardNav() {
                 '<h3>Keyboard Shortcuts</h3>' +
                 '<div><kbd>j</kbd> / <kbd>k</kbd> — next / prev section</div>' +
                 '<div><kbd>/</kbd> — open search</div>' +
-                '<div><kbd>t</kbd> — cycle theme (dark/light/auto)</div>' +
+                '<div><kbd>t</kbd> — toggle theme (dark/light)</div>' +
                 '<div><kbd>?</kbd> — this help</div>' +
                 '<div><kbd>Esc</kbd> — close</div>' +
                 '</div>';
@@ -829,30 +829,18 @@ function initThemeToggle() {
     const btn = document.querySelector('.theme-toggle');
     if (!btn) return;
 
-    // Three states: 'dark' | 'light' | 'auto' (auto = follow system)
     function getMode() {
-        const saved = localStorage.getItem('theme');
-        return (saved === 'dark' || saved === 'light') ? saved : 'auto';
-    }
-    function systemIsLight() {
-        return window.matchMedia('(prefers-color-scheme: light)').matches;
+        return localStorage.getItem('theme') === 'light' ? 'light' : 'dark';
     }
     function applyMode(mode) {
-        if (mode === 'auto') {
-            localStorage.removeItem('theme');
-            document.documentElement.setAttribute('data-theme', systemIsLight() ? 'light' : 'dark');
-        } else {
-            localStorage.setItem('theme', mode);
-            document.documentElement.setAttribute('data-theme', mode);
-        }
+        localStorage.setItem('theme', mode);
+        document.documentElement.setAttribute('data-theme', mode);
         updateIcon(mode);
     }
     function updateIcon(mode) {
-        // Icon shows the CURRENT state. Click cycles dark → light → auto → dark.
         const labels = {
             dark:  { icon: '\u263D', label: 'Theme: dark (click for light)' },
-            light: { icon: '\u2600', label: 'Theme: light (click for auto)' },
-            auto:  { icon: '\u25D1', label: 'Theme: auto (click for dark)' },
+            light: { icon: '\u2600', label: 'Theme: light (click for dark)' },
         };
         const cfg = labels[mode];
         btn.textContent = cfg.icon;
@@ -860,18 +848,10 @@ function initThemeToggle() {
         btn.setAttribute('title', cfg.label);
     }
 
-    // Initial application
     applyMode(getMode());
 
-    // React to system theme changes only when in auto mode
-    window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', () => {
-        if (getMode() === 'auto') applyMode('auto');
-    });
-
     btn.addEventListener('click', () => {
-        const cur = getMode();
-        const next = cur === 'dark' ? 'light' : cur === 'light' ? 'auto' : 'dark';
-        applyMode(next);
+        applyMode(getMode() === 'dark' ? 'light' : 'dark');
     });
 }
 
