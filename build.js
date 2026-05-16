@@ -91,16 +91,6 @@ function buildContact() {
     }).join('\n');
 }
 
-// Generate featured paper HTML
-function buildFeaturedPaper() {
-    if (!config.featured_paper) return '';
-    const fp = config.featured_paper;
-    return `<div class="featured-label">// FEATURED PAPER</div>
-                <div class="featured-venue">${fp.venue}</div>
-                <div class="featured-title">${fp.title}</div>
-                <div class="featured-authors">${fp.authors}</div>`;
-}
-
 // Build section HTML with terminal wrapping
 function buildSection(name) {
     const html = sections[name];
@@ -189,12 +179,6 @@ for (const name of SECTIONS) {
 output = output.replace(
     '<address class="contact-grid" id="contact-grid"></address>',
     `<address class="contact-grid" id="contact-grid">${buildContact()}</address>`
-);
-
-// Featured paper
-output = output.replace(
-    '<a href="#publications" class="featured-paper" id="featured-paper"></a>',
-    `<a href="#publications" class="featured-paper" id="featured-paper">${buildFeaturedPaper()}</a>`
 );
 
 // Inline main.css into <head> — eliminates one render-blocking same-origin

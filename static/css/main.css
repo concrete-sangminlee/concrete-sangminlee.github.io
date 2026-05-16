@@ -925,50 +925,6 @@ textarea.form-field { resize: vertical; min-height: 80px; }
   #services .main-body ul { grid-template-columns: 1fr; }
 }
 
-/* ── FEATURED PAPER ── */
-.featured-paper {
-  display: block;
-  text-decoration: none !important;
-  margin-top: 2rem;
-  padding: 1.5rem 2rem;
-  border: 1px solid var(--green-border);
-  border-left-width: 3px;
-  border-left-color: var(--green);
-  border-radius: 0 6px 6px 0;
-  background: linear-gradient(135deg, var(--green-dim) 0%, transparent 60%);
-  box-shadow: 0 0 30px rgba(57, 211, 83, 0.08);
-  transition: background 0.3s, box-shadow 0.3s, transform 0.3s;
-}
-.featured-paper:hover {
-  background: rgba(57, 211, 83, 0.07);
-  box-shadow: 0 0 20px rgba(57, 211, 83, 0.12);
-  transform: translateX(4px);
-}
-.featured-label {
-  font-family: var(--mono);
-  font-size: 0.58rem;
-  color: var(--green);
-  letter-spacing: 2px;
-  margin-bottom: 0.7rem;
-}
-.featured-venue {
-  font-family: var(--mono);
-  font-size: 0.65rem;
-  color: var(--text-dim);
-  margin-bottom: 0.35rem;
-}
-.featured-title {
-  font-size: 0.92rem;
-  color: var(--text-bright);
-  font-weight: 500;
-  margin-bottom: 0.35rem;
-  line-height: 1.5;
-}
-.featured-authors {
-  font-size: 0.78rem;
-  color: var(--text);
-}
-
 /* ── HERO INTERACTIVE TERMINAL ── */
 .hero-terminal-input {
   display: flex;

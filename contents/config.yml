@@ -42,11 +42,5 @@ contact:
     value: concrete-sangminlee
     url: '/thinkmany/'
 
-# Featured paper
-featured_paper:
-  venue: 'Journal of Nondestructive Evaluation &middot; 2025'
-  title: 'Machine Learning Assisted Method for Automated Impact-Echo Testing of Concrete Structures'
-  authors: 'Lee, S. M., Hong, J., Choi, H., &amp; Kang, T. H.-K.'
-
 # Bio for hero terminal
 bio: 'Ph.D. Candidate in Artificial Intelligence at Seoul National University. Research focuses on machine learning for structural health monitoring and wind engineering.'
