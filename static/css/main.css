@@ -109,7 +109,7 @@ address { font-style: normal; } /* override browser default italic for semantic 
   --border:       #1f1f1f;
   --border2:      #2a2a2a;
   --text:         #c8c8c8;
-  --text-dim:     #505050;
+  --text-dim:     #9a9a9a;
   --text-bright:  #eeeeee;
   --mono: 'JetBrains Mono', 'Courier New', monospace;
   --sans: 'Inter', system-ui, -apple-system, sans-serif;
