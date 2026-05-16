@@ -216,70 +216,6 @@ function addShareButtons() {
     });
 }
 
-function initPublicationFilter() {
-    const md = document.getElementById('publications-md');
-    if (!md) return;
-    const termBody = md.querySelector('.term-body');
-    if (!termBody) return;
-
-    const children = Array.from(termBody.children);
-    const sections = [];
-    const hrEls = []; // tracked separately so they can be hidden when filtering
-    let cur = null;
-    children.forEach(el => {
-        if (el.tagName === 'H3') {
-            cur = { key: el.textContent.trim().split(' ')[0].toLowerCase(), els: [el] };
-            sections.push(cur);
-        } else if (el.tagName === 'HR') {
-            hrEls.push(el);
-        } else if (cur) {
-            cur.els.push(el);
-        }
-    });
-    if (!sections.length) return;
-
-    const bar = document.createElement('div');
-    bar.className = 'pub-filter-bar';
-    function countLI(els) {
-        // Section els are typically [h3, ol] — the LI items live INSIDE the ol/ul,
-        // not as direct children, so filter(tagName === 'LI') always returned 0.
-        return els.reduce((n, e) => {
-            if (e.tagName === 'LI') return n + 1;
-            if (e.tagName === 'OL' || e.tagName === 'UL') return n + e.querySelectorAll('li').length;
-            return n;
-        }, 0);
-    }
-    function countItems(key) {
-        if (key === 'all') return sections.reduce((n, s) => n + countLI(s.els), 0);
-        const sec = sections.find(s => s.key === key);
-        return sec ? countLI(sec.els) : 0;
-    }
-    const filters = [
-        { key: 'all', label: 'ALL' },
-        ...sections.map(s => ({ key: s.key, label: s.key.toUpperCase() }))
-    ];
-    filters.forEach(f => {
-        const btn = document.createElement('button');
-        btn.className = 'pub-filter-btn' + (f.key === 'all' ? ' active' : '');
-        const count = countItems(f.key);
-        btn.textContent = count > 0 ? `${f.label} (${count})` : f.label;
-        btn.addEventListener('click', () => {
-            bar.querySelectorAll('.pub-filter-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            sections.forEach(s => {
-                const show = f.key === 'all' || s.key === f.key;
-                s.els.forEach(el => { el.style.display = show ? '' : 'none'; });
-            });
-            // Hide separators when filtering to a single section
-            hrEls.forEach(el => { el.style.display = f.key === 'all' ? '' : 'none'; });
-        });
-        bar.appendChild(btn);
-    });
-
-    const term = md.querySelector('.term');
-    if (term) md.insertBefore(bar, term);
-}
-
 function initStatsCounter() {
     // Stats values are pre-rendered in HTML for LCP. No JS animation.
     // (Previously animated 0 → target, but that made the stat-num the LCP
@@ -829,7 +765,6 @@ window.addEventListener('DOMContentLoaded', () => {
     initStatsCounter();
     addCopyButtons();
     addShareButtons();
-    initPublicationFilter();
     initScrollProgress();
     initKeyboardNav();
     initSearch();
