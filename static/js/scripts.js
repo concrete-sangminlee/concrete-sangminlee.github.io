@@ -236,108 +236,13 @@ function initHeroTerminal() {
             '  help          - show this message\n' +
             '  ls            - list sections\n' +
             '  cd <section>  - navigate to section\n' +
-            '  whoami        - who is this?\n' +
-            '  cat bio.txt   - research bio\n' +
-            '  pwd           - current page\n' +
-            '  date          - current date/time\n' +
-            '  stats         - publication stats\n' +
-            '  contact       - contact info\n' +
-            '  grep <word>   - search publications\n' +
-            '  cite          - copy first publication to clipboard\n' +
-            '  open <url>    - open link\n' +
-            '  echo <text>   - print text\n' +
-            '  tree          - site structure\n' +
-            '  history       - command history\n' +
-            '  neofetch      - system info\n' +
-            '  skills        - tech stack\n' +
             '  clear         - clear output',
         ls: { rich: true, fn: () => {
-            return allSections.map(s => {
-                const id = s === 'home' ? 'page-top' : s;
-                return false
-                    ? `  <span class="g">${escapeHtml(s)}/</span> <span class="dim">← here</span>`
-                    : `  ${escapeHtml(s)}/`;
-            }).join('\n');
+            return allSections.map(s => `  ${escapeHtml(s)}/`).join('\n');
         }},
-        whoami: () => {
-            const titleEl = document.getElementById('page-top-title');
-            const subtitleEl = document.getElementById('top-section-bg-text');
-            return `${titleEl ? titleEl.textContent : 'Sang Min Lee'}\n${subtitleEl ? subtitleEl.textContent : ''}`;
-        },
-        'cat bio.txt': () => {
-            const paragraphs = document.querySelectorAll('#home-md p');
-            for (const p of paragraphs) {
-                const text = p.textContent.trim();
-                if (text.length > 30) return text;
-            }
-            return '';
-        },
-        pwd: () => window.location.href,
-        date: () => new Date().toLocaleString(),
-        contact: () => {
-            const cards = document.querySelectorAll('.contact-card');
-            return Array.from(cards).map(c => {
-                const label = c.querySelector('.contact-label');
-                const val = c.querySelector('.contact-val');
-                return `  ${label ? label.textContent : ''}: ${val ? val.textContent : ''}`;
-            }).join('\n');
-        },
-        neofetch: () =>
-            '  ┌──────────────────────┐\n' +
-            '  │  SANG MIN LEE        │\n' +
-            '  ├──────────────────────┤\n' +
-            '  │  OS:    SNU AI Ph.D. │\n' +
-            '  │  Host:  Seoul, Korea │\n' +
-            '  │  Shell: portfolio/zsh│\n' +
-            '  │  Theme: matrix-dark  │\n' +
-            '  │  Uptime: 13y research│\n' +
-            '  └──────────────────────┘',
-        skills: () =>
-            'languages:\n  Python, MATLAB, JavaScript, C\n' +
-            'frameworks:\n  PyTorch, TensorFlow, scikit-learn\n' +
-            'domains:\n  SHM, Wind Eng, NDT, LLM/RAG',
-        history: () => history.length
-            ? history.slice(0, 10).map((c, i) => `  ${i + 1}  ${c}`).join('\n')
-            : '  (empty)',
-        cite: () => {
-            const pubs = document.querySelectorAll('#publications-md li');
-            if (!pubs.length) return 'No publications found';
-            const first = pubs[0].textContent.trim().replace(/\s+/g, ' ').replace(/⎘.*$/, '').replace(/𝕏.*$/, '').trim();
-            if (navigator.clipboard) {
-                navigator.clipboard.writeText(first).catch(() => {});
-            }
-            return `Copied first publication to clipboard:\n  ${first.substring(0, 120)}...`;
-        },
-        tree: () => {
-            // Build tree dynamically from current DOM so counts stay in sync
-            const count = id => document.querySelectorAll(`#${id}-md li`).length;
-            const pubs = document.querySelectorAll('#publications-md h3');
-            const pubCounts = {};
-            pubs.forEach(h3 => {
-                const key = h3.textContent.trim().split(' ')[0].toLowerCase();
-                let n = 0, sib = h3.nextElementSibling;
-                while (sib && sib.tagName !== 'H3') {
-                    if (sib.tagName === 'OL' || sib.tagName === 'UL') n += sib.querySelectorAll('li').length;
-                    sib = sib.nextElementSibling;
-                }
-                pubCounts[key] = n;
-            });
-            return '.\n' +
-                '├── home/\n' +
-                '├── education/\n' +
-                '├── experiences/\n' +
-                '├── research-interests/\n' +
-                '├── publications/\n' +
-                Object.entries(pubCounts).map(([k, n]) => `│   ├── ${k}/ (${n})\n`).join('').replace(/├──([^├]*)$/, '└──$1') +
-                `├── projects/ (${count('projects')})\n` +
-                `├── patents/ (${count('patents')})\n` +
-                `├── awards/ (${count('awards')})\n` +
-                '├── services/\n' +
-                '└── contact/';
-        },
     };
 
-    const cmdNames = [...Object.keys(commands), 'clear', 'cd', 'grep', 'open', 'echo'];
+    const cmdNames = [...Object.keys(commands), 'clear', 'cd'];
     const history = [];
     const HISTORY_MAX = 50;
     let histIdx = -1;
@@ -359,34 +264,6 @@ function initHeroTerminal() {
                 const result = typeof entry === 'function' ? entry() : entry;
                 resultHtml = `<span class="g">$</span> ${escapeHtml(cmd)}\n${escapeHtml(result)}`;
             }
-        } else if (cmd.startsWith('grep ')) {
-            const keyword = cmd.slice(5).trim().toLowerCase();
-            if (!keyword) {
-                resultHtml = `<span class="g">$</span> ${escapeHtml(cmd)}\nUsage: grep &lt;keyword&gt;`;
-            } else {
-                const pubs = document.querySelectorAll('#publications-md li');
-                const matches = Array.from(pubs).filter(li => li.textContent.toLowerCase().includes(keyword));
-                const maxShow = 8;
-                let out;
-                if (!matches.length) {
-                    out = `No results for "${keyword}"`;
-                } else {
-                    out = matches.slice(0, maxShow).map(li => '  ' + li.textContent.trim().replace(/\n/g, ' ').substring(0, 100) + '...').join('\n');
-                    if (matches.length > maxShow) out += `\n  ...and ${matches.length - maxShow} more`;
-                }
-                resultHtml = `<span class="g">$</span> ${escapeHtml(cmd)}\n${escapeHtml(out)}`;
-            }
-        } else if (cmd.startsWith('open ')) {
-            const url = cmd.slice(5).trim();
-            if (url.startsWith('http://') || url.startsWith('https://')) {
-                window.open(url, '_blank', 'noopener');
-                resultHtml = `<span class="g">$</span> ${escapeHtml(cmd)}\nopened ${escapeHtml(url)}`;
-            } else {
-                resultHtml = `<span class="g">$</span> ${escapeHtml(cmd)}\n<span class="err">open: invalid URL - must start with http(s)://</span>`;
-            }
-        } else if (cmd.startsWith('echo ')) {
-            const text = cmd.slice(5);
-            resultHtml = `<span class="g">$</span> ${escapeHtml(cmd)}\n${escapeHtml(text)}`;
         } else if (cmd.startsWith('cd ') || cmd === 'cd') {
             const target = cmd.slice(2).trim().replace(/\/$/, '');
             if (!target) {
@@ -443,13 +320,13 @@ function initHeroTerminal() {
             } else {
                 const partial = val.trim();
                 const match = cmdNames.find(c => c.startsWith(partial));
-                if (match) input.value = (match === 'cd' || match === 'grep' || match === 'open') ? match + ' ' : match;
+                if (match) input.value = match === 'cd' ? match + ' ' : match;
             }
         }
     });
 
     // Cycle placeholder text
-    const hints = ['help', 'ls', 'cat bio.txt', 'cd education', 'whoami', 'grep wind', 'neofetch', 'skills', 'tree'];
+    const hints = ['help', 'ls', 'cd education', 'clear'];
     let hintIdx = 0;
     function cyclePlaceholder() {
         const h = hints[hintIdx++ % hints.length];
