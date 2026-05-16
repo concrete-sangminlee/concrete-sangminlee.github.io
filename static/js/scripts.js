@@ -216,12 +216,6 @@ function addShareButtons() {
     });
 }
 
-function initStatsCounter() {
-    // Stats values are pre-rendered in HTML for LCP. No JS animation.
-    // (Previously animated 0 → target, but that made the stat-num the LCP
-    // element and tanked Performance score. CSS handles any visual flourish.)
-}
-
 function escapeHtml(str) {
     return String(str)
         .replace(/&/g, '&amp;')
@@ -282,14 +276,6 @@ function initHeroTerminal() {
         },
         pwd: () => window.location.href,
         date: () => new Date().toLocaleString(),
-        stats: () => {
-            const items = document.querySelectorAll('.stat-item');
-            return Array.from(items).map(el => {
-                const num = el.querySelector('.stat-num');
-                const label = el.querySelector('.stat-label');
-                return `  ${num ? num.dataset.target : '?'} ${label ? label.textContent : ''}`;
-            }).join('\n');
-        },
         contact: () => {
             const cards = document.querySelectorAll('.contact-card');
             return Array.from(cards).map(c => {
@@ -756,7 +742,6 @@ window.addEventListener('DOMContentLoaded', () => {
     initScrollSpy();
     initNavbarToggle();
     initScrollAnimations();
-    initStatsCounter();
     addCopyButtons();
     addShareButtons();
     initScrollProgress();

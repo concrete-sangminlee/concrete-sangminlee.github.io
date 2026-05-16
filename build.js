@@ -77,17 +77,6 @@ function wrapInTerminal(name, html) {
         </div>`;
 }
 
-// Generate stats HTML — pre-render final value (no "0" start) so LCP fires immediately
-function buildStats() {
-    if (!config.stats) return '';
-    return config.stats.map(s =>
-        `<div class="stat-item" title="${s.value}${s.suffix || ''} ${s.label.toLowerCase()}">
-                    <span class="stat-num" data-target="${s.value}"${s.suffix ? ` data-suffix="${s.suffix}"` : ''}>${s.value}${s.suffix || ''}</span>
-                    <span class="stat-label">${s.label}</span>
-                </div>`
-    ).join('\n');
-}
-
 // Generate contact cards HTML
 function buildContact() {
     if (!config.contact) return '';
@@ -195,12 +184,6 @@ for (const name of SECTIONS) {
         `<div class="main-body" id="${name}-md">${buildSection(name)}</div>`
     );
 }
-
-// Stats
-output = output.replace(
-    '<div class="stats-grid" id="stats-grid"></div>',
-    `<div class="stats-grid" id="stats-grid">${buildStats()}</div>`
-);
 
 // Contact
 output = output.replace(

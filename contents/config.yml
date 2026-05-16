@@ -42,21 +42,6 @@ contact:
     value: concrete-sangminlee
     url: '/thinkmany/'
 
-# Stats bar
-stats:
-  - value: 6
-    suffix: ''
-    label: JOURNAL PAPERS
-  - value: 16
-    suffix: ''
-    label: CONFERENCE PAPERS
-  - value: 13
-    suffix: ''
-    label: YEARS IN RESEARCH
-  - value: 6
-    suffix: ''
-    label: AWARDS
-
 # Featured paper
 featured_paper:
   venue: 'Journal of Nondestructive Evaluation &middot; 2025'
