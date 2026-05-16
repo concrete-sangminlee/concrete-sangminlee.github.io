@@ -381,6 +381,7 @@ section:last-of-type::after { display: none; }
   grid-template-columns: 1fr 1fr;
   gap: 0.4rem;
 }
+#services .main-body ul:last-of-type { grid-template-columns: 1fr; }
 @media (max-width: 576px) {
   #services .main-body ul { grid-template-columns: 1fr; }
 }
