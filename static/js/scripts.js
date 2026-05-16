@@ -273,11 +273,8 @@ function initHeroTerminal() {
             return `${titleEl ? titleEl.textContent : 'Sang Min Lee'}\n${subtitleEl ? subtitleEl.textContent : ''}`;
         },
         'cat bio.txt': () => {
-            // Skip the badge-link paragraph; return the first paragraph that's
-            // actual prose (doesn't contain .home-badges, has more than 30 chars).
             const paragraphs = document.querySelectorAll('#home-md p');
             for (const p of paragraphs) {
-                if (p.querySelector('.home-badges')) continue;
                 const text = p.textContent.trim();
                 if (text.length > 30) return text;
             }
@@ -646,9 +643,6 @@ function initSearch() {
         const md = document.getElementById(name + '-md');
         if (!md) return;
         md.querySelectorAll('li, p').forEach(item => {
-            // Skip the home badge paragraph — its text is just '[GH] GitHub [GS] Scholar ...'
-            // and would surface as a junk hit when users type 'github' or 'scholar'.
-            if (item.querySelector('.home-badges')) return;
             const text = item.textContent.trim();
             if (text.length > 10) index.push({ text, section: name, el: el || md });
         });

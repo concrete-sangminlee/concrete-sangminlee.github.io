@@ -442,33 +442,6 @@ section:last-of-type::after { display: none; }
   border-left: 2px solid var(--border2);
 }
 
-/* Home badges (inline text replacement for shields.io) */
-.home-badges {
-  display: inline-flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin-bottom: 0.6rem;
-}
-.home-badges a {
-  font-family: var(--mono);
-  font-size: 0.7rem;
-  padding: 0.25rem 0.6rem;
-  color: var(--green);
-  background: rgba(57, 211, 83, 0.06);
-  border: 1px solid var(--green-border);
-  border-radius: 3px;
-  text-decoration: none;
-  letter-spacing: 0.04em;
-  transition: background 0.15s, box-shadow 0.15s;
-}
-.home-badges a:hover,
-.home-badges a:focus {
-  background: rgba(57, 211, 83, 0.15);
-  box-shadow: 0 0 6px var(--green-glow);
-  color: var(--green);
-  outline: none;
-}
-
 /* Screen-reader-only utility */
 .visually-hidden {
   position: absolute;
