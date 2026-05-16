@@ -252,11 +252,9 @@ function initHeroTerminal() {
             '  skills        — tech stack\n' +
             '  clear         — clear output',
         ls: { rich: true, fn: () => {
-            const active = document.querySelector('#mainNav .nav-link.active');
-            const activeId = active ? active.getAttribute('href').replace('#', '') : '';
             return allSections.map(s => {
                 const id = s === 'home' ? 'page-top' : s;
-                return id === activeId
+                return false
                     ? `  <span class="g">${escapeHtml(s)}/</span> <span class="dim">← here</span>`
                     : `  ${escapeHtml(s)}/`;
             }).join('\n');
@@ -465,70 +463,15 @@ function initHeroTerminal() {
     setTimeout(cyclePlaceholder, 3000);
 }
 
-// Vanilla ScrollSpy — highlights nav link for the visible section
-function initScrollSpy() {
-    const navLinks = document.querySelectorAll('#mainNav .nav-link');
-    const sectionEls = [];
-
-    navLinks.forEach(link => {
-        const id = link.getAttribute('href').replace('#', '');
-        const el = document.getElementById(id);
-        if (el) {
-            sectionEls.push({ el, link });
-            link.addEventListener('click', e => {
-                e.preventDefault();
-                scrollToEl(el);
-            });
-        }
-    });
-
-    function update() {
-        const scrollY = window.scrollY + 65;
-        let current = sectionEls[0];
-        for (const s of sectionEls) {
-            if (s.el.offsetTop <= scrollY) current = s;
-        }
-        navLinks.forEach(l => { l.classList.remove('active'); l.removeAttribute('aria-current'); });
-        if (current) { current.link.classList.add('active'); current.link.setAttribute('aria-current', 'true'); }
-    }
-
-    window.addEventListener('scroll', rafThrottle(update), { passive: true });
-    update();
-}
-
-// Vanilla navbar collapse toggle
-function initNavbarToggle() {
-    const toggler = document.querySelector('.navbar-toggler');
-    const collapse = document.getElementById('navbarResponsive');
-    if (!toggler || !collapse) return;
-
-    toggler.addEventListener('click', () => {
-        collapse.classList.toggle('show');
-        toggler.setAttribute('aria-expanded', collapse.classList.contains('show'));
-    });
-
-    // Close on nav link click (mobile)
-    collapse.querySelectorAll('.nav-link').forEach(link => {
-        link.addEventListener('click', () => {
-            if (collapse.classList.contains('show')) {
-                collapse.classList.remove('show');
-                toggler.setAttribute('aria-expanded', 'false');
-            }
-        });
-    });
-}
-
 function initScrollProgress() {
     const bar = document.querySelector('.scroll-progress');
     const btn = document.querySelector('.back-to-top');
-    const nav = document.getElementById('mainNav');
     if (!bar && !btn) return;
     function update() {
         const h = document.documentElement.scrollHeight - window.innerHeight;
         const pct = h > 0 ? (window.scrollY / h) * 100 : 0;
         if (bar) bar.style.width = pct + '%';
         if (btn) btn.classList.toggle('visible', window.scrollY > 400);
-        if (nav) nav.classList.toggle('scrolled', window.scrollY > 60);
     }
     window.addEventListener('scroll', rafThrottle(update), { passive: true });
     if (btn) btn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
@@ -559,7 +502,6 @@ function initKeyboardNav() {
                 '<div class="kbd-box">' +
                 '<h3>Keyboard Shortcuts</h3>' +
                 '<div><kbd>j</kbd> / <kbd>k</kbd> — next / prev section</div>' +
-                '<div><kbd>/</kbd> — open search</div>' +
                 '<div><kbd>?</kbd> — this help</div>' +
                 '<div><kbd>Esc</kbd> — close</div>' +
                 '</div>';
@@ -571,11 +513,6 @@ function initKeyboardNav() {
             overlay.addEventListener('close', () => overlay.remove());
             document.body.appendChild(overlay);
             overlay.showModal();
-            return;
-        }
-        if (e.key === '/') {
-            e.preventDefault();
-            document.querySelector('.search-toggle')?.click();
             return;
         }
         if (e.key === 'j') {
@@ -615,138 +552,14 @@ function initContactForm() {
     });
 }
 
-function initSearch() {
-    const toggle = document.querySelector('.search-toggle');
-    const bar = document.getElementById('searchBar');
-    const input = document.getElementById('searchInput');
-    const results = document.getElementById('searchResults');
-    if (!toggle || !bar || !input) return;
-
-    // Build index from canonical section list
-    const index = [];
-    all_section_ids.forEach(name => {
-        const el = document.getElementById(name === 'home' ? 'page-top' : name);
-        const md = document.getElementById(name + '-md');
-        if (!md) return;
-        md.querySelectorAll('li, p').forEach(item => {
-            const text = item.textContent.trim();
-            if (text.length > 10) index.push({ text, section: name, el: el || md });
-        });
-    });
-
-    toggle.addEventListener('click', () => {
-        bar.classList.toggle('open');
-        if (bar.classList.contains('open')) input.focus();
-    });
-
-    let searchTimer = null;
-    input.addEventListener('input', () => {
-        if (searchTimer) clearTimeout(searchTimer);
-        searchTimer = setTimeout(() => doSearch(), 120);
-    });
-    results.setAttribute('role', 'listbox');
-    results.id = results.id || 'searchResults';
-    input.setAttribute('role', 'combobox');
-    input.setAttribute('aria-controls', results.id);
-    input.setAttribute('aria-expanded', 'false');
-    input.setAttribute('aria-autocomplete', 'list');
-    let activeIdx = -1;
-
-    function selectActive(scroll) {
-        const items = results.querySelectorAll('.search-result-item:not(.search-result-empty)');
-        items.forEach((it, i) => {
-            const active = i === activeIdx;
-            it.classList.toggle('active', active);
-            it.setAttribute('aria-selected', active ? 'true' : 'false');
-            if (active && scroll) it.scrollIntoView({ block: 'nearest' });
-        });
-        if (activeIdx >= 0 && items[activeIdx] && items[activeIdx].id) {
-            input.setAttribute('aria-activedescendant', items[activeIdx].id);
-        } else {
-            input.removeAttribute('aria-activedescendant');
-        }
-    }
-
-    function doSearch() {
-        const q = input.value.trim().toLowerCase();
-        results.innerHTML = '';
-        activeIdx = -1;
-        input.setAttribute('aria-expanded', q.length >= 2 ? 'true' : 'false');
-        if (q.length < 2) return;
-        const matches = index.filter(i => i.text.toLowerCase().includes(q)).slice(0, 10);
-        if (!matches.length) {
-            const empty = document.createElement('div');
-            empty.className = 'search-result-item search-result-empty';
-            empty.setAttribute('role', 'status');
-            empty.setAttribute('aria-live', 'polite');
-            empty.textContent = `No results for "${q}"`;
-            results.appendChild(empty);
-            return;
-        }
-        matches.forEach((m, i) => {
-            const btn = document.createElement('button');
-            btn.type = 'button';
-            btn.id = 'sr-opt-' + i;
-            btn.className = 'search-result-item';
-            btn.setAttribute('role', 'option');
-            btn.setAttribute('aria-selected', 'false');
-            const sectionSpan = document.createElement('span');
-            sectionSpan.className = 'sr-section';
-            sectionSpan.textContent = section_labels[m.section] || m.section;
-            const textSpan = document.createElement('span');
-            const snippet = m.text.length > 120 ? m.text.substring(0, 120) + '...' : m.text;
-            textSpan.textContent = ' ' + snippet;
-            btn.appendChild(sectionSpan);
-            btn.appendChild(textSpan);
-            btn.addEventListener('click', () => activate(m));
-            results.appendChild(btn);
-        });
-    }
-
-    function activate(m) {
-        bar.classList.remove('open');
-        input.value = '';
-        results.innerHTML = '';
-        input.setAttribute('aria-expanded', 'false');
-        scrollToEl(m.el);
-    }
-
-    input.addEventListener('keydown', e => {
-        if (e.key === 'Escape') {
-            bar.classList.remove('open');
-            input.value = '';
-            results.innerHTML = '';
-            input.setAttribute('aria-expanded', 'false');
-            return;
-        }
-        const items = results.querySelectorAll('.search-result-item:not(.search-result-empty)');
-        if (!items.length) return;
-        if (e.key === 'ArrowDown') {
-            e.preventDefault();
-            activeIdx = (activeIdx + 1) % items.length;
-            selectActive(true);
-        } else if (e.key === 'ArrowUp') {
-            e.preventDefault();
-            activeIdx = activeIdx <= 0 ? items.length - 1 : activeIdx - 1;
-            selectActive(true);
-        } else if (e.key === 'Enter' && activeIdx >= 0) {
-            e.preventDefault();
-            items[activeIdx].click();
-        }
-    });
-}
-
 window.addEventListener('DOMContentLoaded', () => {
     initMatrixRain();
     initHeroTerminal();
-    initScrollSpy();
-    initNavbarToggle();
     initScrollAnimations();
     addCopyButtons();
     addShareButtons();
     initScrollProgress();
     initKeyboardNav();
-    initSearch();
     initContactForm();
 
     // Auto-update copyright year
