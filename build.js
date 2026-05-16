@@ -214,21 +214,6 @@ output = output.replace(
     `<a href="#publications" class="featured-paper" id="featured-paper">${buildFeaturedPaper()}</a>`
 );
 
-// Remove client-side parsing libraries (no longer needed)
-output = output.replace(/\s*<script[^>]*src="static\/js\/marked\.min\.js"[^>]*><\/script>\s*/g, '\n');
-output = output.replace(/\s*<script[^>]*src="static\/js\/js-yaml\.min\.js"[^>]*><\/script>\s*/g, '\n');
-output = output.replace(/\s*<script[^>]*src="static\/js\/bootstrap\.bundle\.min\.js"[^>]*><\/script>\s*/g, '\n');
-output = output.replace(/\s*<!-- Markdown -->\s*/g, '\n');
-output = output.replace(/\s*<!-- Bootstrap core JS-->\s*/g, '\n');
-
-// Remove polyfill.io (ES6 is universally supported now)
-output = output.replace(/\s*<!-- For Compatability -->\s*/g, '\n');
-output = output.replace(/\s*<script[^>]*polyfill\.io[^>]*><\/script>\s*/g, '\n');
-
-// Remove styles.css link (Bootstrap) — main.css is now self-contained
-output = output.replace(/\s*<link[^>]*href="static\/css\/styles\.css"[^>]*\/>\s*/g, '\n');
-output = output.replace(/\s*<!-- Core theme CSS \(includes Bootstrap\)-->\s*/g, '\n');
-
 // Inject <picture> tag for WebP with JFIF fallback
 output = output.replace(
     '<img src="static/assets/img/photo.jfif" alt="Sang Min Lee" class="hero-photo" loading="eager" fetchpriority="high" width="200" height="200">',
@@ -327,21 +312,6 @@ await Promise.all([
         fs.writeFileSync(jsPath, result.code);
     })(),
 ]);
-
-// Remove libraries from dist that are no longer needed client-side
-const toRemove = [
-    'static/js/marked.min.js',
-    'static/js/js-yaml.min.js',
-    'static/js/bootstrap.bundle.min.js',
-    'static/js/bootstrap.bundle.min.js.map',
-    'static/js/tex-svg.js',
-    'static/css/styles.css',
-    'static/assets/leonard_round.png',
-];
-for (const f of toRemove) {
-    const p = path.join(DIST_DIR, f);
-    if (fs.existsSync(p)) fs.unlinkSync(p);
-}
 
 // Copy root-level files to dist (sitemap.xml gets a fresh lastmod stamp)
 for (const f of ['robots.txt', '404.html', 'manifest.json']) {
