@@ -641,7 +641,6 @@ function initKeyboardNav() {
                 '<h3>Keyboard Shortcuts</h3>' +
                 '<div><kbd>j</kbd> / <kbd>k</kbd> — next / prev section</div>' +
                 '<div><kbd>/</kbd> — open search</div>' +
-                '<div><kbd>t</kbd> — toggle theme (dark/light)</div>' +
                 '<div><kbd>?</kbd> — this help</div>' +
                 '<div><kbd>Esc</kbd> — close</div>' +
                 '</div>';
@@ -653,10 +652,6 @@ function initKeyboardNav() {
             overlay.addEventListener('close', () => overlay.remove());
             document.body.appendChild(overlay);
             overlay.showModal();
-            return;
-        }
-        if (e.key === 't') {
-            document.querySelector('.theme-toggle')?.click();
             return;
         }
         if (e.key === '/') {
@@ -825,36 +820,6 @@ function initSearch() {
     });
 }
 
-function initThemeToggle() {
-    const btn = document.querySelector('.theme-toggle');
-    if (!btn) return;
-
-    function getMode() {
-        return localStorage.getItem('theme') === 'light' ? 'light' : 'dark';
-    }
-    function applyMode(mode) {
-        localStorage.setItem('theme', mode);
-        document.documentElement.setAttribute('data-theme', mode);
-        updateIcon(mode);
-    }
-    function updateIcon(mode) {
-        const labels = {
-            dark:  { icon: '\u263D', label: 'Theme: dark (click for light)' },
-            light: { icon: '\u2600', label: 'Theme: light (click for dark)' },
-        };
-        const cfg = labels[mode];
-        btn.textContent = cfg.icon;
-        btn.setAttribute('aria-label', cfg.label);
-        btn.setAttribute('title', cfg.label);
-    }
-
-    applyMode(getMode());
-
-    btn.addEventListener('click', () => {
-        applyMode(getMode() === 'dark' ? 'light' : 'dark');
-    });
-}
-
 window.addEventListener('DOMContentLoaded', () => {
     initMatrixRain();
     initHeroTerminal();
@@ -867,7 +832,6 @@ window.addEventListener('DOMContentLoaded', () => {
     initPublicationFilter();
     initScrollProgress();
     initKeyboardNav();
-    initThemeToggle();
     initSearch();
     initContactForm();
 
