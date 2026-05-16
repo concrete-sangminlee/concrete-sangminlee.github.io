@@ -5,7 +5,6 @@ const CACHE_NAME = '__CACHE_VERSION__';
 const PRECACHE = [
     '/',
     '/index.html',
-    '/static/css/main.css',
     '/static/js/scripts.js',
     '/static/assets/img/photo.webp',
     '/static/assets/img/photo.jfif',

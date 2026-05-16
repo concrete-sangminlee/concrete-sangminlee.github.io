@@ -214,6 +214,17 @@ output = output.replace(
     `<a href="#publications" class="featured-paper" id="featured-paper">${buildFeaturedPaper()}</a>`
 );
 
+// Inline main.css into <head> — eliminates one render-blocking same-origin
+// request, the bottleneck for mobile FCP on throttled 4G.
+{
+    const rawCss = fs.readFileSync('static/css/main.css', 'utf8');
+    const minifiedCss = (await esbuild.transform(rawCss, { loader: 'css', minify: true })).code;
+    output = output.replace(
+        /\s*<!-- Core theme CSS \(preload for explicit critical hint\) -->\s*<link rel="preload" as="style" href="static\/css\/main\.css" \/>\s*<link type="text\/css" href="static\/css\/main\.css" rel="stylesheet" \/>/,
+        `\n    <style>${minifiedCss}</style>`
+    );
+}
+
 // Inject <picture> tag for WebP with JFIF fallback
 output = output.replace(
     '<img src="static/assets/img/photo.jfif" alt="Sang Min Lee" class="hero-photo" loading="eager" fetchpriority="high" width="200" height="200">',
@@ -297,21 +308,17 @@ await Promise.all(iconSizes.map(({ size, name }) =>
         .toFile(path.join(DIST_DIR, 'static/assets', name))
 ));
 
-// Minify CSS and JS in parallel
-await Promise.all([
-    (async () => {
-        const cssPath = path.join(DIST_DIR, 'static/css/main.css');
-        const css = fs.readFileSync(cssPath, 'utf8');
-        const result = await esbuild.transform(css, { loader: 'css', minify: true });
-        fs.writeFileSync(cssPath, result.code);
-    })(),
-    (async () => {
-        const jsPath = path.join(DIST_DIR, 'static/js/scripts.js');
-        const js = fs.readFileSync(jsPath, 'utf8');
-        const result = await esbuild.transform(js, { loader: 'js', minify: true, target: 'es2020' });
-        fs.writeFileSync(jsPath, result.code);
-    })(),
-]);
+// CSS is now inlined into <head>; remove the standalone file from dist.
+const distCssDir = path.join(DIST_DIR, 'static/css');
+if (fs.existsSync(distCssDir)) fs.rmSync(distCssDir, { recursive: true, force: true });
+
+// Minify JS
+{
+    const jsPath = path.join(DIST_DIR, 'static/js/scripts.js');
+    const js = fs.readFileSync(jsPath, 'utf8');
+    const result = await esbuild.transform(js, { loader: 'js', minify: true, target: 'es2020' });
+    fs.writeFileSync(jsPath, result.code);
+}
 
 // Copy root-level files to dist (sitemap.xml gets a fresh lastmod stamp)
 for (const f of ['robots.txt', '404.html', 'manifest.json']) {
