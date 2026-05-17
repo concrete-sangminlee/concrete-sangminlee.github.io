@@ -181,13 +181,15 @@ output = output.replace(
     `<address class="contact-grid" id="contact-grid">${buildContact()}</address>`
 );
 
-// Inline main.css into <head> - eliminates one render-blocking same-origin
-// request, the bottleneck for mobile FCP on throttled 4G.
+// Inline main.css at the INLINE_CSS_HERE placeholder. In dev, the placeholder
+// is followed by a plain <link rel="stylesheet"> so opening index.html
+// directly still gets styled; the build strips both and replaces them with
+// an inline <style>, eliminating one render-blocking same-origin request.
 {
     const rawCss = fs.readFileSync('static/css/main.css', 'utf8');
     const minifiedCss = (await esbuild.transform(rawCss, { loader: 'css', minify: true })).code;
     output = output.replace(
-        /\s*<!-- Core theme CSS \(preload for explicit critical hint\) -->\s*<link rel="preload" as="style" href="static\/css\/main\.css" \/>\s*<link type="text\/css" href="static\/css\/main\.css" rel="stylesheet" \/>/,
+        /\s*<!-- INLINE_CSS_HERE: build\.js replaces this comment with <style>\.\.\.<\/style> -->\s*<link rel="stylesheet" href="static\/css\/main\.css" \/>/,
         `\n    <style>${minifiedCss}</style>`
     );
 }
