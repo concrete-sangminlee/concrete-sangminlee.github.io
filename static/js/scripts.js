@@ -325,8 +325,12 @@ function initHeroTerminal() {
         }
     });
 
+    // Auto-run `ls` once on load so visitors see the section list without
+    // having to guess that a terminal is interactive.
+    setTimeout(() => runCommand('ls'), 800);
+
     // Cycle placeholder text
-    const hints = ['help', 'ls', 'cd education', 'clear'];
+    const hints = ['help', 'ls', 'cd education', 'clear', 'press ? for shortcuts'];
     let hintIdx = 0;
     function cyclePlaceholder() {
         const h = hints[hintIdx++ % hints.length];
