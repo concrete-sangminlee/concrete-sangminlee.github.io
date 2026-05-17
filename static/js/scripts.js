@@ -155,67 +155,6 @@ function showToast(msg) {
     setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 300); }, 1500);
 }
 
-function addCopyButtons() {
-    const container = document.getElementById('publications-md');
-    if (!container) return;
-    container.querySelectorAll('li').forEach(li => {
-        const citationText = li.textContent.trim();
-        li.style.position = 'relative';
-        const btn = document.createElement('button');
-        btn.className = 'cite-copy-btn';
-        btn.title = 'Copy citation';
-        btn.setAttribute('aria-label', 'Copy citation');
-        btn.textContent = '⎘';
-        btn.addEventListener('click', () => {
-            if (!navigator.clipboard) return;
-            navigator.clipboard.writeText(citationText).then(() => {
-                btn.textContent = '✓';
-                btn.classList.add('copied');
-                showToast('Citation copied');
-                setTimeout(() => {
-                    btn.textContent = '⎘';
-                    btn.classList.remove('copied');
-                }, 1500);
-            }).catch(() => {});
-        });
-        li.appendChild(btn);
-    });
-}
-
-function addShareButtons() {
-    const container = document.getElementById('publications-md');
-    if (!container) return;
-    container.querySelectorAll('li').forEach(li => {
-        // Exclude already-added cite-copy-btn so its '⎘' glyph doesn't end up in shared text
-        const liClone = li.cloneNode(true);
-        liClone.querySelectorAll('.cite-copy-btn, .share-btns').forEach(b => b.remove());
-        const text = liClone.textContent.trim().replace(/\s+/g, ' ').substring(0, 200);
-        const link = li.querySelector('a[href]');
-        const url = link ? link.href : window.location.href;
-        const wrap = document.createElement('span');
-        wrap.className = 'share-btns';
-        const twBtn = document.createElement('button');
-        twBtn.className = 'share-btn';
-        twBtn.title = 'Share on X';
-        twBtn.setAttribute('aria-label', 'Share on X');
-        twBtn.textContent = '𝕏';
-        twBtn.addEventListener('click', () => {
-            window.open(`https://x.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank', 'noopener,width=550,height=420');
-        });
-        const liBtn = document.createElement('button');
-        liBtn.className = 'share-btn';
-        liBtn.title = 'Share on LinkedIn';
-        liBtn.setAttribute('aria-label', 'Share on LinkedIn');
-        liBtn.textContent = 'in';
-        liBtn.addEventListener('click', () => {
-            window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`, '_blank', 'noopener,width=550,height=420');
-        });
-        wrap.appendChild(twBtn);
-        wrap.appendChild(liBtn);
-        li.appendChild(wrap);
-    });
-}
-
 function escapeHtml(str) {
     return String(str)
         .replace(/&/g, '&amp;')
@@ -412,8 +351,6 @@ window.addEventListener('DOMContentLoaded', () => {
     initMatrixRain();
     initHeroTerminal();
     initScrollAnimations();
-    addCopyButtons();
-    addShareButtons();
     initScrollProgress();
     initKeyboardNav();
 

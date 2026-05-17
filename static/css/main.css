@@ -748,57 +748,7 @@ footer a:hover {
   .hero-photo-wrap { animation: none !important; }
 }
 
-/* ── COPY CITATION BUTTON ── */
-.cite-copy-btn {
-  position: absolute;
-  top: 0.4rem;
-  right: 0.4rem;
-  background: transparent;
-  border: 1px solid var(--border2);
-  color: var(--text-dim);
-  font-size: 0.72rem;
-  padding: 1px 6px;
-  border-radius: 3px;
-  cursor: pointer;
-  opacity: 0;
-  transition: opacity 0.2s, color 0.2s, border-color 0.2s;
-  font-family: var(--mono);
-  line-height: 1.6;
-}
-.main-body li:hover .cite-copy-btn { opacity: 1; }
-.cite-copy-btn:hover,
-.cite-copy-btn.copied { color: var(--green); border-color: var(--green); opacity: 1; }
-
-.share-btns {
-  position: absolute;
-  right: 0.4rem;
-  bottom: 0.4rem;
-  display: flex;
-  gap: 0.25rem;
-  opacity: 0;
-  transition: opacity 0.2s;
-}
-.main-body li:hover .share-btns { opacity: 1; }
-.share-btn {
-  background: transparent;
-  border: 1px solid var(--border2);
-  color: var(--text-dim);
-  font-family: var(--mono);
-  font-size: 0.55rem;
-  width: 20px;
-  height: 20px;
-  border-radius: 3px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: color 0.2s, border-color 0.2s;
-  padding: 0;
-}
-.share-btn:hover { color: var(--green); border-color: var(--green); }
-
 #publications .main-body li {
-  padding-right: 2.6rem !important;
   overflow-wrap: break-word;
   word-break: keep-all; /* CJK-friendly: don't break inside Korean phrases */
 }
@@ -1069,7 +1019,6 @@ kbd {
 /* ── PRINT ── */
 @media print {
   footer, .scroll-progress, .back-to-top, .hero-corners,
-  .cite-copy-btn, .share-btns,
   #matrix-canvas, .hero-overlay, .hero-scanlines, .hero-terminal-input,
   #hero-cmd-output, .skip-link { display: none !important; }
   body { background: #fff !important; color: #000 !important; font-size: 10.5pt; }
