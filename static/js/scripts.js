@@ -114,7 +114,7 @@ function initScrollAnimations() {
         });
     }, { threshold: 0.07 });
 
-    document.querySelectorAll('.term, .featured-paper').forEach(el => {
+    document.querySelectorAll('.term').forEach(el => {
         el.classList.add('anim-target');
         observer.observe(el);
     });

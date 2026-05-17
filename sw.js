@@ -10,7 +10,6 @@ const PRECACHE = [
     '/static/assets/img/photo.jfif',
     '/static/assets/favicon-32.png',
     '/manifest.json',
-    '/publications.bib',
 ];
 
 self.addEventListener('install', e => {
