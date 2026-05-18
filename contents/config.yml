@@ -21,11 +21,6 @@ contact:
     label: GOOGLE SCHOLAR
     value: Sang Min Lee
     url: 'https://scholar.google.com/citations?user=ogvd_LsAAAAJ&hl=en'
-  - icon: IN
-    code: IN
-    label: LINKEDIN
-    value: Sang Min Lee
-    url: 'https://www.linkedin.com/in/sang-min-lee-3a2568174/'
   - icon: ID
     code: ID
     label: ORCID
