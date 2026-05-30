@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Sequence Arena">
+  <rect width="512" height="512" rx="96" fill="#10372e"/>
+  <rect x="48" y="58" width="416" height="396" rx="34" fill="#d6bd79"/>
+  <rect x="48" y="58" width="416" height="396" rx="34" fill="url(#felt)" opacity=".32"/>
+  <g stroke="#4b3517" stroke-opacity=".22" stroke-width="3">
+    <path d="M90 58v396M132 58v396M174 58v396M216 58v396M258 58v396M300 58v396M342 58v396M384 58v396M426 58v396"/>
+    <path d="M48 98h416M48 138h416M48 178h416M48 218h416M48 258h416M48 298h416M48 338h416M48 378h416M48 418h416"/>
+  </g>
+  <circle cx="146" cy="164" r="38" fill="#c33a55"/>
+  <circle cx="366" cy="348" r="38" fill="#2f62d4"/>
+  <circle cx="146" cy="164" r="25" fill="#f9dfe5" opacity=".58"/>
+  <circle cx="366" cy="348" r="25" fill="#dfe9ff" opacity=".58"/>
+  <text x="256" y="282" text-anchor="middle" font-family="Georgia, serif" font-size="96" font-weight="800" fill="#2a2116">SA</text>
+  <defs>
+    <linearGradient id="felt" x1="48" x2="464" y1="58" y2="454">
+      <stop stop-color="#fff8e9"/>
+      <stop offset=".56" stop-color="#c99a3c"/>
+      <stop offset="1" stop-color="#75501f"/>
+    </linearGradient>
+  </defs>
+</svg>

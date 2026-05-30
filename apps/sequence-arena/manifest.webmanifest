@@ -1,0 +1,48 @@
+{
+  "id": "./?source=pwa",
+  "name": "Sequence Arena",
+  "short_name": "Sequence",
+  "description": "GitHub Pages에서 바로 실행되는 오프라인 솔로 시퀀스 보드게임.",
+  "lang": "ko",
+  "dir": "ltr",
+  "start_url": "./?source=pwa",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": ["window-controls-overlay", "minimal-ui", "standalone"],
+  "orientation": "portrait-primary",
+  "background_color": "#061411",
+  "theme_color": "#10372e",
+  "categories": ["games", "entertainment"],
+  "prefer_related_applications": false,
+  "launch_handler": {
+    "client_mode": "navigate-existing"
+  },
+  "icons": [
+    {
+      "src": "./assets/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./assets/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./assets/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "새 방 만들기",
+      "short_name": "새 방",
+      "description": "오프라인 솔로 게임을 엽니다.",
+      "url": "./"
+    }
+  ]
+}

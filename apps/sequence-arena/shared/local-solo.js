@@ -1,0 +1,295 @@
+import {
+  TEAM_META,
+  createGame,
+  discardDeadCard,
+  discardPendingCard,
+  drawReplacementCard,
+  getCurrentPlayer,
+  playCard,
+  serializeViewerGame,
+} from "./game-core.js";
+import { BOT_DIFFICULTIES, chooseBotAction, normalizeBotDifficulty } from "./bot-ai.js";
+
+const LOCAL_ROOM_CODE = "SOLO";
+const LOCAL_BOT_SESSION_ID = "local-cobalt-bot";
+const LOCAL_BOT_NAME = "코발트 봇";
+const LOCAL_BOT_DELAY_MS = 650;
+const BOT_TIMER_PENDING = Symbol("bot-timer-pending");
+
+function randomSessionId() {
+  return globalThis.crypto?.randomUUID?.() || `local-${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
+}
+
+function makeSeatSummary(seats) {
+  return seats.map((seat) => ({
+    seatIndex: seat.seatIndex,
+    team: seat.team,
+    teamName: TEAM_META[seat.team].name,
+    occupied: true,
+    connected: seat.connected,
+    isBot: Boolean(seat.isBot),
+    name: seat.name,
+  }));
+}
+
+function makeSeats(sessionId, name) {
+  return [
+    {
+      seatIndex: 0,
+      team: "A",
+      sessionId,
+      name,
+      connected: true,
+      isBot: false,
+    },
+    {
+      seatIndex: 1,
+      team: "B",
+      sessionId: LOCAL_BOT_SESSION_ID,
+      name: LOCAL_BOT_NAME,
+      connected: true,
+      isBot: true,
+    },
+  ];
+}
+
+export class LocalSoloRuntime {
+  constructor({ onSnapshot = null, timerApi = globalThis, botDelayMs = LOCAL_BOT_DELAY_MS } = {}) {
+    this.onSnapshot = onSnapshot;
+    this.timerApi = timerApi;
+    this.botDelayMs = botDelayMs;
+    this.room = null;
+    this.botTimer = null;
+    this.matchNumber = 0;
+    this.lastRecordedMatchNumber = 0;
+    this.matchHistory = [];
+  }
+
+  clearBotTimer() {
+    if (this.botTimer != null && this.botTimer !== BOT_TIMER_PENDING) {
+      this.timerApi.clearTimeout?.(this.botTimer);
+    }
+    this.botTimer = null;
+    if (this.room) {
+      this.room.botThinkingSeatIndex = null;
+    }
+  }
+
+  start({ name = "플레이어", sessionId = "", difficulty = BOT_DIFFICULTIES.smart } = {}) {
+    this.clearBotTimer();
+    const cleanName = String(name || "플레이어").trim().slice(0, 40) || "플레이어";
+    const cleanSessionId = sessionId || randomSessionId();
+    const seats = makeSeats(cleanSessionId, cleanName);
+    this.matchNumber += 1;
+    this.room = {
+      code: LOCAL_ROOM_CODE,
+      phase: "playing",
+      teamSize: 1,
+      seats,
+      game: createGame(seats, Math.random),
+      botDifficulty: normalizeBotDifficulty(difficulty),
+      botThinkingSeatIndex: null,
+      rematchMode: "host",
+      rematchVotes: [],
+      chatMessages: [],
+      matchStartedAt: Date.now(),
+      matchNumber: this.matchNumber,
+    };
+    this.room.game.matchNumber = this.matchNumber;
+    return this.emit("오프라인 솔로 모드가 시작되었습니다. 서버 없이 이 브라우저에서 봇과 1대1로 진행합니다.");
+  }
+
+  snapshot(systemMessage = "") {
+    const room = this.room;
+    if (!room) return null;
+    return {
+      type: "room_snapshot",
+      localMode: true,
+      roomCode: room.code,
+      phase: room.phase,
+      systemMessage,
+      yourSessionId: room.seats[0].sessionId,
+      yourRole: "player",
+      yourSeatIndex: 0,
+      allSeatsFilled: true,
+      teamSize: 1,
+      requiredPlayers: 2,
+      occupiedSeats: 2,
+      spectatorCount: 0,
+      spectators: [],
+      allowSpectators: false,
+      botThinkingSeatIndex: room.botThinkingSeatIndex,
+      botDifficulty: room.botDifficulty,
+      rematchMode: room.rematchMode,
+      rematchVoteSeatIndexes: [],
+      rematchRequiredVotes: 1,
+      matchHistory: this.matchHistory,
+      chatMessages: room.chatMessages,
+      seats: makeSeatSummary(room.seats),
+      game: room.game ? serializeViewerGame(room.game, 0) : null,
+    };
+  }
+
+  emit(systemMessage = "") {
+    const snapshot = this.snapshot(systemMessage);
+    if (snapshot && this.onSnapshot) {
+      this.onSnapshot(snapshot);
+    }
+    return snapshot;
+  }
+
+  handle(payload) {
+    if (!this.room) {
+      return this.start();
+    }
+    switch (payload?.type) {
+      case "play_card":
+        return this.playCard(payload);
+      case "discard_dead":
+        return this.discardDead(payload);
+      case "discard_to_pile":
+        return this.discardToPile();
+      case "draw_from_deck":
+        return this.drawFromDeck();
+      case "rematch":
+        return this.rematch();
+      case "set_bot_difficulty":
+        return this.setBotDifficulty(payload.difficulty);
+      case "send_chat":
+        return this.sendChat(payload.text);
+      default:
+        return this.emit("오프라인 솔로 모드에서는 이 작업을 사용할 수 없습니다.");
+    }
+  }
+
+  playCard(payload) {
+    const result = playCard(this.room.game, 0, payload.cardId, payload.targetCellId);
+    if (!result.ok) return this.emit(result.error);
+    return this.emit();
+  }
+
+  discardDead(payload) {
+    const result = discardDeadCard(this.room.game, 0, payload.cardId);
+    if (!result.ok) return this.emit(result.error);
+    return this.emit();
+  }
+
+  discardToPile() {
+    const result = discardPendingCard(this.room.game, 0);
+    if (!result.ok) return this.emit(result.error);
+    return this.emit();
+  }
+
+  drawFromDeck() {
+    const result = drawReplacementCard(this.room.game, 0, Math.random);
+    if (!result.ok) return this.emit(result.error);
+    this.markFinishedIfNeeded();
+    const snapshot = this.emit();
+    this.processBotTurn();
+    return snapshot;
+  }
+
+  rematch() {
+    if (this.room.game?.phase !== "finished") {
+      return this.emit("게임이 끝난 뒤에 리매치를 시작할 수 있습니다.");
+    }
+    const name = this.room.seats[0].name;
+    const sessionId = this.room.seats[0].sessionId;
+    const difficulty = this.room.botDifficulty;
+    return this.start({ name, sessionId, difficulty });
+  }
+
+  setBotDifficulty(difficulty) {
+    this.room.botDifficulty = normalizeBotDifficulty(difficulty);
+    return this.emit(`AI 모드를 ${this.room.botDifficulty.toUpperCase()}로 변경했습니다.`);
+  }
+
+  sendChat(text) {
+    const cleanText = String(text || "").trim().slice(0, 140);
+    if (!cleanText) return this.snapshot();
+    this.room.chatMessages = [
+      ...this.room.chatMessages,
+      { author: this.room.seats[0].name, text: cleanText, createdAt: new Date().toISOString() },
+    ].slice(-50);
+    return this.emit();
+  }
+
+  processBotTurn() {
+    if (!this.room || this.room.phase !== "playing" || this.room.game?.phase !== "playing" || this.botTimer != null) return;
+    const current = getCurrentPlayer(this.room.game);
+    const seat = this.room.seats.find((entry) => entry.seatIndex === current?.seatIndex);
+    if (!seat?.isBot) {
+      this.room.botThinkingSeatIndex = null;
+      return;
+    }
+    this.room.botThinkingSeatIndex = seat.seatIndex;
+    this.emit(`${seat.name}이 다음 수를 고르는 중입니다.`);
+    this.botTimer = BOT_TIMER_PENDING;
+    const timerId = this.timerApi.setTimeout?.(() => this.takeBotTurn(seat.seatIndex), this.botDelayMs);
+    if (this.botTimer === BOT_TIMER_PENDING) {
+      this.botTimer = timerId ?? null;
+    }
+  }
+
+  takeBotTurn(seatIndex) {
+    this.botTimer = null;
+    if (!this.room || this.room.phase !== "playing" || this.room.game?.phase !== "playing") return;
+    const current = getCurrentPlayer(this.room.game);
+    if (!current || current.seatIndex !== seatIndex) return;
+    const action = chooseBotAction(this.room.game, current, this.room.botDifficulty);
+    let moved = false;
+    if (action?.type === "play_card") {
+      moved = playCard(this.room.game, current.seatIndex, action.cardId, action.targetCellId).ok;
+    } else if (action?.type === "discard_dead") {
+      moved = discardDeadCard(this.room.game, current.seatIndex, action.cardId).ok;
+    }
+    if (moved) {
+      moved = this.finishPendingTurn(seatIndex);
+    }
+    this.room.botThinkingSeatIndex = null;
+    this.markFinishedIfNeeded();
+    const next = getCurrentPlayer(this.room.game);
+    const message =
+      this.room.game?.phase === "finished" && this.room.game.winner
+        ? `${TEAM_META[this.room.game.winner].name} 승리! 리매치를 시작할 수 있습니다.`
+        : next?.seatIndex === 0
+          ? `${this.room.seats[0].name}님 차례입니다.`
+          : "";
+    this.emit(message);
+    this.processBotTurn();
+  }
+
+  finishPendingTurn(seatIndex) {
+    const pending = this.room.game?.pendingStep;
+    if (!pending || pending.seatIndex !== seatIndex) return true;
+    if (pending.type === "discard" && !discardPendingCard(this.room.game, seatIndex).ok) return false;
+    if (this.room.game.pendingStep?.type === "draw" && !drawReplacementCard(this.room.game, seatIndex, Math.random).ok) return false;
+    return true;
+  }
+
+  markFinishedIfNeeded() {
+    if (this.room.game?.phase !== "finished") return false;
+    const wasFinished = this.room.phase === "finished";
+    this.room.phase = "finished";
+    if (!wasFinished && this.room.game.winner) {
+      const matchNumber = this.room.game.matchNumber || this.room.matchNumber;
+      if (this.lastRecordedMatchNumber !== matchNumber) {
+        this.matchHistory = [
+          {
+            matchNumber,
+            winner: this.room.game.winner,
+            winnerName: TEAM_META[this.room.game.winner].name,
+            scores: { A: this.room.game.teamScores.A, B: this.room.game.teamScores.B },
+            finishedAt: new Date().toISOString(),
+            durationMs: Date.now() - this.room.matchStartedAt,
+            testMode: "local-solo",
+            botDifficulty: this.room.botDifficulty,
+          },
+          ...this.matchHistory,
+        ].slice(0, 12);
+        this.lastRecordedMatchNumber = matchNumber;
+      }
+    }
+    return true;
+  }
+}

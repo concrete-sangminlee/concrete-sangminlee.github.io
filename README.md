@@ -4,6 +4,8 @@ Personal academic website for Sang Min Lee, Ph.D. Candidate in Artificial Intell
 
 **Website:** https://concrete-sangminlee.github.io
 
+**Static apps:** https://concrete-sangminlee.github.io/sequence-arena/
+
 ## About
 
 - **Research Interests:** AI for Resilient Infrastructure, Structural Health Monitoring, Wind Engineering, Automated NDT, LLM for Engineering

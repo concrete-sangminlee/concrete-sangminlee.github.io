@@ -294,6 +294,11 @@ for (const f of ['robots.txt', '404.html', 'manifest.json']) {
     if (fs.existsSync(f)) fs.copyFileSync(f, path.join(DIST_DIR, f));
 }
 
+// Publish small standalone apps under stable subpaths on the existing
+// concrete-sangminlee.github.io Pages site. These are intentionally copied as
+// static assets, not bundled into the academic homepage build.
+copyRecursive('apps/sequence-arena', path.join(DIST_DIR, 'sequence-arena'));
+
 // Sitemap: stamp every <lastmod> with today's date in YYYY-MM-DD
 if (fs.existsSync('sitemap.xml')) {
     const today = new Date().toISOString().slice(0, 10);

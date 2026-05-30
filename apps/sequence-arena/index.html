@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#10372e" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#061914" media="(prefers-color-scheme: dark)" />
+    <meta name="application-name" content="Sequence Arena" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Sequence Arena" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="description" content="Sequence Arena — GitHub Pages에서 바로 실행되는 오프라인 솔로 시퀀스 보드게임. PWA 설치 가능, 한국어 UI." />
+    <meta name="robots" content="index,follow" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="format-detection" content="telephone=no, email=no, address=no, date=no" />
+    <title>Sequence Arena · 오프라인 솔로 시퀀스</title>
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="icon" href="./assets/icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" sizes="180x180" href="./assets/apple-touch-icon.png" />
+    <link rel="canonical" href="https://concrete-sangminlee.github.io/sequence-arena/" />
+    <link rel="stylesheet" href="./styles.css" />
+    <link rel="modulepreload" href="./app.js" />
+    <link rel="modulepreload" href="./shared/game-core.js" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Sequence Arena" />
+    <meta property="og:title" content="Sequence Arena · 오프라인 솔로 시퀀스" />
+    <meta property="og:description" content="GitHub Pages에서 바로 실행되는 오프라인 솔로 시퀀스 보드게임. 설치 없이 브라우저에서 플레이하세요." />
+    <meta property="og:url" content="https://concrete-sangminlee.github.io/sequence-arena/" />
+    <meta property="og:image" content="https://concrete-sangminlee.github.io/sequence-arena/assets/icon-512.png" />
+    <meta property="og:locale" content="ko_KR" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="Sequence Arena · 오프라인 솔로 시퀀스" />
+    <meta name="twitter:description" content="GitHub Pages에서 바로 실행되는 오프라인 솔로 시퀀스 보드게임." />
+    <meta name="twitter:image" content="https://concrete-sangminlee.github.io/sequence-arena/assets/icon-512.png" />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "VideoGame",
+        "name": "Sequence Arena",
+        "alternateName": "시퀀스 아레나",
+        "description": "GitHub Pages에서 바로 실행되는 오프라인 솔로 시퀀스 보드게임. 브라우저에서 루비 플레이어와 코발트 봇이 대전합니다.",
+        "url": "https://concrete-sangminlee.github.io/sequence-arena/",
+        "image": "https://concrete-sangminlee.github.io/sequence-arena/assets/icon-512.png",
+        "applicationCategory": "Game",
+        "applicationSubCategory": "Board Game",
+        "operatingSystem": "Web Browser, iOS, Android",
+        "inLanguage": "ko-KR",
+        "isAccessibleForFree": true,
+        "playMode": "SinglePlayer",
+        "numberOfPlayers": { "@type": "QuantitativeValue", "minValue": 1, "maxValue": 1 },
+        "gamePlatform": ["Web", "PWA"],
+        "accessibilityAPI": "ARIA",
+        "accessibilityControl": ["fullKeyboardControl", "fullMouseControl", "fullTouchControl"],
+        "accessibilityFeature": ["ARIA", "alternativeText", "highContrastDisplay", "readingOrder", "structuralNavigation", "tableOfContents"],
+        "accessibilityHazard": ["noFlashingHazard", "noMotionSimulationHazard", "noSoundHazard"],
+        "accessibilitySummary": "Full keyboard navigation with skip link, ARIA live regions for status updates, prefers-reduced-motion honoured, no flashing or motion-simulation hazards, sound effects toggleable."
+      }
+    </script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main-content">본문으로 바로가기</a>
+    <noscript>
+      <div class="noscript-notice" role="alert">
+        <h1>Sequence Arena</h1>
+        <p>이 게임을 플레이하려면 JavaScript가 필요합니다. 브라우저 설정에서 JavaScript를 활성화한 뒤 페이지를 새로고침해 주세요.</p>
+        <p>
+          1대1 · 2대2 · 3대3 실시간 팀전 시퀀스 보드게임. 친구에게 방 코드를 공유하고 같은 브라우저에서 바로 접속해 플레이할 수 있습니다.
+        </p>
+        <p>
+          <strong>GitHub:</strong>
+          <a href="https://github.com/concrete-sangminlee/sequence-arena">concrete-sangminlee/sequence-arena</a>
+        </p>
+      </div>
+    </noscript>
+    <div id="offline-banner" class="offline-banner" role="status" aria-live="polite" hidden>
+      <span class="offline-dot" aria-hidden="true"></span>
+      <span class="offline-text">연결이 끊겨 재접속을 시도 중입니다.</span>
+      <button id="offline-retry-btn" type="button" class="offline-retry">지금 다시 시도</button>
+    </div>
+    <div id="update-banner" class="update-banner" role="status" aria-live="polite" hidden>
+      <span class="update-dot" aria-hidden="true"></span>
+      <span class="update-text">새 버전이 설치되었습니다. 새로고침하면 최신 기능을 사용할 수 있습니다.</span>
+      <button id="update-reload-btn" type="button" class="update-reload">지금 새로고침</button>
+    </div>
+    <div class="app-shell">
+      <header class="app-topbar">
+        <div class="brand-lockup">
+          <span class="brand-mark" aria-hidden="true">SA</span>
+          <div>
+            <p class="eyebrow">실시간 팀전 보드게임</p>
+            <h1>Sequence Arena</h1>
+          </div>
+        </div>
+        <div class="topbar-actions">
+          <div class="team-legend" aria-label="팀별 좌석 안내">
+            <span id="ruby-seat-legend" class="legend-chip ruby">루비 1 · 3 · 5</span>
+            <span id="cobalt-seat-legend" class="legend-chip cobalt">코발트 2 · 4 · 6</span>
+          </div>
+          <button id="theme-toggle-btn" class="icon-button theme-toggle" type="button" aria-label="다크 모드 켜기" title="다크 모드 켜기">☾</button>
+          <button id="help-btn" class="icon-button help-toggle" type="button" aria-label="게임 규칙과 단축키 보기" aria-keyshortcuts="?" aria-haspopup="dialog" aria-controls="help-modal" aria-expanded="false" title="게임 규칙 · 단축키 (?)">?</button>
+          <button id="install-app-btn" class="icon-button install-toggle" type="button" aria-label="앱 설치" title="앱 설치" hidden>↓</button>
+          <button id="notification-toggle-btn" class="icon-button notification-toggle" type="button" aria-label="내 차례 브라우저 알림 켜기" title="내 차례 알림 켜기">!</button>
+          <button id="sound-toggle-btn" class="icon-button sound-toggle" type="button" aria-label="사운드 켜기" title="사운드 켜기">♪</button>
+          <button id="haptics-toggle-btn" class="icon-button haptics-toggle" type="button" aria-label="진동 피드백 끄기" title="진동 끄기">◉</button>
+        </div>
+      </header>
+
+      <main id="main-content" class="main-grid">
+        <section class="panel gateway-panel">
+          <div class="panel-head">
+            <h2>방</h2>
+            <p>방을 만들거나 받은 코드로 입장하세요. 같은 브라우저에서는 좌석이 복구됩니다.</p>
+          </div>
+
+          <div id="welcome-card" class="welcome-card">
+            <button id="welcome-dismiss-btn" class="welcome-dismiss" type="button" aria-label="환영 카드 닫기" title="닫기">✕</button>
+            <strong class="welcome-title">Sequence Arena에 오신 걸 환영합니다</strong>
+            <p class="welcome-body">카드를 보드 위 같은 칸에 매칭해 칩을 놓고, 가로·세로·대각선으로 <strong>5칸 일렬</strong>을 먼저 두 개 만들면 승리. 2명·4명·6명이 1대1/2대2/3대3으로 즐기는 실시간 시퀀스.</p>
+            <div class="welcome-actions">
+              <button id="welcome-create-btn" class="primary-button" type="button">방 만들기로 시작</button>
+              <button id="welcome-help-btn" class="ghost-button" type="button">자세한 규칙 보기</button>
+            </div>
+          </div>
+
+          <div class="gateway-grid">
+            <form id="create-form" class="stack-card">
+              <h3>새 방 만들기</h3>
+              <label>
+                <span>내 이름</span>
+                <input
+                  id="create-name"
+                  type="text"
+                  maxlength="20"
+                  placeholder="예: 민수"
+                  value="플레이어"
+                  autocomplete="nickname"
+                  inputmode="text"
+                  spellcheck="false"
+                  autocapitalize="words"
+                  enterkeyhint="go"
+                />
+              </label>
+              <div class="host-setting create-match-setting">
+                <div class="setting-topline">
+                  <span>대결 방식</span>
+                  <strong id="create-team-size-label">3대3</strong>
+                </div>
+                <div id="create-team-size-control" class="segmented-control team-size-control" role="group" aria-label="대결 방식">
+                  <button type="button" data-create-team-size="1">1대1</button>
+                  <button type="button" data-create-team-size="2">2대2</button>
+                  <button type="button" data-create-team-size="3">3대3</button>
+                </div>
+              </div>
+              <button id="create-room-btn" class="primary-button" type="submit">방 만들기</button>
+              <button id="offline-solo-btn" class="ghost-button" type="button">오프라인 솔로</button>
+            </form>
+
+            <form id="join-form" class="stack-card">
+              <h3>기존 방 입장</h3>
+              <label>
+                <span>내 이름</span>
+                <input
+                  id="join-name"
+                  type="text"
+                  maxlength="20"
+                  placeholder="예: 지연"
+                  value="플레이어"
+                  autocomplete="nickname"
+                  inputmode="text"
+                  spellcheck="false"
+                  autocapitalize="words"
+                  enterkeyhint="next"
+                />
+              </label>
+              <label>
+                <span>방 코드</span>
+                <input
+                  id="join-code"
+                  type="text"
+                  maxlength="6"
+                  placeholder="ABC123"
+                  autocomplete="off"
+                  inputmode="text"
+                  spellcheck="false"
+                  autocapitalize="characters"
+                  autocorrect="off"
+                  enterkeyhint="go"
+                  pattern="[A-Za-z0-9]{4,6}"
+                  aria-describedby="join-code-hint"
+                />
+                <small id="join-code-hint" class="input-hint">4~6자리 영문/숫자</small>
+              </label>
+              <button id="join-room-btn" class="primary-button secondary-tone" type="submit">방 입장</button>
+            </form>
+          </div>
+
+          <div class="share-grid">
+            <div class="share-status-card">
+              <div>
+                <strong>연결 상태</strong>
+                <span id="connection-indicator" aria-live="polite" aria-atomic="true">소켓 연결 중</span>
+              </div>
+              <div>
+                <strong>현재 접속 주소</strong>
+                <span id="current-origin">-</span>
+              </div>
+            </div>
+
+            <div class="invite-card">
+              <span class="invite-label">현재 방 코드</span>
+              <strong id="active-room-code" class="room-code-display" aria-live="polite" aria-atomic="true" aria-label="현재 방 코드">미접속</strong>
+              <span id="room-link-preview" class="room-link-preview">
+                방을 만들면 초대 링크가 여기에 표시됩니다.
+              </span>
+              <div class="invite-progress-card" id="invite-progress-card">
+                <div class="invite-progress-topline">
+                  <span>입장 인원</span>
+                  <strong id="invite-progress-count" aria-live="polite" aria-atomic="true">0 / 6</strong>
+                </div>
+                <div class="occupancy-meter compact">
+                  <div id="invite-progress-fill" class="occupancy-fill"></div>
+                </div>
+                <small id="invite-progress-hint">친구가 들어오면 여기에서 바로 보입니다.</small>
+              </div>
+            </div>
+
+            <div class="ai-mode-card host-settings-card">
+              <div class="mode-card-head">
+                <span>방장 설정</span>
+                <strong id="host-settings-label">잠김</strong>
+              </div>
+              <div class="host-setting">
+                <div class="setting-topline">
+                  <span>대결 방식</span>
+                  <strong id="team-size-label">3대3</strong>
+                </div>
+                <div id="team-size-control" class="segmented-control team-size-control" role="group" aria-label="대결 방식">
+                  <button type="button" data-team-size="1">1대1</button>
+                  <button type="button" data-team-size="2">2대2</button>
+                  <button type="button" data-team-size="3">3대3</button>
+                </div>
+              </div>
+              <div class="host-setting">
+                <div class="setting-topline">
+                  <span>AI 난이도</span>
+                  <strong id="ai-mode-label">전략</strong>
+                </div>
+                <div id="ai-mode-control" class="segmented-control" role="group" aria-label="AI 난이도 선택">
+                  <button type="button" data-ai-mode="easy">쉬움</button>
+                  <button type="button" data-ai-mode="smart">전략</button>
+                  <button type="button" data-ai-mode="aggressive">공격</button>
+                </div>
+              </div>
+              <div class="host-setting">
+                <label class="toggle-row" for="allow-spectators-toggle">
+                  <span>관전 입장</span>
+                  <input id="allow-spectators-toggle" type="checkbox" checked />
+                  <strong id="spectator-mode-label">열림</strong>
+                </label>
+              </div>
+              <div class="host-setting">
+                <div class="setting-topline">
+                  <span>리매치</span>
+                  <strong id="rematch-mode-label">전원 동의</strong>
+                </div>
+                <div id="rematch-mode-control" class="segmented-control rematch-mode-control" role="group" aria-label="리매치 방식 선택">
+                  <button type="button" data-rematch-mode="all">전원 동의</button>
+                  <button type="button" data-rematch-mode="host">방장 시작</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="share-actions-card">
+              <button id="start-test-btn" class="primary-button" type="button">혼자 테스트 시작</button>
+              <button id="copy-code-btn" class="ghost-button" type="button">코드 복사</button>
+              <button id="copy-room-btn" class="ghost-button" type="button">링크 복사</button>
+              <button id="copy-spectator-link-btn" class="ghost-button" type="button">관전 링크</button>
+              <button id="share-room-btn" class="primary-button secondary-tone" type="button">공유</button>
+              <a id="open-room-link" class="ghost-button button-link" href="./" target="_blank" rel="noopener noreferrer">
+                링크 열기
+              </a>
+            </div>
+          </div>
+
+          <p id="flash-message" class="flash-message" role="status" aria-live="polite">필요 인원이 모두 입장하면 게임이 자동 시작됩니다.</p>
+        </section>
+
+        <section class="panel room-panel">
+          <div class="panel-head">
+            <h2>좌석</h2>
+            <p id="room-subtitle">방에 입장하면 좌석 현황이 표시됩니다.</p>
+          </div>
+          <div class="occupancy-card">
+            <div class="occupancy-meta">
+              <strong>입장 진행도</strong>
+              <span id="occupancy-text">0 / 6</span>
+            </div>
+            <div class="occupancy-meter">
+              <div id="occupancy-fill" class="occupancy-fill"></div>
+            </div>
+          </div>
+          <div id="seat-grid" class="seat-grid"></div>
+          <p id="room-hint" class="room-hint">
+            각 좌석은 해당 브라우저 세션에 고정되며, 같은 브라우저로 새로고침하면 복구됩니다.
+          </p>
+        </section>
+
+        <section id="game-layout" class="game-layout">
+          <div class="board-panel panel">
+            <canvas
+              id="game-canvas"
+              width="1000"
+              height="1000"
+              role="application"
+              tabindex="0"
+              aria-label="시퀀스 게임 보드. 카드를 선택한 뒤 방향키로 칸을 고르고 Enter 또는 Space로 칩을 놓으세요."
+              aria-describedby="board-state-summary"
+            ></canvas>
+            <p id="board-state-summary" class="sr-only" aria-live="polite"></p>
+          </div>
+
+          <aside class="sidebar">
+            <section class="panel status-panel">
+              <div class="panel-head compact">
+                <h2>현재 상태</h2>
+                <p id="turn-subtitle">게임 시작 전입니다.</p>
+              </div>
+              <div id="turn-banner" class="turn-banner">
+                <strong id="turn-player">대기 중</strong>
+                <span id="turn-team">-</span>
+              </div>
+              <div id="lobby-progress-card" class="lobby-progress-card">
+                <div>
+                  <span>입장 현황</span>
+                  <strong id="lobby-progress-count" aria-live="polite" aria-atomic="true">0 / 6</strong>
+                </div>
+                <div class="occupancy-meter compact">
+                  <div id="lobby-progress-fill" class="occupancy-fill"></div>
+                </div>
+                <small id="lobby-progress-hint">필요 인원이 모두 들어오면 자동 시작됩니다.</small>
+              </div>
+              <div id="victory-card" class="victory-card" hidden>
+                <span class="victory-kicker">최종 결과</span>
+                <strong id="victory-winner">-</strong>
+                <span id="victory-score">0 : 0</span>
+                <button id="rematch-btn" class="primary-button" type="button">리매치 투표</button>
+                <span id="rematch-vote-status" class="rematch-vote-status">0 / 0 동의</span>
+              </div>
+              <p id="status-message" class="status-message">방에 필요한 인원이 모두 들어오면 자동으로 게임이 시작됩니다.</p>
+              <div class="score-row ruby">
+                <strong>루비 팀</strong>
+                <span id="score-ruby">0 / 2 시퀀스</span>
+              </div>
+              <div class="score-row cobalt">
+                <strong>코발트 팀</strong>
+                <span id="score-cobalt">0 / 2 시퀀스</span>
+              </div>
+              <div class="score-row neutral">
+                <strong>관전</strong>
+                <span id="spectator-count">0명</span>
+              </div>
+              <div class="pile-actions" aria-label="카드 더미">
+                <button id="discard-pile-btn" class="pile-button discard" type="button">
+                  <span>버림 더미</span>
+                  <strong id="discard-count">0장</strong>
+                  <small id="discard-top-card">비어 있음</small>
+                </button>
+                <button id="deck-pile-btn" class="pile-button deck" type="button">
+                  <span>덱</span>
+                  <strong id="deck-count">0장</strong>
+                  <small>새 카드 뽑기</small>
+                </button>
+              </div>
+            </section>
+
+            <section class="panel spectator-panel">
+              <div class="panel-head compact">
+                <h2>관전자</h2>
+                <p id="spectator-summary">현재 관전자 없음</p>
+              </div>
+              <div id="spectator-list" class="spectator-list"></div>
+            </section>
+
+            <section class="panel chat-panel">
+              <div class="panel-head compact">
+                <h2>채팅</h2>
+                <p>같은 방 사람들과 대화하세요.</p>
+              </div>
+              <div id="chat-log" class="chat-log" aria-live="polite"></div>
+              <div class="chat-emoji-row" aria-label="이모지 빠른 전송">
+                <button class="emoji-btn" type="button" data-chat-emoji="👍">👍</button>
+                <button class="emoji-btn" type="button" data-chat-emoji="👏">👏</button>
+                <button class="emoji-btn" type="button" data-chat-emoji="😂">😂</button>
+                <button class="emoji-btn" type="button" data-chat-emoji="🔥">🔥</button>
+                <button class="emoji-btn" type="button" data-chat-emoji="😭">😭</button>
+              </div>
+              <form id="chat-form" class="chat-form">
+                <input id="chat-input" type="text" maxlength="140" placeholder="메시지 입력" autocomplete="off" />
+                <button id="chat-send-btn" class="primary-button" type="submit">전송</button>
+              </form>
+            </section>
+
+            <section class="panel hand-panel">
+              <div class="panel-head compact">
+                <h2>내 손패</h2>
+                <p id="hand-caption">내 차례가 되면 카드를 선택해 보드를 클릭하세요.</p>
+              </div>
+              <div id="hand-container" class="hand-container"></div>
+              <div class="button-row">
+                <button id="cancel-selection-btn" class="ghost-button" type="button" aria-keyshortcuts="Escape" title="선택 취소 (Esc)">선택 취소</button>
+                <button id="discard-dead-btn" class="ghost-button" type="button">죽은 카드 버리기</button>
+              </div>
+              <p id="selection-hint" class="selection-hint">카드를 고르면 놓을 수 있는 칸이 보드에 초록색으로 표시됩니다.</p>
+            </section>
+
+            <section class="panel log-panel">
+              <div class="panel-head compact">
+                <h2>게임 로그</h2>
+                <p>방 전체에 공유되는 최근 액션입니다.</p>
+              </div>
+              <ol id="log-list" class="log-list"></ol>
+            </section>
+
+            <section class="panel history-panel">
+              <div class="panel-head compact">
+                <h2>경기 기록</h2>
+                <p>이 방에서 끝난 최근 결과입니다.</p>
+              </div>
+              <div id="history-summary" class="history-summary">Ruby 0% · Cobalt 0%</div>
+              <ol id="history-list" class="history-list"></ol>
+            </section>
+          </aside>
+        </section>
+      </main>
+    </div>
+
+    <div class="sr-only" role="status" aria-live="polite" aria-atomic="true" id="live-polite"></div>
+    <div class="sr-only" role="alert" aria-live="assertive" aria-atomic="true" id="live-assertive"></div>
+
+    <div id="help-modal" class="help-modal" role="dialog" aria-modal="true" aria-labelledby="help-modal-title" hidden>
+      <div class="help-backdrop" data-help-dismiss></div>
+      <div class="help-dialog">
+        <header class="help-header">
+          <h2 id="help-modal-title">게임 규칙 · 단축키</h2>
+          <button id="help-close-btn" class="icon-button help-close" type="button" aria-label="도움말 닫기" title="닫기">✕</button>
+        </header>
+        <div class="help-body">
+          <section class="help-section">
+            <h3>목표</h3>
+            <p>팀 색 칩으로 연속 5칸 <strong>시퀀스</strong> 2개를 먼저 만드는 팀이 이깁니다. 코너 ★는 모든 팀이 공유하는 자동 칩입니다.</p>
+          </section>
+          <section class="help-section">
+            <h3>턴 진행</h3>
+            <ol>
+              <li>손패에서 카드를 선택합니다.</li>
+              <li>보드에서 강조된 칸을 눌러 칩을 놓거나 잭 액션을 실행합니다.</li>
+              <li>사용한 카드를 <strong>버림 더미</strong>에 놓습니다.</li>
+              <li><strong>덱</strong>에서 새 카드를 뽑으면 턴이 끝납니다.</li>
+            </ol>
+          </section>
+          <section class="help-section">
+            <h3>잭(J) 특수 규칙</h3>
+            <ul class="help-grid">
+              <li><span class="help-tag wild">J♣ · J♦ · 와일드</span>빈 칸 어디든 내 팀 칩을 놓을 수 있습니다(코너 제외).</li>
+              <li><span class="help-tag cut">J♥ · J♠ · 컷</span>상대 팀의 <em>잠기지 않은</em> 칩을 제거합니다. 시퀀스 칩은 보호됩니다.</li>
+            </ul>
+          </section>
+          <section class="help-section">
+            <h3>죽은 카드</h3>
+            <p>보드에 둘 곳이 없는 숫자/그림 카드는 <strong>죽은 카드 버리기</strong> 버튼으로 제거하고 새 카드를 뽑을 수 있습니다.</p>
+          </section>
+          <section class="help-section">
+            <h3>키보드 · 접근성</h3>
+            <ul>
+              <li>손패에서 ← → ↑ ↓로 카드 이동, <kbd>Enter</kbd>로 선택.</li>
+              <li>카드 선택 후 ← → ↑ ↓로 보드 커서 이동, <kbd>Enter</kbd>/<kbd>Space</kbd>로 확정.</li>
+              <li><kbd>Esc</kbd>로 선택 취소, <kbd>A</kbd>로 가장 먼저 쓸 수 있는 카드 선택, <kbd>B</kbd>로 첫 수 자동 실행.</li>
+              <li><kbd>F</kbd>로 전체화면 전환. 화면 낭독기 안내와 모바일 진동 피드백을 지원합니다.</li>
+            </ul>
+          </section>
+          <section class="help-section" id="help-privacy-section">
+            <h3>개인정보 처리방침</h3>
+            <ul>
+              <li><strong>수집 항목:</strong> 입력하신 닉네임(메모리에 일시 보관), 접속 IP(연결 제한·보안 로그용), 자동 발급 세션 ID(브라우저 localStorage). 이메일·전화번호·실명은 받지 않습니다.</li>
+              <li><strong>보관 기간:</strong> 닉네임과 세션 정보는 방을 닫거나 브라우저를 끄면 즉시 사라집니다. 종료된 매치 기록(점수·승패)은 서버 디스크에 최대 12경기, 200개 방까지만 저장됩니다.</li>
+              <li><strong>제3자 제공:</strong> 없음. Google Analytics 등 외부 추적 도구를 사용하지 않으며, 수집한 정보는 본 게임 운영 목적 외에 활용하지 않습니다.</li>
+              <li><strong>이용자 권리:</strong> 브라우저 설정에서 사이트 데이터를 지우면 닉네임·세션 ID 등 클라이언트 측 정보가 모두 삭제됩니다. 서버에 저장된 매치 기록은 시간이 지나면 자동 폐기됩니다.</li>
+              <li><strong>보안 조치:</strong> 정적 배포는 GitHub Pages HTTPS로 제공됩니다. 자세한 보안 정책은 <a href="../security.txt" target="_blank" rel="noopener">security.txt</a>를 참고하세요.</li>
+            </ul>
+          </section>
+          <footer class="help-footer">
+            <span id="help-build-version" aria-live="polite">버전 확인 중…</span>
+          </footer>
+        </div>
+      </div>
+    </div>
+
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>
