@@ -42,6 +42,7 @@ const refs = {
   copyRoomBtn: document.getElementById("copy-room-btn"),
   copySpectatorLinkBtn: document.getElementById("copy-spectator-link-btn"),
   shareRoomBtn: document.getElementById("share-room-btn"),
+  leaveRoomBtn: document.getElementById("leave-room-btn"),
   openRoomLink: document.getElementById("open-room-link"),
   installAppBtn: document.getElementById("install-app-btn"),
   notificationToggleBtn: document.getElementById("notification-toggle-btn"),
@@ -702,6 +703,18 @@ function hasVotedForRematch() {
     clientState.yourSeatIndex != null &&
     clientState.rematchVoteSeatIndexes.includes(clientState.yourSeatIndex)
   );
+}
+
+function canLeaveRoom() {
+  if (!clientState.roomCode || clientState.localMode) {
+    return false;
+  }
+  // During active play, keeping the seat active is safer than forcing a mid-game vacancy.
+  // Spectators can leave at any time because they don't block game flow.
+  if (clientState.yourRole === "spectator") {
+    return true;
+  }
+  return clientState.roomPhase !== "playing";
 }
 
 function ensureAudioContext() {
@@ -1917,6 +1930,41 @@ function handleJoinRoom(event) {
     sessionId: clientState.sessionId,
     role: resolveJoinRole(),
   });
+}
+
+function leaveCurrentRoom() {
+  if (!canLeaveRoom()) {
+    setFlashMessage(
+      clientState.roomPhase === "playing"
+        ? "게임 진행 중에는 나가기 버튼을 사용할 수 없습니다. 게임이 끝난 뒤 시도해 주세요."
+        : "방을 먼저 입장해야 방 나가기가 가능합니다."
+    );
+    return;
+  }
+  if (!clientState.roomCode) {
+    return;
+  }
+  const confirmed = window.confirm("현재 방을 나가서 다시 입장/재입장할 수 있도록 좌석을 비웁니다. 진행할까요?");
+  if (!confirmed) {
+    return;
+  }
+  if (refs.leaveRoomBtn) {
+    refs.leaveRoomBtn.disabled = true;
+  }
+  sendSocket({ type: "leave_room" });
+  setFlashMessage("방 나가기를 처리하고 있습니다.");
+  playSound("tap");
+  window.setTimeout(() => {
+    if (!clientState.roomCode) {
+      return;
+    }
+    if (refs.leaveRoomBtn) {
+      refs.leaveRoomBtn.disabled = !canLeaveRoom();
+    }
+    if (!canLeaveRoom() && !clientState.game) {
+      render();
+    }
+  }, 1200);
 }
 
 function flashCopiedButton(button) {
@@ -3242,6 +3290,13 @@ function renderStatus() {
   refs.copySpectatorLinkBtn.disabled = !canShareRoom || !clientState.allowSpectators;
   refs.shareRoomBtn.disabled = !canShareRoom;
   refs.openRoomLink.classList.toggle("disabled", !canShareRoom);
+  refs.leaveRoomBtn.disabled = !canLeaveRoom();
+  refs.leaveRoomBtn.hidden = clientState.localMode || !clientState.roomCode;
+  refs.leaveRoomBtn.title = canLeaveRoom()
+    ? "현재 방에서 나가기"
+    : clientState.roomPhase === "playing"
+      ? "게임 진행 중에는 방 나가기가 제한됩니다"
+      : "방에 입장해야 사용할 수 있습니다";
   refs.startTestBtn.disabled = !(clientState.roomCode && clientState.roomPhase === "lobby" && clientState.yourSeatIndex === 0);
   updateInstallButton();
   updateNotificationButton();
@@ -4797,6 +4852,7 @@ refs.roomLinkPreview?.addEventListener("click", () => {
     render();
   });
 });
+refs.leaveRoomBtn?.addEventListener("click", leaveCurrentRoom);
 refs.shareRoomBtn.addEventListener("click", () => {
   shareRoom().catch((error) => {
     // User-cancelled share sheets are now swallowed inside shareRoom(), so any error here is a real failure.
