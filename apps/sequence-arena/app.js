@@ -291,7 +291,9 @@ function normalizeRoomCode(value) {
 }
 
 function normalizePlayerName(value) {
-  return String(value || "플레이어").trim().slice(0, 20).replace(/\s+/g, " ");
+  const fallback = "플레이어";
+  const normalized = String(value || fallback).normalize("NFKC").trim().slice(0, 20).replace(/\s+/g, " ");
+  return normalized || fallback;
 }
 
 function normalizeTeamSize(value) {
