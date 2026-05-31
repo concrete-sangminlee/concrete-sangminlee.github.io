@@ -5075,12 +5075,10 @@ document.addEventListener("keydown", (event) => {
     activeElement instanceof HTMLTextAreaElement ||
     (activeElement && activeElement.isContentEditable);
 
-  // Keep global shortcuts from hijacking typing in chat/input fields.
   if (isTypingTarget) {
     return;
   }
 
-  // Help modal shortcuts take precedence when it is open or invoked.
   if (refs.helpModal && !refs.helpModal.hidden && key === "escape") {
     event.preventDefault();
     closeHelpModal();
@@ -5110,10 +5108,14 @@ document.addEventListener("keydown", (event) => {
     return;
   }
 
-  if (key === "escape" && clientState.selectedCardId != null) {
+  if (key === "escape") {
     event.preventDefault();
-    clearSelection();
-    render();
+    if (!refs.welcomeCard?.hidden) {
+      dismissWelcome();
+    } else if (clientState.selectedCardId != null) {
+      clearSelection();
+      render();
+    }
     return;
   }
 
