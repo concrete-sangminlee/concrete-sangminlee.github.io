@@ -46,6 +46,7 @@ const refs = {
   helpBtn: document.getElementById("help-btn"),
   helpModal: document.getElementById("help-modal"),
   helpCloseBtn: document.getElementById("help-close-btn"),
+  helpShortcutCopy: document.getElementById("help-shortcut-copy"),
   welcomeCard: document.getElementById("welcome-card"),
   welcomeDismissBtn: document.getElementById("welcome-dismiss-btn"),
   welcomeCreateBtn: document.getElementById("welcome-create-btn"),
@@ -4880,9 +4881,26 @@ function setBackgroundInert(inert) {
   }
 }
 
+function updateHelpShortcutHints() {
+  if (!refs.helpShortcutCopy) return;
+  if (isSoloContext()) {
+    refs.helpShortcutCopy.textContent =
+      "C는 방 초대 링크가 생성되지 않은 상태에서는 비활성입니다. 멀티플레이 로비에서만 링크를 복사할 수 있습니다.";
+    return;
+  }
+  if (!clientState.roomCode) {
+    refs.helpShortcutCopy.textContent =
+      "C는 방에 입장한 뒤 사용 가능합니다(현재는 복사할 링크가 없음). F: 전체화면 전환, R: 리매치(동의/시작).";
+    return;
+  }
+  refs.helpShortcutCopy.textContent =
+    "C: 현재 방 초대 링크 복사, F: 전체화면 전환, R: 리매치(동의/시작).";
+}
+
 function openHelpModal() {
   if (!refs.helpModal) return;
   helpPreviousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+  updateHelpShortcutHints();
   refs.helpModal.hidden = false;
   document.body.classList.add("help-open");
   // Mirror the dialog's open state on the launcher so screen readers announce the
