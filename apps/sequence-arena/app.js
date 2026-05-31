@@ -305,6 +305,27 @@ function normalizeRoomCode(value) {
     .slice(0, 6);
 }
 
+function focusInviteJoinForm() {
+  if (!refs.joinName) {
+    return false;
+  }
+  if (refs.joinCode) {
+    const joined = normalizeRoomCode(refs.joinCode.value || "");
+    if (!joined) {
+      refs.joinCode.value = clientState.roomCode || "";
+    }
+  }
+  try {
+    refs.joinName.focus();
+    if (typeof refs.joinName.setSelectionRange === "function") {
+      refs.joinName.setSelectionRange(0, refs.joinName.value.length);
+    }
+  } catch {
+    return false;
+  }
+  return true;
+}
+
 function normalizePlayerName(value) {
   const fallback = "플레이어";
   const normalized = String(value || fallback).normalize("NFKC").trim().slice(0, 20).replace(/\s+/g, " ");
@@ -1161,7 +1182,12 @@ function reconnectToSavedRoom() {
 
 function maybeAutoJoinSharedRoom() {
   const sharedRoomCode = normalizeRoomCode(urlRoomCode || "");
-  const joinName = normalizePlayerName(clientState.lastName || refs.joinName?.value || refs.createName?.value);
+  const enteredJoinName = String(refs.joinName?.value || "").trim();
+  const enteredCreateName = String(refs.createName?.value || "").trim();
+  const storedName = safeLocalStorage.get(STORAGE_KEYS.name) || "";
+  const hasStoredName = typeof storedName === "string" && storedName.trim().length > 0;
+  const rawJoinName = enteredJoinName || enteredCreateName || (hasStoredName ? storedName : "");
+  const joinName = rawJoinName ? normalizePlayerName(rawJoinName) : "";
   if (
     !sharedRoomCode ||
     clientState.autoJoinAttempted ||
@@ -1169,6 +1195,20 @@ function maybeAutoJoinSharedRoom() {
     clientState.game ||
     clientState.yourSeatIndex != null
   ) {
+    return;
+  }
+
+  if (!rawJoinName) {
+    clientState.autoJoinAttempted = true;
+    if (refs.joinName) {
+      refs.joinName.value = "";
+    }
+    if (refs.joinCode) {
+      refs.joinCode.value = sharedRoomCode;
+    }
+    setFlashMessage(`${sharedRoomCode} 방으로 입장하려면 먼저 이름을 입력하세요.`);
+    focusInviteJoinForm();
+    render();
     return;
   }
 
