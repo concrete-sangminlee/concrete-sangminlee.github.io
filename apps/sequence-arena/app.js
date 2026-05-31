@@ -7,6 +7,7 @@ const STORAGE_KEYS = {
   name: "sequence-arena-name",
   soundMuted: "sequence-arena-sound-muted",
   hapticsMuted: "sequence-arena-haptics-muted",
+  joinAsSpectator: "sequence-arena-join-as-spectator",
   turnNotifications: "sequence-arena-turn-notifications",
   preferredTeamSize: "sequence-arena-preferred-team-size",
   preferredBotDifficulty: "sequence-arena-preferred-bot-difficulty",
@@ -24,6 +25,7 @@ const refs = {
   offlineSoloBtn: document.getElementById("offline-solo-btn"),
   joinRoomBtn: document.getElementById("join-room-btn"),
   gatewaySubtitle: document.getElementById("gateway-subtitle"),
+  joinAsSpectator: document.getElementById("join-as-spectator"),
   createName: document.getElementById("create-name"),
   joinName: document.getElementById("join-name"),
   joinCode: document.getElementById("join-code"),
@@ -143,7 +145,8 @@ function announceAssertive(message) {
 
 const urlParams = new URLSearchParams(window.location.search);
 const urlRoomCode = urlParams.get("room");
-const urlJoinRole = urlParams.get("role") === "spectator" ? "spectator" : "player";
+const URL_JOIN_ROLE = urlParams.get("role") === "spectator" ? "spectator" : "player";
+let joinRolePreference = URL_JOIN_ROLE;
 
 // Safari private mode and lockdown browsers can throw on any localStorage access. Wrap the two ops
 // the rest of the app uses so a denied storage API never turns into a blank-page boot failure.
@@ -170,6 +173,11 @@ const safeLocalStorage = {
     }
   },
 };
+
+const STORAGE_JOIN_ROLE = safeLocalStorage.get(STORAGE_KEYS.joinAsSpectator);
+if (STORAGE_JOIN_ROLE === "player" || STORAGE_JOIN_ROLE === "spectator") {
+  joinRolePreference = STORAGE_JOIN_ROLE;
+}
 
 const IS_IOS =
   /iphone|ipad|ipod/i.test(window.navigator.userAgent || "") ||
@@ -298,6 +306,21 @@ if (clientState.lastName) {
 }
 if (clientState.roomCode) {
   refs.joinCode.value = clientState.roomCode;
+}
+if (refs.joinAsSpectator) {
+  refs.joinAsSpectator.checked = joinRolePreference === "spectator";
+}
+
+function resolveJoinRole() {
+  return joinRolePreference === "spectator" ? "spectator" : "player";
+}
+
+function setJoinRolePreference(role) {
+  joinRolePreference = role === "spectator" ? "spectator" : "player";
+  if (refs.joinAsSpectator) {
+    refs.joinAsSpectator.checked = joinRolePreference === "spectator";
+  }
+  safeLocalStorage.set(STORAGE_KEYS.joinAsSpectator, joinRolePreference);
 }
 
 function normalizeRoomCode(value) {
@@ -1237,10 +1260,10 @@ function maybeAutoJoinSharedRoom() {
     name: joinName,
     roomCode: sharedRoomCode,
     sessionId: clientState.sessionId,
-    role: urlJoinRole,
+    role: resolveJoinRole(),
   });
   setFlashMessage(
-    urlJoinRole === "spectator"
+    resolveJoinRole() === "spectator"
       ? `${sharedRoomCode} 방 관전 입장 시도 중입니다.`
       : `${sharedRoomCode} 방으로 자동 입장 시도 중입니다.`
   );
@@ -1612,7 +1635,7 @@ function handleJoinRoom(event) {
     name,
     roomCode,
     sessionId: clientState.sessionId,
-    role: urlJoinRole,
+    role: resolveJoinRole(),
   });
 }
 
@@ -4543,6 +4566,9 @@ refs.welcomeCreateBtn?.addEventListener("click", () => {
 refs.welcomeHelpBtn?.addEventListener("click", () => {
   dismissWelcome();
   openHelpModal();
+});
+refs.joinAsSpectator?.addEventListener("change", (event) => {
+  setJoinRolePreference(event.currentTarget?.checked ? "spectator" : "player");
 });
 
 maybeShowWelcome();
