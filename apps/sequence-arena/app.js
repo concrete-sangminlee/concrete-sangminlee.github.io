@@ -1014,6 +1014,10 @@ function buildInviteUrl(roomCode = clientState.roomCode, role = "player") {
   return inviteUrl.toString();
 }
 
+function getInviteRole() {
+  return clientState.yourRole === "spectator" ? "spectator" : "player";
+}
+
 function isStaticPagesHost() {
   return window.location.hostname.endsWith(".github.io") || window.location.pathname.startsWith("/sequence-arena/");
 }
@@ -1661,16 +1665,17 @@ async function writeToClipboard(text) {
   }
 }
 
-async function copyRoomLink() {
+async function copyRoomLink(role = getInviteRole()) {
   if (!clientState.roomCode) {
     setFlashMessage("복사할 방 코드가 아직 없습니다.");
     render();
     return;
   }
 
-  const ok = await writeToClipboard(buildInviteUrl());
+  const isSpectatorInvite = role === "spectator";
+  const ok = await writeToClipboard(buildInviteUrl(clientState.roomCode, role));
   if (ok) {
-    setFlashMessage(`초대 링크를 복사했습니다: ${clientState.roomCode}`);
+    setFlashMessage(isSpectatorInvite ? `관전 전용 링크를 복사했습니다: ${clientState.roomCode}` : `초대 링크를 복사했습니다: ${clientState.roomCode}`);
     flashCopiedButton(refs.copyRoomBtn);
     flashCopiedButton(refs.roomLinkPreview);
     flashCopiedButton(refs.shareRoomBtn);
@@ -1727,7 +1732,7 @@ async function shareRoom() {
   const sharePayload = {
     title: "Sequence Arena 초대",
     text: `방 코드 ${clientState.roomCode}로 들어오세요.`,
-    url: buildInviteUrl(),
+    url: buildInviteUrl(undefined, getInviteRole()),
   };
 
   if (navigator.share) {
@@ -2775,7 +2780,7 @@ function renderStatus() {
       delete refs.joinCode.dataset.staticDisabled;
     }
   }
-  const inviteUrl = clientState.roomCode ? buildInviteUrl() : "";
+  const inviteUrl = clientState.roomCode ? buildInviteUrl(clientState.roomCode, getInviteRole()) : "";
   refs.activeRoomCode.textContent = clientState.roomCode || "미접속";
   if (clientState.localMode) {
     refs.roomLinkPreview.textContent = "오프라인 솔로는 이 브라우저에서만 진행됩니다.";
@@ -2798,7 +2803,8 @@ function renderStatus() {
   if (refs.roomLinkHint) {
   refs.roomLinkHint.hidden = !canShareRoom;
   }
-  refs.openRoomLink.href = canShareRoom ? buildInviteUrl() : window.location.origin;
+  const roleAwareInviteUrl = canShareRoom ? buildInviteUrl(clientState.roomCode, getInviteRole()) : window.location.origin;
+  refs.openRoomLink.href = roleAwareInviteUrl;
   refs.openRoomLink.tabIndex = canShareRoom ? 0 : -1;
   refs.openRoomLink.setAttribute("aria-disabled", canShareRoom ? "false" : "true");
   refs.openRoomLink.setAttribute(
