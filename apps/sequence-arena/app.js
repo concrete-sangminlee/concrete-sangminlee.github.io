@@ -1,5 +1,6 @@
 import { BOARD_SIZE, TEAM_META, getLegalTargets } from "./shared/game-core.js";
 import { LocalSoloRuntime } from "./shared/local-solo.js";
+import { sanitizeName, ROOM_CODE_PATTERN, MAX_ROOM_CODE_LENGTH } from "./shared/validation.js";
 
 const STORAGE_KEYS = {
   session: "sequence-arena-session",
@@ -14,9 +15,6 @@ const STORAGE_KEYS = {
   theme: "sequence-arena-theme",
   welcomed: "sequence-arena-welcomed",
 };
-
-const ROOM_CODE_PATTERN = /^[A-Z0-9]{4,6}$/;
-const MAX_ROOM_CODE_LENGTH = 6;
 
 const canvas = document.getElementById("game-canvas");
 const ctx = canvas.getContext("2d");
@@ -415,11 +413,7 @@ function focusInviteJoinForm() {
 }
 
 function sanitizePlayerName(value) {
-  return String(value || "")
-    .normalize("NFKC")
-    .trim()
-    .replace(/\s+/g, " ")
-    .slice(0, 20);
+  return sanitizeName(value, 20).replace(/\s+/g, " ");
 }
 
 function normalizePlayerName(value) {
