@@ -9,6 +9,7 @@ const STORAGE_KEYS = {
   hapticsMuted: "sequence-arena-haptics-muted",
   turnNotifications: "sequence-arena-turn-notifications",
   preferredTeamSize: "sequence-arena-preferred-team-size",
+  preferredBotDifficulty: "sequence-arena-preferred-bot-difficulty",
   theme: "sequence-arena-theme",
   welcomed: "sequence-arena-welcomed",
 };
@@ -197,7 +198,7 @@ const clientState = {
   spectators: [],
   allowSpectators: true,
   botThinkingSeatIndex: null,
-  botDifficulty: "smart",
+  botDifficulty: normalizeBotDifficulty(safeLocalStorage.get(STORAGE_KEYS.preferredBotDifficulty)),
   rematchMode: "all",
   rematchVoteSeatIndexes: [],
   rematchRequiredVotes: 0,
@@ -337,6 +338,10 @@ function normalizeTeamSize(value) {
   return [1, 2, 3].includes(teamSize) ? teamSize : 3;
 }
 
+function normalizeBotDifficulty(value) {
+  return value === "easy" || value === "aggressive" ? value : "smart";
+}
+
 function requiredPlayerCount() {
   return clientState.requiredPlayers || clientState.seats.length || clientState.teamSize * 2 || 6;
 }
@@ -375,6 +380,7 @@ function saveSessionMeta() {
     safeLocalStorage.set(STORAGE_KEYS.name, clientState.lastName);
   }
   safeLocalStorage.set(STORAGE_KEYS.preferredTeamSize, String(clientState.preferredTeamSize));
+  safeLocalStorage.set(STORAGE_KEYS.preferredBotDifficulty, String(clientState.botDifficulty || "smart"));
 }
 
 function setFlashMessage(message) {
