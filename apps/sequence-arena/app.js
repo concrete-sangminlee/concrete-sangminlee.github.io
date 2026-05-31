@@ -3135,27 +3135,33 @@ function renderStatus() {
     refs.victoryCard.hidden = true;
     refs.rematchBtn.disabled = true;
     refs.rematchVoteStatus.textContent = "0 / 0 동의";
-    refs.turnSubtitle.textContent = clientState.roomCode ? `로비 대기 중 · ${matchLabel}` : "방 미접속";
-    refs.turnPlayer.textContent = clientState.roomCode ? "플레이어 대기" : "대기 중";
+    refs.turnSubtitle.textContent = clientState.localMode
+      ? "솔로 대기"
+      : clientState.roomCode
+        ? `로비 대기 중 · ${matchLabel}`
+        : "방 미접속";
+    refs.turnPlayer.textContent = clientState.localMode ? "솔로" : clientState.roomCode ? "플레이어 대기" : "대기 중";
     refs.turnTeam.textContent = "-";
     refs.turnTeam.className = "";
     const lobbyReadyText =
       remainingSeats > 0
         ? `친구 ${remainingSeats}명이 더 들어오면 자동 시작됩니다.`
         : "필요 인원이 모두 들어왔습니다. 곧 게임이 시작됩니다.";
-    refs.statusMessage.textContent = clientState.roomCode
-      ? clientState.yourRole === "spectator"
-        ? "관전자로 입장했습니다. 게임이 시작되면 보드와 로그를 실시간으로 볼 수 있습니다."
-        : clientState.yourSeatIndex === 0
-        ? `${filledSeats}/${requiredPlayers}명이 입장했습니다. ${lobbyReadyText} 혼자 확인하려면 혼자 테스트 시작을 누르세요.`
-        : `${filledSeats}/${requiredPlayers}명이 입장했습니다. ${lobbyReadyText}`
-      : "방을 만들거나 받은 코드로 입장하세요.";
+    refs.statusMessage.textContent = clientState.localMode
+      ? "시작 버튼으로 솔로 게임을 시작하세요."
+      : clientState.roomCode
+        ? clientState.yourRole === "spectator"
+          ? "관전자로 입장했습니다. 게임이 시작되면 보드와 로그를 실시간으로 볼 수 있습니다."
+          : clientState.yourSeatIndex === 0
+          ? `${filledSeats}/${requiredPlayers}명이 입장했습니다. ${lobbyReadyText} 혼자 확인하려면 혼자 테스트 시작을 누르세요.`
+          : `${filledSeats}/${requiredPlayers}명이 입장했습니다. ${lobbyReadyText}`
+        : "방을 만들거나 받은 코드로 입장하세요.";
     refs.scoreRuby.textContent = `0 / 2 시퀀스`;
     refs.scoreCobalt.textContent = `0 / 2 시퀀스`;
     refs.deckCount.textContent = "0장";
     refs.discardCount.textContent = "0장";
     refs.handCaption.textContent = "게임이 시작되면 이 칸에 내 손패가 보입니다.";
-    refs.selectionHint.textContent = "멀티플레이 대기 중입니다.";
+    refs.selectionHint.textContent = clientState.localMode ? "시작 버튼으로 플레이하세요." : "멀티플레이 대기 중입니다.";
     refs.cancelSelectionBtn.disabled = true;
     refs.discardDeadBtn.disabled = true;
     refs.logList.replaceChildren();
