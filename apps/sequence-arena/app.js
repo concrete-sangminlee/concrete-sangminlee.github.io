@@ -4783,7 +4783,8 @@ function dismissWelcome() {
 
 function maybeShowWelcome() {
   if (!refs.welcomeCard) return;
-  refs.welcomeCard.hidden = !shouldShowWelcome();
+  const shouldShow = shouldShowWelcome();
+  refs.welcomeCard.hidden = !shouldShow;
 }
 
 function updateWelcomeCreateLabel() {
@@ -4795,10 +4796,10 @@ function updateWelcomeModePanel() {
   if (!refs.welcomeModeBanner || !refs.welcomeModeSteps) return;
   const isStatic = isOfflineOnlyRuntime();
   refs.welcomeModeBanner.textContent = isStatic
-    ? "정적판: 오프라인 솔로로 시작, 멀티는 WebSocket 서버 필요"
-    : "멀티플레이를 위한 방 만들기/입장 준비";
-  const stepA = isStatic ? "오프라인 솔로" : "방 만들기";
-  const stepB = isStatic ? "서버 주소에서 방 생성" : "코드/링크 공유";
+    ? "정적판: 오프라인 솔로만"
+    : "실시간 멀티플레이 대기";
+  const stepA = isStatic ? "내 이름 입력" : "방 만들기";
+  const stepB = isStatic ? "바로 솔로 플레이 시작" : "코드/링크 공유";
   refs.welcomeModeSteps.replaceChildren(
     ...[stepA, stepB, "도움말 확인"].map((text, index) => {
       const node = document.createElement("li");
