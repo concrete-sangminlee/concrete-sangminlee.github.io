@@ -1216,6 +1216,7 @@ function reconnectToSavedRoom() {
 
 function maybeAutoJoinSharedRoom() {
   const sharedRoomCode = normalizeRoomCode(urlRoomCode || "");
+  const isSpectatorRole = resolveJoinRole() === "spectator";
   const enteredJoinName = String(refs.joinName?.value || "").trim();
   const enteredCreateName = String(refs.createName?.value || "").trim();
   const storedName = safeLocalStorage.get(STORAGE_KEYS.name) || "";
@@ -1240,7 +1241,11 @@ function maybeAutoJoinSharedRoom() {
     if (refs.joinCode) {
       refs.joinCode.value = sharedRoomCode;
     }
-    setFlashMessage(`${sharedRoomCode} 방으로 입장하려면 먼저 이름을 입력하세요.`);
+    setFlashMessage(
+      isSpectatorRole
+        ? `${sharedRoomCode} 방 관전으로 입장하려면 먼저 이름을 입력하세요.`
+        : `${sharedRoomCode} 방으로 입장하려면 먼저 이름을 입력하세요.`
+    );
     focusInviteJoinForm();
     render();
     return;
@@ -1263,7 +1268,7 @@ function maybeAutoJoinSharedRoom() {
     role: resolveJoinRole(),
   });
   setFlashMessage(
-    resolveJoinRole() === "spectator"
+    isSpectatorRole
       ? `${sharedRoomCode} 방 관전 입장 시도 중입니다.`
       : `${sharedRoomCode} 방으로 자동 입장 시도 중입니다.`
   );
@@ -2793,6 +2798,12 @@ function renderStatus() {
     }
     refs.joinRoomBtn.textContent = offlineOnlyRuntime ? "멀티 서버 필요" : "방 입장";
     refs.joinRoomBtn.title = offlineOnlyRuntime ? "WebSocket 서버가 켜진 주소에서 사용할 수 있습니다." : "방 코드로 입장";
+  }
+  if (refs.joinAsSpectator) {
+    refs.joinAsSpectator.disabled = offlineOnlyRuntime;
+    refs.joinAsSpectator.title = offlineOnlyRuntime
+      ? "오프라인 모드에서는 관전 입장을 사용할 수 없습니다"
+      : "";
   }
   if (refs.joinCode) {
     if (offlineOnlyRuntime) {
