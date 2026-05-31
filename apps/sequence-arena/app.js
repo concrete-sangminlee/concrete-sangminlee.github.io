@@ -1136,6 +1136,10 @@ function isOfflineOnlyRuntime() {
   return !window.location.host || window.location.protocol === "file:" || isStaticPagesHost();
 }
 
+function isSoloContext() {
+  return isOfflineOnlyRuntime() || clientState.localMode;
+}
+
 function formatRetryDelay(ms) {
   if (!ms || ms <= 0) {
     return "곧";
@@ -2769,7 +2773,7 @@ function renderHistory() {
   refs.historySummary.replaceChildren();
 
   if (clientState.matchHistory.length === 0) {
-    const soloHintContext = isOfflineOnlyRuntime() || clientState.localMode;
+    const soloHintContext = isSoloContext();
     const historyAction = soloHintContext
       ? {
           label: "바로 솔로 시작",
@@ -2937,7 +2941,7 @@ function renderChat() {
   refs.chatLog.replaceChildren();
   if (!clientState.chatMessages.length) {
     const hasGateway = Boolean(refs.createName || refs.joinName);
-    const chatOfflineContext = isOfflineOnlyRuntime() || clientState.localMode;
+    const chatOfflineContext = isSoloContext();
     const chatAction = clientState.roomCode && !clientState.localMode
       ? {
           label: "첫 메시지 쓰기",
@@ -3275,7 +3279,7 @@ function renderStatus() {
     refs.cancelSelectionBtn.disabled = true;
     refs.discardDeadBtn.disabled = true;
     refs.logList.replaceChildren();
-    const soloHintContext = isOfflineOnlyRuntime() || clientState.localMode;
+    const soloHintContext = isSoloContext();
     const pregameAction = soloHintContext
       ? {
           label: "솔로 테스트 시작",
@@ -3435,7 +3439,7 @@ function renderStatus() {
 
   refs.logList.replaceChildren();
   if (clientState.game.logs.length === 0) {
-    const soloHintContext = isOfflineOnlyRuntime() || clientState.localMode;
+    const soloHintContext = isSoloContext();
     const logAction = soloHintContext
       ? {
           label: "솔로 테스트 시작",
