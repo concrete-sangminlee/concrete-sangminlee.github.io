@@ -1658,6 +1658,17 @@ function handleJoinRoom(event) {
   const roomCode = normalizeRoomCode(refs.joinCode.value);
 
   if (!name || !roomCode) {
+    if (!name && refs.joinName) {
+      refs.joinName.focus();
+      if (typeof refs.joinName.setSelectionRange === "function") {
+        refs.joinName.setSelectionRange(0, refs.joinName.value.length);
+      }
+    } else if (!roomCode && refs.joinCode) {
+      refs.joinCode.focus();
+      if (typeof refs.joinCode.setSelectionRange === "function") {
+        refs.joinCode.setSelectionRange(0, refs.joinCode.value.length);
+      }
+    }
     setFlashMessage("이름과 방 코드를 모두 입력하세요.");
     render();
     return;
@@ -1667,6 +1678,12 @@ function handleJoinRoom(event) {
   // length). Catch it here so the user gets immediate feedback matching the hint text
   // instead of a server round-trip + a generic "방 코드 형식이 올바르지 않습니다." error.
   if (roomCode.length < 4) {
+    if (refs.joinCode) {
+      refs.joinCode.focus();
+      if (typeof refs.joinCode.setSelectionRange === "function") {
+        refs.joinCode.setSelectionRange(0, refs.joinCode.value.length);
+      }
+    }
     setFlashMessage("방 코드는 4~6자 영문/숫자여야 합니다.");
     render();
     return;
