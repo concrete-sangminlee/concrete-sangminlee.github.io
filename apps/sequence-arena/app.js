@@ -2796,10 +2796,16 @@ function renderStatus() {
   refs.roomLinkPreview.title = canShareRoom ? "클릭하면 초대 링크를 복사합니다" : "방을 만든 뒤 링크를 복사할 수 있습니다.";
   refs.roomLinkPreview.setAttribute("aria-describedby", canShareRoom ? "room-link-preview-desc" : "");
   if (refs.roomLinkHint) {
-    refs.roomLinkHint.hidden = !canShareRoom;
+  refs.roomLinkHint.hidden = !canShareRoom;
   }
   refs.openRoomLink.href = canShareRoom ? buildInviteUrl() : window.location.origin;
+  refs.openRoomLink.tabIndex = canShareRoom ? 0 : -1;
   refs.openRoomLink.setAttribute("aria-disabled", canShareRoom ? "false" : "true");
+  refs.openRoomLink.setAttribute(
+    "aria-label",
+    canShareRoom ? `${clientState.roomCode} 링크 열기` : "방을 만든 뒤 링크를 열 수 있습니다"
+  );
+  refs.openRoomLink.title = canShareRoom ? "새 탭에서 방 링크 열기" : "방을 만든 뒤 사용할 수 있습니다";
   refs.copyCodeBtn.disabled = !canShareRoom;
   refs.copyRoomBtn.disabled = !canShareRoom;
   refs.copySpectatorLinkBtn.disabled = !canShareRoom || !clientState.allowSpectators;
@@ -4286,6 +4292,13 @@ refs.activeRoomCode?.addEventListener("click", () => {
     setFlashMessage("방 코드 복사에 실패했습니다.");
     render();
   });
+});
+refs.openRoomLink?.addEventListener("click", (event) => {
+  if (!clientState.roomCode || clientState.localMode) {
+    event.preventDefault();
+    setFlashMessage("방을 만든 뒤에 링크를 열 수 있습니다.");
+    return;
+  }
 });
 refs.roomLinkPreview?.addEventListener("click", () => {
   if (!clientState.roomCode || clientState.localMode) return;
