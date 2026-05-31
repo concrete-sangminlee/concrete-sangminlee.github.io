@@ -262,7 +262,7 @@ const clientState = {
   socketReady: false,
   localMode: false,
   sessionId: safeLocalStorage.get(STORAGE_KEYS.session) || "",
-  roomCode: sanitizeRoomCodeCandidate(normalizedUrlRoomCode || persistedRoomCode || ""),
+  roomCode: isOfflineOnlyRuntime() ? "" : sanitizeRoomCodeCandidate(normalizedUrlRoomCode || persistedRoomCode || ""),
   hostSessionId: null,
   lastName: safeLocalStorage.get(STORAGE_KEYS.name) || "",
   seats: [],
@@ -322,7 +322,7 @@ const clientState = {
 };
 
 function pruneOfflineRuntimeRecoveredState() {
-  if (!isOfflineOnlyRuntime() || normalizedUrlRoomCode) {
+  if (!isOfflineOnlyRuntime()) {
     return;
   }
   if (!clientState.roomCode && !clientState.sessionId) {
