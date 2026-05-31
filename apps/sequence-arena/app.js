@@ -8,6 +8,8 @@ const STORAGE_KEYS = {
   name: "sequence-arena-name",
   soundMuted: "sequence-arena-sound-muted",
   hapticsMuted: "sequence-arena-haptics-muted",
+  soundVolume: "sequence-arena-sound-volume",
+  hapticsIntensity: "sequence-arena-haptics-intensity",
   joinAsSpectator: "sequence-arena-join-as-spectator",
   turnNotifications: "sequence-arena-turn-notifications",
   preferredTeamSize: "sequence-arena-preferred-team-size",
@@ -48,6 +50,10 @@ const refs = {
   notificationToggleBtn: document.getElementById("notification-toggle-btn"),
   soundToggleBtn: document.getElementById("sound-toggle-btn"),
   hapticsToggleBtn: document.getElementById("haptics-toggle-btn"),
+  soundVolumeSlider: document.getElementById("sound-volume-slider"),
+  soundVolumeValue: document.getElementById("sound-volume-value"),
+  hapticIntensitySlider: document.getElementById("haptic-intensity-slider"),
+  hapticIntensityValue: document.getElementById("haptic-intensity-value"),
   helpBtn: document.getElementById("help-btn"),
   helpModal: document.getElementById("help-modal"),
   helpCloseBtn: document.getElementById("help-close-btn"),
@@ -214,6 +220,23 @@ const safeLocalStorage = {
   },
 };
 
+function readPercentPreference(key, fallback, min = 0, max = 100) {
+  const raw = safeLocalStorage.get(key);
+  const numeric = Number(raw);
+  if (!Number.isFinite(numeric)) {
+    return fallback;
+  }
+  return Math.max(min, Math.min(max, Math.round(numeric)));
+}
+
+function clamp01(value, fallback = 0) {
+  const n = Number(value);
+  if (!Number.isFinite(n)) {
+    return fallback;
+  }
+  return Math.max(0, Math.min(1, n));
+}
+
 const STORAGE_JOIN_ROLE = safeLocalStorage.get(STORAGE_KEYS.joinAsSpectator);
 if (URL_JOIN_ROLE) {
   safeLocalStorage.set(STORAGE_KEYS.joinAsSpectator, URL_JOIN_ROLE);
@@ -229,6 +252,10 @@ const persistedRoomCode = safeLocalStorage.get(STORAGE_KEYS.room);
 const initialFlashMessage = hasMalformedRoomParam
   ? "방 코드 링크 형식이 올바르지 않습니다. 새로 입장해서 시작해 주세요."
   : "방을 만들거나 받은 코드로 입장하세요.";
+const startupFeedbackSettings = {
+  soundVolume: readPercentPreference(STORAGE_KEYS.soundVolume, 70),
+  hapticsIntensity: readPercentPreference(STORAGE_KEYS.hapticsIntensity, 70),
+};
 const clientState = {
   socket: null,
   socketReady: false,
@@ -276,6 +303,8 @@ const clientState = {
   sessionTakenOver: false,
   audioMuted: safeLocalStorage.get(STORAGE_KEYS.soundMuted) === "true",
   hapticsMuted: safeLocalStorage.get(STORAGE_KEYS.hapticsMuted) === "true",
+  soundVolume: startupFeedbackSettings.soundVolume,
+  hapticsIntensity: startupFeedbackSettings.hapticsIntensity,
   turnNotificationsEnabled: safeLocalStorage.get(STORAGE_KEYS.turnNotifications) === "true",
   deferredInstallPrompt: null,
   appInstalled: window.matchMedia?.("(display-mode: standalone)").matches || window.navigator.standalone === true,
@@ -471,6 +500,8 @@ function saveSessionMeta() {
   }
   safeLocalStorage.set(STORAGE_KEYS.preferredTeamSize, String(clientState.preferredTeamSize));
   safeLocalStorage.set(STORAGE_KEYS.preferredBotDifficulty, String(clientState.botDifficulty || "smart"));
+  safeLocalStorage.set(STORAGE_KEYS.soundVolume, String(clientState.soundVolume));
+  safeLocalStorage.set(STORAGE_KEYS.hapticsIntensity, String(clientState.hapticsIntensity));
 }
 
 function setFlashMessage(message) {
@@ -483,6 +514,21 @@ function updateSoundButton() {
   refs.soundToggleBtn.setAttribute("aria-pressed", String(!clientState.audioMuted));
   refs.soundToggleBtn.setAttribute("aria-label", clientState.audioMuted ? "사운드 켜기" : "사운드 끄기");
   refs.soundToggleBtn.title = clientState.audioMuted ? "사운드 켜기" : "사운드 끄기";
+}
+
+function updateFeedbackControls() {
+  if (refs.soundVolumeSlider) {
+    refs.soundVolumeSlider.value = String(clientState.soundVolume);
+  }
+  if (refs.soundVolumeValue) {
+    refs.soundVolumeValue.textContent = `${clientState.soundVolume}%`;
+  }
+  if (refs.hapticIntensitySlider) {
+    refs.hapticIntensitySlider.value = String(clientState.hapticsIntensity);
+  }
+  if (refs.hapticIntensityValue) {
+    refs.hapticIntensityValue.textContent = `${clientState.hapticsIntensity}%`;
+  }
 }
 
 function notificationsSupported() {
@@ -745,8 +791,19 @@ function ensureAudioContext() {
 }
 
 function playSound(name) {
+  // Expose for ui-regression before audio-device checks so diagnostics still capture
+  // intended sound intent even when audio is effectively muted (volume 0/headless).
+  window.__sequenceLastSound = name;
+  window.__sequenceSoundHistory = window.__sequenceSoundHistory || [];
+  window.__sequenceSoundHistory.push(name);
+  if (window.__sequenceSoundHistory.length > 8) window.__sequenceSoundHistory.shift();
+
   const context = ensureAudioContext();
   if (!context) {
+    return;
+  }
+  const volumeScale = clamp01(clientState.soundVolume / 100, 0);
+  if (volumeScale <= 0) {
     return;
   }
 
@@ -812,13 +869,6 @@ function playSound(name) {
   };
 
   const notes = patterns[name] || patterns.tap;
-  // Expose for ui-regression: headless Chromium has no audio device. `last` is the most
-  // recent, `history` keeps the last 8 so race-adjacent sounds (e.g., jack-action sound
-  // + chip-drop sound fired ~300ms apart) don't make one overwrite the other in tests.
-  window.__sequenceLastSound = name;
-  window.__sequenceSoundHistory = window.__sequenceSoundHistory || [];
-  window.__sequenceSoundHistory.push(name);
-  if (window.__sequenceSoundHistory.length > 8) window.__sequenceSoundHistory.shift();
   const startAt = context.currentTime + 0.01;
   for (const note of notes) {
     const oscillator = context.createOscillator();
@@ -826,7 +876,7 @@ function playSound(name) {
     oscillator.type = note.type;
     oscillator.frequency.setValueAtTime(note.frequency, startAt + note.delay);
     gain.gain.setValueAtTime(0.0001, startAt + note.delay);
-    gain.gain.exponentialRampToValueAtTime(note.gain, startAt + note.delay + 0.012);
+    gain.gain.exponentialRampToValueAtTime(note.gain * volumeScale, startAt + note.delay + 0.012);
     gain.gain.exponentialRampToValueAtTime(0.0001, startAt + note.delay + note.duration);
     oscillator.connect(gain);
     gain.connect(context.destination);
@@ -848,22 +898,32 @@ const HAPTIC = Object.freeze({
 });
 
 function triggerHaptic(pattern) {
-  if (clientState.hapticsMuted) {
-    return;
-  }
+  const normalized = Array.isArray(pattern) ? pattern : [pattern];
+  const safePattern = normalized.map((v) => {
+    const level = Number(v);
+    return Number.isFinite(level) ? Math.max(1, Math.round(level)) : 1;
+  });
   // Expose for ui-regression. `last` is overwritten on every call so race-adjacent
   // calls (e.g., jack-action haptic + chip-drop haptic fired ~300ms apart) clobber
   // each other. `history` keeps the last 8 patterns so tests can assert on a
   // *specific* haptic instead of being forced to read between two clobbers.
-  window.__sequenceLastHaptic = pattern;
+  window.__sequenceLastHaptic = safePattern;
   window.__sequenceHapticHistory = window.__sequenceHapticHistory || [];
-  window.__sequenceHapticHistory.push(pattern);
+  window.__sequenceHapticHistory.push(safePattern);
   if (window.__sequenceHapticHistory.length > 8) window.__sequenceHapticHistory.shift();
+  if (clientState.hapticsMuted) {
+    return;
+  }
+  const intensity = clamp01(clientState.hapticsIntensity / 100, 0);
+  if (intensity <= 0) {
+    return;
+  }
+  const scaled = safePattern.map((v) => Math.max(1, Math.round(v * intensity)));
   if (!("vibrate" in navigator)) {
     return;
   }
   try {
-    navigator.vibrate(pattern);
+    navigator.vibrate(scaled);
   } catch {
     // Some browsers expose vibrate but block it; audio/visual feedback still runs.
   }
@@ -2127,16 +2187,46 @@ async function shareRoom() {
 function toggleSound() {
   clientState.audioMuted = !clientState.audioMuted;
   safeLocalStorage.set(STORAGE_KEYS.soundMuted, String(clientState.audioMuted));
+  if (!clientState.audioMuted && clientState.soundVolume === 0) {
+    setSoundVolume(70);
+    return;
+  }
   updateSoundButton();
+  updateFeedbackControls();
   if (!clientState.audioMuted) {
     playSound("tap");
   }
 }
 
+function setSoundVolume(percent) {
+  const next = clamp01(Number(percent) / 100, clientState.soundVolume / 100);
+  if (next === (clientState.soundVolume / 100)) {
+    return;
+  }
+  clientState.soundVolume = Math.round(next * 100);
+  safeLocalStorage.set(STORAGE_KEYS.soundVolume, String(clientState.soundVolume));
+  if (clientState.soundVolume === 0 && !clientState.audioMuted) {
+    clientState.audioMuted = true;
+    safeLocalStorage.set(STORAGE_KEYS.soundMuted, "true");
+    announcePolite("사운드를 껐습니다.");
+  } else if (clientState.soundVolume > 0 && clientState.audioMuted) {
+    clientState.audioMuted = false;
+    safeLocalStorage.set(STORAGE_KEYS.soundMuted, "false");
+    announcePolite("사운드를 켰습니다.");
+  }
+  updateSoundButton();
+  updateFeedbackControls();
+}
+
 function toggleHaptics() {
   clientState.hapticsMuted = !clientState.hapticsMuted;
   safeLocalStorage.set(STORAGE_KEYS.hapticsMuted, String(clientState.hapticsMuted));
+  if (!clientState.hapticsMuted && clientState.hapticsIntensity === 0) {
+    setHapticsIntensity(70);
+    return;
+  }
   updateHapticsButton();
+  updateFeedbackControls();
   if (!clientState.hapticsMuted) {
     triggerHaptic([18]);
   }
@@ -2150,6 +2240,26 @@ function updateHapticsButton() {
   refs.hapticsToggleBtn.setAttribute("aria-pressed", String(!muted));
   refs.hapticsToggleBtn.setAttribute("aria-label", muted ? "진동 피드백 켜기" : "진동 피드백 끄기");
   refs.hapticsToggleBtn.title = muted ? "진동 켜기" : "진동 끄기";
+}
+
+function setHapticsIntensity(percent) {
+  const next = clamp01(Number(percent) / 100, clientState.hapticsIntensity / 100);
+  if (next === clientState.hapticsIntensity / 100) {
+    return;
+  }
+  clientState.hapticsIntensity = Math.round(next * 100);
+  safeLocalStorage.set(STORAGE_KEYS.hapticsIntensity, String(clientState.hapticsIntensity));
+  if (clientState.hapticsIntensity === 0 && !clientState.hapticsMuted) {
+    clientState.hapticsMuted = true;
+    safeLocalStorage.set(STORAGE_KEYS.hapticsMuted, "true");
+    announcePolite("진동 피드백을 껐습니다.");
+  } else if (clientState.hapticsIntensity > 0 && clientState.hapticsMuted) {
+    clientState.hapticsMuted = false;
+    safeLocalStorage.set(STORAGE_KEYS.hapticsMuted, "false");
+    announcePolite("진동 피드백을 켰습니다.");
+  }
+  updateHapticsButton();
+  updateFeedbackControls();
 }
 
 function setSelectedCard(cardId) {
@@ -4641,6 +4751,8 @@ function render() {
     refs.activeRoomCode.textContent = clientState.roomCode || "미접속";
     refs.flashMessage.textContent = clientState.flashMessage;
     updateSoundButton();
+    updateHapticsButton();
+    updateFeedbackControls();
     updateWelcomeCreateLabel();
     if (typeof maybeShowWelcome === "function") maybeShowWelcome();
     drawBoard();
@@ -4884,6 +4996,18 @@ refs.notificationToggleBtn.addEventListener("click", () => {
 });
 refs.soundToggleBtn.addEventListener("click", toggleSound);
 refs.hapticsToggleBtn?.addEventListener("click", toggleHaptics);
+refs.soundVolumeSlider?.addEventListener("input", (event) => {
+  setSoundVolume(event.currentTarget?.value ?? event.target?.value);
+});
+refs.soundVolumeSlider?.addEventListener("change", () => {
+  saveSessionMeta();
+});
+refs.hapticIntensitySlider?.addEventListener("input", (event) => {
+  setHapticsIntensity(event.currentTarget?.value ?? event.target?.value);
+});
+refs.hapticIntensitySlider?.addEventListener("change", () => {
+  saveSessionMeta();
+});
 updateHapticsButton();
 
 function resolveInitialTheme() {
@@ -5702,6 +5826,8 @@ window.sequenceTest = {
     get hapticHistory() { return [...(window.__sequenceHapticHistory || [])]; },
     get audioMuted() { return clientState.audioMuted; },
     get hapticsMuted() { return clientState.hapticsMuted; },
+    get soundVolumePercent() { return clientState.soundVolume; },
+    get hapticsIntensityPercent() { return clientState.hapticsIntensity; },
     reset() {
       window.__sequenceLastSound = null;
       window.__sequenceLastHaptic = null;

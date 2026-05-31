@@ -526,6 +526,32 @@
                 <li id="help-shortcut-copy"><kbd>C</kbd>로 현재 방 초대 링크 복사, <kbd>F</kbd>로 전체화면 전환, <kbd>R</kbd>로 리매치(동의/시작).</li>
             </ul>
           </section>
+          <section class="help-section" id="help-feedback-section">
+            <h3>오디오 · 햅틱 설정</h3>
+            <div class="help-control-row">
+              <label for="sound-volume-slider">효과음</label>
+              <div class="help-control-group">
+                <input id="sound-volume-slider" class="range-slider" type="range" min="0" max="100" step="5" value="70" aria-describedby="sound-volume-value" />
+                <output id="sound-volume-value" for="sound-volume-slider">70%</output>
+              </div>
+            </div>
+            <div class="help-control-row">
+              <label for="haptic-intensity-slider">햅틱 세기</label>
+              <div class="help-control-group">
+                <input
+                  id="haptic-intensity-slider"
+                  class="range-slider"
+                  type="range"
+                  min="0"
+                  max="100"
+                  step="10"
+                  value="70"
+                  aria-describedby="haptic-intensity-value"
+                />
+                <output id="haptic-intensity-value" for="haptic-intensity-slider">70%</output>
+              </div>
+            </div>
+          </section>
           <section class="help-section" id="help-privacy-section">
             <h3>개인정보 처리방침</h3>
             <ul>
