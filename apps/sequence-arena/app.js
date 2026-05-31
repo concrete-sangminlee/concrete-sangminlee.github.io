@@ -15,6 +15,8 @@ const STORAGE_KEYS = {
   welcomed: "sequence-arena-welcomed",
 };
 
+const ROOM_CODE_PATTERN = /^[A-Z0-9]{4,6}$/;
+
 const canvas = document.getElementById("game-canvas");
 const ctx = canvas.getContext("2d");
 
@@ -150,6 +152,18 @@ const URL_JOIN_ROLE = urlParams.get("role") === "spectator" ? "spectator" : null
 let joinRolePreference = URL_JOIN_ROLE;
 let spectatorClosedRecoveryAttempted = false;
 
+function sanitizeRoomCodeCandidate(value) {
+  const normalized = normalizeRoomCode(value);
+  return ROOM_CODE_PATTERN.test(normalized) ? normalized : "";
+}
+
+const normalizedUrlRoomCode = sanitizeRoomCodeCandidate(urlRoomCode);
+if (urlRoomCode && !normalizedUrlRoomCode) {
+  const cleanedUrl = new URL(window.location.href);
+  cleanedUrl.searchParams.delete("room");
+  window.history.replaceState({}, "", cleanedUrl);
+}
+
 // Safari private mode and lockdown browsers can throw on any localStorage access. Wrap the two ops
 // the rest of the app uses so a denied storage API never turns into a blank-page boot failure.
 const safeLocalStorage = {
@@ -193,7 +207,7 @@ const clientState = {
   socketReady: false,
   localMode: false,
   sessionId: safeLocalStorage.get(STORAGE_KEYS.session) || "",
-  roomCode: normalizeRoomCode(urlRoomCode || persistedRoomCode || ""),
+  roomCode: sanitizeRoomCodeCandidate(normalizedUrlRoomCode || persistedRoomCode || ""),
   lastName: safeLocalStorage.get(STORAGE_KEYS.name) || "",
   seats: [],
   roomPhase: "idle",
@@ -1090,7 +1104,21 @@ function getInviteRole() {
 }
 
 function isStaticPagesHost() {
-  return window.location.hostname.endsWith(".github.io") || window.location.pathname.startsWith("/sequence-arena/");
+  const runtimeMode =
+    document.body?.dataset?.runtimeMode || document.documentElement?.dataset?.runtimeMode || "";
+  if (runtimeMode === "github-pages") {
+    return true;
+  }
+  if (window.location.hostname.endsWith(".github.io")) {
+    return true;
+  }
+  if (
+    (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") &&
+    window.location.pathname.startsWith("/sequence-arena/")
+  ) {
+    return true;
+  }
+  return false;
 }
 
 function isOfflineOnlyRuntime() {
@@ -1315,7 +1343,7 @@ function reconnectToSavedRoom() {
 }
 
 function maybeAutoJoinSharedRoom() {
-  const sharedRoomCode = normalizeRoomCode(urlRoomCode || "");
+  const sharedRoomCode = sanitizeRoomCodeCandidate(urlRoomCode || "");
   const isSpectatorRole = resolveJoinRole() === "spectator";
   const enteredJoinName = String(refs.joinName?.value || "").trim();
   const enteredCreateName = String(refs.createName?.value || "").trim();
@@ -1857,8 +1885,9 @@ async function writeToClipboard(text) {
   }
   // Fallback: use a hidden textarea + document.execCommand("copy"). Works on http://127.0.0.1 dev
   // and on older Safari / in-app browsers where Clipboard API is blocked.
+  let scratch = null;
   try {
-    const scratch = document.createElement("textarea");
+    scratch = document.createElement("textarea");
     scratch.value = text;
     scratch.setAttribute("readonly", "");
     scratch.style.position = "absolute";
@@ -1867,10 +1896,17 @@ async function writeToClipboard(text) {
     document.body.appendChild(scratch);
     scratch.select();
     const ok = document.execCommand?.("copy");
-    document.body.removeChild(scratch);
     return Boolean(ok);
   } catch {
     return false;
+  } finally {
+    if (scratch) {
+      try {
+        document.body.removeChild(scratch);
+      } catch {
+        // ignore
+      }
+    }
   }
 }
 
