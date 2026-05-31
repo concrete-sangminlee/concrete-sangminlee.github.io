@@ -4837,7 +4837,7 @@ function printConsoleBanner() {
   const brand = "%cSequence Arena";
   const brandStyle =
     "font: 900 28px/1 'Trebuchet MS', sans-serif; color: #fff8e9; background: linear-gradient(135deg, #10372e, #c99a3c); padding: 10px 18px; border-radius: 8px;";
-  const info = "%c정적 GitHub Pages 배포 · 오프라인 솔로 지원";
+  const info = "%cGitHub Pages 정적판 · https://concrete-sangminlee.github.io/sequence-arena/";
   const infoStyle = "color: #68766e; font: 600 12px 'Inter', sans-serif; padding-left: 4px;";
   const warnStyle = "color: #b01d3c; font: 900 16px 'Inter', sans-serif;";
   const detailStyle = "color: #68766e; font: 500 12px 'Inter', sans-serif; padding-left: 4px;";
