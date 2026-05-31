@@ -202,6 +202,19 @@ label:has(input[aria-invalid="true"]) .input-hint {
   text-transform: uppercase;
 }
 
+.join-code-control {
+  display: grid;
+  gap: 7px;
+}
+
+.join-code-paste-btn {
+  width: fit-content;
+  min-height: 34px;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  justify-self: start;
+}
+
 .sr-only {
   position: absolute;
   width: 1px;

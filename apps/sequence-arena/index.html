@@ -175,8 +175,9 @@
                   enterkeyhint="next"
                 />
               </label>
-              <label>
-                <span>방 코드</span>
+            <label>
+              <span>방 코드</span>
+              <div class="join-code-control">
                 <input
                   id="join-code"
                   type="text"
@@ -191,8 +192,12 @@
                   pattern="[A-Za-z0-9]{4,6}"
                   aria-describedby="join-code-hint"
                 />
-                <small id="join-code-hint" class="input-hint">4~6자리 영문/숫자</small>
-              </label>
+                <button id="join-code-paste-btn" class="ghost-button join-code-paste-btn" type="button">
+                  클립보드 붙여넣기
+                </button>
+              </div>
+              <small id="join-code-hint" class="input-hint">4~6자리 영문/숫자</small>
+            </label>
               <label class="host-setting toggle-row">
                 <span>관전 입장</span>
                 <input id="join-as-spectator" type="checkbox" />

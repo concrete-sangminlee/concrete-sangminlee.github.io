@@ -32,6 +32,7 @@ const refs = {
   joinName: document.getElementById("join-name"),
   joinCode: document.getElementById("join-code"),
   joinCodeHint: document.getElementById("join-code-hint"),
+  joinCodePasteBtn: document.getElementById("join-code-paste-btn"),
   rubySeatLegend: document.getElementById("ruby-seat-legend"),
   cobaltSeatLegend: document.getElementById("cobalt-seat-legend"),
   currentOrigin: document.getElementById("current-origin"),
@@ -5003,6 +5004,37 @@ function handleJoinCodeInput() {
   updateJoinCodeHint(defaultHint);
 }
 
+async function handleJoinCodePaste() {
+  if (!refs.joinCode) return;
+  if (!navigator.clipboard || typeof navigator.clipboard.readText !== "function") {
+    setFlashMessage("이 브라우저는 클립보드 읽기를 지원하지 않습니다.");
+    return;
+  }
+
+  let pasted = "";
+  try {
+    pasted = await navigator.clipboard.readText();
+  } catch {
+    setFlashMessage("클립보드 권한이 없어 붙여넣기를 불러올 수 없습니다.");
+    return;
+  }
+
+  const next = normalizeJoinCodeInput(pasted);
+  if (!next) {
+    setFlashMessage("클립보드에 유효한 방 코드(4~6자리 영문/숫자)가 없습니다.");
+    return;
+  }
+  refs.joinCode.value = next;
+  handleJoinCodeInput();
+  setFlashMessage(`방 코드를 붙여넣었습니다: ${next}`);
+  if (typeof refs.joinCode.focus === "function") {
+    refs.joinCode.focus();
+  }
+  if (typeof refs.joinCode.setSelectionRange === "function") {
+    refs.joinCode.setSelectionRange(0, refs.joinCode.value.length);
+  }
+}
+
 function dismissWelcome() {
   if (!refs.welcomeCard) return;
   refs.welcomeCard.hidden = true;
@@ -5073,6 +5105,9 @@ refs.welcomeHelpBtn?.addEventListener("click", () => {
 });
 refs.joinCode?.addEventListener("input", handleJoinCodeInput);
 refs.joinCode?.addEventListener("blur", handleJoinCodeInput);
+refs.joinCodePasteBtn?.addEventListener("click", () => {
+  void handleJoinCodePaste();
+});
 refs.joinAsSpectator?.addEventListener("change", (event) => {
   setJoinRolePreference(event.currentTarget?.checked ? "spectator" : "player");
 });
