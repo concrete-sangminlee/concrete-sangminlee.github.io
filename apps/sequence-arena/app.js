@@ -32,6 +32,7 @@ const refs = {
   joinName: document.getElementById("join-name"),
   joinCode: document.getElementById("join-code"),
   joinCodeHint: document.getElementById("join-code-hint"),
+  joinCodeLiveFeedback: document.getElementById("join-code-live-feedback"),
   joinCodePasteBtn: document.getElementById("join-code-paste-btn"),
   rubySeatLegend: document.getElementById("ruby-seat-legend"),
   cobaltSeatLegend: document.getElementById("cobalt-seat-legend"),
@@ -4813,28 +4814,37 @@ refs.themeToggleBtn?.addEventListener("click", toggleTheme);
 // The hint element doubles as the error surface. Cache the original neutral copy at boot
 // so the validation flow can swap to error text on bad input and restore on recovery —
 // without a cached copy, an upstream string change would silently desync.
-const JOIN_CODE_HINT_DEFAULT = document.getElementById("join-code-hint")?.textContent || "";
+const JOIN_CODE_HINT_DEFAULT = refs.joinCodeHint?.textContent || "4~6자리 영문/숫자";
 const JOIN_CODE_HINT_ERROR = "방 코드는 4~6자 영문/숫자여야 합니다.";
+
+function announceJoinCodeHint(message) {
+  if (refs.joinCodeLiveFeedback) {
+    refs.joinCodeLiveFeedback.textContent = message || "";
+  }
+}
 
 function updateJoinCodeValidity() {
   if (!refs.joinCode) return;
   const value = normalizeRoomCode(refs.joinCode.value);
-  const hint = document.getElementById("join-code-hint");
+  const hint = refs.joinCodeHint;
   // Empty stays neutral — pre-typing aria-invalid would set off SR alerts before the user
   // has had a chance to do anything, which is hostile UX. Only flip to invalid once the
   // user has committed at least one character that doesn't yet meet the 4-6 length range.
   if (value.length === 0) {
     refs.joinCode.removeAttribute("aria-invalid");
     if (hint) hint.textContent = JOIN_CODE_HINT_DEFAULT;
+    announceJoinCodeHint("");
     return;
   }
   if (value.length < 4) {
     refs.joinCode.setAttribute("aria-invalid", "true");
     if (hint) hint.textContent = JOIN_CODE_HINT_ERROR;
+    announceJoinCodeHint(JOIN_CODE_HINT_ERROR);
     return;
   }
   refs.joinCode.removeAttribute("aria-invalid");
   if (hint) hint.textContent = JOIN_CODE_HINT_DEFAULT;
+  announceJoinCodeHint(JOIN_CODE_HINT_DEFAULT);
 }
 
 function hasValidJoinName() {
