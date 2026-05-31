@@ -160,10 +160,16 @@ function sanitizeRoomCodeCandidate(value) {
 }
 
 const normalizedUrlRoomCode = sanitizeRoomCodeCandidate(urlRoomCode);
+const hasMalformedRoomParam = Boolean(urlRoomCode && !normalizedUrlRoomCode);
 if (urlRoomCode && !normalizedUrlRoomCode) {
   const cleanedUrl = new URL(window.location.href);
   cleanedUrl.searchParams.delete("room");
   window.history.replaceState({}, "", cleanedUrl);
+  try {
+    window.localStorage.removeItem(STORAGE_KEYS.room);
+  } catch {
+    // ignore: optional persistence only.
+  }
 }
 
 // Safari private mode and lockdown browsers can throw on any localStorage access. Wrap the two ops
@@ -204,6 +210,9 @@ const IS_IOS =
   (window.navigator.platform === "MacIntel" && window.navigator.maxTouchPoints > 1);
 
 const persistedRoomCode = safeLocalStorage.get(STORAGE_KEYS.room);
+const initialFlashMessage = hasMalformedRoomParam
+  ? "방 코드 링크 형식이 올바르지 않습니다. 새로 입장해서 시작해 주세요."
+  : "방을 만들거나 받은 코드로 입장하세요.";
 const clientState = {
   socket: null,
   socketReady: false,
@@ -244,7 +253,7 @@ const clientState = {
   chatCooldownUntil: 0,
   chatCooldownTimer: null,
   chatFeedbackTimer: null,
-  flashMessage: "방을 만들거나 받은 코드로 입장하세요.",
+  flashMessage: initialFlashMessage,
   reconnectAttempted: false,
   autoJoinAttempted: false,
   sessionTakenOver: false,
