@@ -325,7 +325,9 @@ function setJoinRolePreference(role) {
 }
 
 function normalizeRoomCode(value) {
-  const raw = String(value || "").trim();
+  const raw = String(value || "")
+    .normalize("NFKC")
+    .trim();
   if (!raw) {
     return "";
   }
