@@ -324,7 +324,19 @@ function setJoinRolePreference(role) {
 }
 
 function normalizeRoomCode(value) {
-  return String(value || "")
+  const raw = String(value || "").trim();
+  if (!raw) {
+    return "";
+  }
+  const inviteQuery = raw.match(/[?&](?:room|code)=([A-Za-z0-9]{4,6})/i);
+  if (inviteQuery?.[1]) {
+    return inviteQuery[1].toUpperCase();
+  }
+  const codeMatch = raw.match(/[A-Za-z0-9]{4,6}/g);
+  if (codeMatch?.length) {
+    return codeMatch[codeMatch.length - 1].toUpperCase();
+  }
+  return raw
     .toUpperCase()
     .replace(/[^A-Z0-9]/g, "")
     .slice(0, 6);
@@ -4443,12 +4455,13 @@ function updateJoinCodeValidity() {
 
 refs.joinCode?.addEventListener("input", () => {
   const caret = refs.joinCode.selectionStart;
-  const upper = refs.joinCode.value.toUpperCase();
-  if (refs.joinCode.value !== upper) {
-    refs.joinCode.value = upper;
+  const normalized = normalizeRoomCode(refs.joinCode.value);
+  if (refs.joinCode.value !== normalized) {
+    refs.joinCode.value = normalized;
     if (caret != null) {
       try {
-        refs.joinCode.setSelectionRange(caret, caret);
+        const nextCaret = Math.min(caret, refs.joinCode.value.length);
+        refs.joinCode.setSelectionRange(nextCaret, nextCaret);
       } catch {
         // Some mobile browsers disallow setSelectionRange during input; ignore.
       }
