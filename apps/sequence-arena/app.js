@@ -1163,6 +1163,7 @@ function maybeAutoJoinSharedRoom() {
   if (refs.joinName) {
     refs.joinName.value = joinName;
   }
+  safeLocalStorage.set(STORAGE_KEYS.name, joinName);
   sendSocket({
     type: "join_room",
     name: joinName,
@@ -1317,11 +1318,15 @@ function connectSocket() {
 }
 
 function startOfflineSolo() {
-  const name = (refs.createName?.value || clientState.lastName || "플레이어").trim() || "플레이어";
+  const name = normalizePlayerName(refs.createName?.value || clientState.lastName || "플레이어");
   if (typeof dismissWelcome === "function") {
     dismissWelcome();
   }
   clientState.lastName = name;
+  if (refs.createName) {
+    refs.createName.value = name;
+  }
+  safeLocalStorage.set(STORAGE_KEYS.name, name);
   clientState.localMode = true;
   clientState.socketReady = false;
   clientState.reconnectAttempted = false;
@@ -1396,7 +1401,7 @@ function handleCreateRoom(event) {
     render();
     return;
   }
-  const name = refs.createName.value.trim();
+  const name = normalizePlayerName(refs.createName.value);
   if (!name) {
     setFlashMessage("방을 만들려면 이름이 필요합니다.");
     render();
@@ -1412,6 +1417,7 @@ function handleCreateRoom(event) {
   }
 
   clientState.lastName = name;
+  safeLocalStorage.set(STORAGE_KEYS.name, name);
   clientState.roomCode = "";
   clientState.roomPhase = "idle";
   clientState.yourRole = "none";
@@ -1449,7 +1455,7 @@ function handleJoinRoom(event) {
     render();
     return;
   }
-  const name = refs.joinName.value.trim();
+  const name = normalizePlayerName(refs.joinName.value);
   const roomCode = normalizeRoomCode(refs.joinCode.value);
 
   if (!name || !roomCode) {
