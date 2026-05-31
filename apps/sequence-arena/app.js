@@ -31,6 +31,7 @@ const refs = {
   createName: document.getElementById("create-name"),
   joinName: document.getElementById("join-name"),
   joinCode: document.getElementById("join-code"),
+  joinCodeHint: document.getElementById("join-code-hint"),
   rubySeatLegend: document.getElementById("ruby-seat-legend"),
   cobaltSeatLegend: document.getElementById("cobalt-seat-legend"),
   currentOrigin: document.getElementById("current-origin"),
@@ -4960,6 +4961,48 @@ function shouldShowWelcome() {
   return true;
 }
 
+function updateJoinCodeHint(message, isInvalid = false) {
+  if (!refs.joinCodeHint) {
+    return;
+  }
+  refs.joinCodeHint.textContent = message;
+  if (refs.joinCode) {
+    if (isInvalid) {
+      refs.joinCode.setAttribute("aria-invalid", "true");
+      return;
+    }
+
+    refs.joinCode.removeAttribute("aria-invalid");
+  }
+}
+
+function normalizeJoinCodeInput(value = "") {
+  return normalizeRoomCode(value).slice(0, 6);
+}
+
+function handleJoinCodeInput() {
+  if (!refs.joinCode) return;
+  const next = normalizeJoinCodeInput(refs.joinCode.value);
+  const defaultHint = "4~6자리 영문/숫자";
+  if (refs.joinCode.value !== next) {
+    refs.joinCode.value = next;
+  }
+
+  if (next.length === 0) {
+    updateJoinCodeHint(defaultHint);
+    return;
+  }
+  if (next.length < 4) {
+    updateJoinCodeHint("4~6자리여야 입장 가능합니다.", true);
+    return;
+  }
+  if (next.length > 6) {
+    updateJoinCodeHint("최대 6자리까지만 사용 가능합니다.", true);
+    return;
+  }
+  updateJoinCodeHint(defaultHint);
+}
+
 function dismissWelcome() {
   if (!refs.welcomeCard) return;
   refs.welcomeCard.hidden = true;
@@ -5028,9 +5071,13 @@ refs.welcomeHelpBtn?.addEventListener("click", () => {
   dismissWelcome();
   openHelpModal();
 });
+refs.joinCode?.addEventListener("input", handleJoinCodeInput);
+refs.joinCode?.addEventListener("blur", handleJoinCodeInput);
 refs.joinAsSpectator?.addEventListener("change", (event) => {
   setJoinRolePreference(event.currentTarget?.checked ? "spectator" : "player");
 });
+
+handleJoinCodeInput();
 
 maybeShowWelcome();
 refs.helpModal?.addEventListener("click", (event) => {
