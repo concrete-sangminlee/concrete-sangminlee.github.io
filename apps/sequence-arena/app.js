@@ -1517,6 +1517,27 @@ function maybeAutoJoinSharedRoom() {
   render();
 }
 
+function getWebSocketCloseLabel(event = {}) {
+  const code = typeof event.code === "number" ? event.code : null;
+  const reason = typeof event.reason === "string" ? event.reason.trim() : "";
+  if (!code) {
+    return reason ? `연결이 끊겼습니다. ${reason}` : "연결이 끊겼습니다.";
+  }
+  if (code === 1000) {
+    return "연결이 정상 종료되었습니다. 새로고침으로 다시 시작하세요.";
+  }
+  if (code === 1001) {
+    return "서버가 연결을 종료했습니다. 네트워크를 확인한 뒤 다시 시도하세요.";
+  }
+  if (code === 1006) {
+    return "네트워크 연결이 예기치 않게 끊어졌습니다. 재연결을 시도합니다.";
+  }
+  if (code === 1011) {
+    return "서버 내부 오류로 연결이 종료되었습니다. 잠시 후 다시 시도하세요.";
+  }
+  return `연결이 예기치 않게 종료되었습니다 (코드 ${code}).${reason ? ` 사유: ${reason}` : ""}`;
+}
+
 function connectSocket() {
   if (clientState.localMode) {
     return;
@@ -1690,7 +1711,7 @@ function connectSocket() {
     }
   });
 
-  clientState.socket.addEventListener("close", () => {
+  clientState.socket.addEventListener("close", (event) => {
     if (clientState.localMode) {
       return;
     }
@@ -1714,7 +1735,8 @@ function connectSocket() {
       clearReconnectCountdownTimer();
       refs.connectionIndicator.textContent = "연결 실패 · 수동 재연결 필요";
       setFlashMessage("연결이 자주 끊겨서 자동 재연결이 중단되었습니다. 지금 다시 시도 버튼을 눌러 수동으로 재연결하세요.");
-      showOfflineBanner("연결이 불안정합니다. 지금 다시 시도 버튼으로 한 번 직접 시도해 주세요.", {
+      const closeMessage = getWebSocketCloseLabel(event);
+      showOfflineBanner(`${closeMessage} 지금 다시 시도 버튼으로 한 번 직접 시도해 주세요.`, {
         reconnectsPaused: true,
         buttonLabel: "수동 재연결",
         showOfflineFallback: canFallbackToOfflineSolo(),
@@ -1732,8 +1754,9 @@ function connectSocket() {
     const nextDelay = capped + jitter;
     clientState.reconnectDelayMs = nextDelay;
     refs.connectionIndicator.textContent = `연결 끊김 · 재시도 중 (${clientState.reconnectAttempts}번째)`;
+    const closeMessage = getWebSocketCloseLabel(event);
     showOfflineBanner(
-      `연결이 끊겨 재접속을 시도 중입니다 (${clientState.reconnectAttempts}/${RECONNECT_MAX_ATTEMPTS}번째). ${
+      `${closeMessage} 재접속을 시도 중입니다 (${clientState.reconnectAttempts}/${RECONNECT_MAX_ATTEMPTS}번째). ${
         formatRetryDelay(nextDelay)
       } 자동 재시도됩니다.`,
       { reconnectsPaused: false, buttonLabel: "지금 다시 시도" }
