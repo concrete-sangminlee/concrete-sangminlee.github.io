@@ -2769,6 +2769,19 @@ function renderHistory() {
   refs.historySummary.replaceChildren();
 
   if (clientState.matchHistory.length === 0) {
+    const historyAction = clientState.roomCode
+      ? {
+          label: "승리 규칙 보기",
+          title: "승리 조건과 규칙을 확인해 다음 액션을 이해하세요.",
+          onAction: () => openHelpModal(),
+        }
+      : {
+          label: "방 입장하기",
+          title: "방을 만들거나 코드로 입장하면 기록이 쌓이기 시작합니다.",
+          onAction: () => {
+            focusGatewayPrimaryInput();
+          },
+        };
     refs.historySummary.append(
       buildHistoryStat("최근", "0경기"),
       buildHistoryStat("승률", "대기 중"),
@@ -2781,7 +2794,8 @@ function renderHistory() {
         "history-empty",
         "★",
         "완료된 경기 없음",
-        "첫 경기가 끝나면 승리 팀, 점수, 소요 시간이 여기에 남습니다."
+        "첫 경기가 끝나면 승리 팀, 점수, 소요 시간이 여기에 남습니다.",
+        historyAction
       )
     );
     return;
@@ -2915,13 +2929,38 @@ function renderChat() {
   if (!refs.chatLog) return;
   refs.chatLog.replaceChildren();
   if (!clientState.chatMessages.length) {
+    const hasGateway = Boolean(refs.createName || refs.joinName);
+    const chatAction = clientState.roomCode && !clientState.localMode
+      ? {
+          label: "첫 메시지 쓰기",
+          title: "채팅 입력창으로 이동해 첫 메시지를 남겨보세요.",
+          onAction: () => {
+            if (!refs.chatInput) return;
+            refs.chatInput.focus();
+            refs.chatInput.value = "";
+          },
+        }
+      : {
+          label: isOfflineOnlyRuntime() ? "채팅은 멀티에서만 가능" : "방 입장하기",
+          disabled: isOfflineOnlyRuntime() || !hasGateway,
+          title: isOfflineOnlyRuntime()
+            ? "오프라인 솔로에서는 채팅이 비활성입니다."
+            : "방에 입장하면 채팅이 활성화됩니다.",
+          onAction: () => {
+            if (isOfflineOnlyRuntime() || !hasGateway) {
+              return;
+            }
+            focusGatewayPrimaryInput();
+          },
+        };
     refs.chatLog.appendChild(
       buildEmptyState(
         "div",
         "chat-empty",
         "!",
         "첫 메시지 대기 중",
-        "이모지나 짧은 응원으로 같은 방 사람들과 흐름을 공유하세요."
+        "이모지나 짧은 응원으로 같은 방 사람들과 흐름을 공유하세요.",
+        chatAction
       )
     );
     return;
@@ -3234,7 +3273,18 @@ function renderStatus() {
         "log-empty",
         "•",
         "아직 액션 없음",
-        "게임이 시작되면 카드 배치와 시퀀스가 여기에 쌓입니다."
+        "게임이 시작되면 카드 배치와 시퀀스가 여기에 쌓입니다.",
+        {
+          label: clientState.roomCode ? "방으로 이동" : "방 입장하기",
+          title: clientState.roomCode ? "현재 로비에서 준비 중인 좌석/상태를 확인하세요." : "방을 만들거나 코드로 입장하세요.",
+          onAction: () => {
+            if (clientState.roomCode) {
+              document.getElementById("game-canvas")?.scrollIntoView({ behavior: "smooth", block: "center" });
+            } else {
+              focusGatewayPrimaryInput();
+            }
+          },
+        }
       )
     );
     renderHistory();
@@ -3364,13 +3414,32 @@ function renderStatus() {
 
   refs.logList.replaceChildren();
   if (clientState.game.logs.length === 0) {
+    const logAction = isOfflineOnlyRuntime()
+      ? {
+          label: "솔로 테스트 시작",
+          title: "오프라인 솔로 시작 버튼으로 즉시 플레이를 시작해보세요.",
+          onAction: () => {
+            if (refs.startTestBtn) {
+              refs.startTestBtn.focus();
+              refs.startTestBtn.click();
+            }
+          },
+        }
+      : {
+          label: "첫 동작 보기",
+          title: "첫 카드 배치 이후 움직임이 바로 여기에 기록됩니다.",
+          onAction: () => {
+            setFlashMessage("보드의 카드를 선택해 첫 동작을 실행해 보세요.");
+          },
+        };
     refs.logList.appendChild(
       buildEmptyState(
         "li",
         "log-empty",
         "•",
         "아직 액션 없음",
-        "첫 카드가 놓이면 방 전체 로그가 여기에서 시작됩니다."
+        "첫 카드가 놓이면 방 전체 로그가 여기에서 시작됩니다.",
+        logAction
       )
     );
   }
@@ -4851,16 +4920,21 @@ function dismissWelcome() {
   if (!refs.welcomeCard) return;
   refs.welcomeCard.hidden = true;
   safeLocalStorage.set(STORAGE_KEYS.welcomed, "true");
-  // Move focus out of the hidden modal path so keyboard users land on the primary
-  // lobby action instead of stopping on the overlay trigger context.
-  const focusTarget = refs.createName || refs.joinName;
-  if (focusTarget) {
-    window.setTimeout(() => {
-      focusTarget.focus();
-      if (typeof focusTarget.setSelectionRange === "function") {
-        focusTarget.setSelectionRange(0, focusTarget.value.length);
-      }
-    }, 0);
+  focusGatewayPrimaryInput();
+}
+
+function focusGatewayPrimaryInput() {
+  const focusTarget = refs.createName && refs.createName.offsetParent != null ? refs.createName : refs.joinName;
+  if (!focusTarget) {
+    return;
+  }
+  focusTarget.focus();
+  if (typeof focusTarget.setSelectionRange === "function") {
+    focusTarget.setSelectionRange(0, focusTarget.value.length);
+  }
+  const formTarget = focusTarget === refs.createName ? refs.createForm : refs.joinForm;
+  if (formTarget && typeof formTarget.scrollIntoView === "function") {
+    formTarget.scrollIntoView({ behavior: "smooth", block: "center" });
   }
 }
 
