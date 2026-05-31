@@ -3152,6 +3152,7 @@ function renderStatus() {
       delete refs.joinCode.dataset.staticDisabled;
     }
   }
+  refreshJoinFormState();
   if (typeof updateWelcomeModePanel === "function") {
     updateWelcomeModePanel();
   }
@@ -4836,9 +4837,39 @@ function updateJoinCodeValidity() {
   if (hint) hint.textContent = JOIN_CODE_HINT_DEFAULT;
 }
 
-refs.joinCode?.addEventListener("input", () => {
+function hasValidJoinName() {
+  return String(refs.joinName?.value || "").trim().length > 0;
+}
+
+function hasValidJoinCode() {
+  if (!refs.joinCode) return false;
+  const code = normalizeRoomCode(refs.joinCode.value);
+  return code.length >= 4 && code.length <= 6;
+}
+
+function refreshJoinFormState() {
+  if (!refs.joinRoomBtn) return;
+  if (refs.joinRoomBtn.dataset.staticDisabled === "true") {
+    refs.joinRoomBtn.disabled = true;
+    return;
+  }
+  const canJoin =
+    !isOfflineOnlyRuntime() &&
+    clientState.socketReady &&
+    hasValidJoinCode() &&
+    hasValidJoinName();
+  refs.joinRoomBtn.disabled = !canJoin;
+  if (!canJoin && !isOfflineOnlyRuntime() && clientState.socketReady) {
+    refs.joinRoomBtn.title = hasValidJoinCode()
+      ? "이름을 입력하면 방에 입장할 수 있습니다."
+      : "방 코드는 4~6자 영문/숫자로 입력해야 합니다.";
+  }
+}
+
+function handleJoinCodeInput() {
+  if (!refs.joinCode) return;
   const caret = refs.joinCode.selectionStart;
-  const normalized = normalizeRoomCode(refs.joinCode.value);
+  const normalized = normalizeJoinCodeInput(refs.joinCode.value);
   if (refs.joinCode.value !== normalized) {
     refs.joinCode.value = normalized;
     if (caret != null) {
@@ -4851,7 +4882,8 @@ refs.joinCode?.addEventListener("input", () => {
     }
   }
   updateJoinCodeValidity();
-});
+  refreshJoinFormState();
+}
 window.matchMedia?.("(prefers-color-scheme: dark)").addEventListener?.("change", (event) => {
   // Respect explicit user choice; only follow the OS when the user has not picked.
   if (safeLocalStorage.get(STORAGE_KEYS.theme)) return;
@@ -4962,46 +4994,8 @@ function shouldShowWelcome() {
   return true;
 }
 
-function updateJoinCodeHint(message, isInvalid = false) {
-  if (!refs.joinCodeHint) {
-    return;
-  }
-  refs.joinCodeHint.textContent = message;
-  if (refs.joinCode) {
-    if (isInvalid) {
-      refs.joinCode.setAttribute("aria-invalid", "true");
-      return;
-    }
-
-    refs.joinCode.removeAttribute("aria-invalid");
-  }
-}
-
 function normalizeJoinCodeInput(value = "") {
   return normalizeRoomCode(value).slice(0, 6);
-}
-
-function handleJoinCodeInput() {
-  if (!refs.joinCode) return;
-  const next = normalizeJoinCodeInput(refs.joinCode.value);
-  const defaultHint = "4~6자리 영문/숫자";
-  if (refs.joinCode.value !== next) {
-    refs.joinCode.value = next;
-  }
-
-  if (next.length === 0) {
-    updateJoinCodeHint(defaultHint);
-    return;
-  }
-  if (next.length < 4) {
-    updateJoinCodeHint("4~6자리여야 입장 가능합니다.", true);
-    return;
-  }
-  if (next.length > 6) {
-    updateJoinCodeHint("최대 6자리까지만 사용 가능합니다.", true);
-    return;
-  }
-  updateJoinCodeHint(defaultHint);
 }
 
 async function handleJoinCodePaste() {
@@ -5102,6 +5096,9 @@ refs.welcomeCreateBtn?.addEventListener("click", () => {
 refs.welcomeHelpBtn?.addEventListener("click", () => {
   dismissWelcome();
   openHelpModal();
+});
+refs.joinName?.addEventListener("input", () => {
+  refreshJoinFormState();
 });
 refs.joinCode?.addEventListener("input", handleJoinCodeInput);
 refs.joinCode?.addEventListener("blur", handleJoinCodeInput);
