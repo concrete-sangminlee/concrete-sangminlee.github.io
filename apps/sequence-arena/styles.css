@@ -328,6 +328,11 @@ label:has(input[aria-invalid="true"]) .input-hint {
   animation: none;
 }
 
+.offline-banner[data-reconnect-state="offline"] {
+  background: rgba(97, 82, 24, 0.95);
+  animation: none;
+}
+
 .offline-banner[hidden] {
   display: none;
 }
@@ -344,6 +349,12 @@ label:has(input[aria-invalid="true"]) .input-hint {
 .offline-banner[data-reconnect-state="stalled"] .offline-dot {
   background: #ffe3af;
   box-shadow: 0 0 0 4px rgba(255, 227, 175, 0.28);
+  animation: none;
+}
+
+.offline-banner[data-reconnect-state="offline"] .offline-dot {
+  background: #ffe9bf;
+  box-shadow: 0 0 0 4px rgba(255, 233, 191, 0.3);
   animation: none;
 }
 

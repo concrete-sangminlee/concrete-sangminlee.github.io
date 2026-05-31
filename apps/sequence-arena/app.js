@@ -1551,8 +1551,10 @@ function showOfflineBanner(message, options = {}) {
   } else if (!message && options.message) {
     refs.offlineText.textContent = options.message;
   }
+  const isOffline = Boolean(options.offline);
   const isPaused = Boolean(options.reconnectsPaused);
-  refs.offlineBanner.setAttribute("data-reconnect-state", isPaused ? "stalled" : "retrying");
+  const state = isOffline ? "offline" : isPaused ? "stalled" : "retrying";
+  refs.offlineBanner.setAttribute("data-reconnect-state", state);
   if (typeof announcePolite === "function") {
     announcePolite(message || "연결이 끊겨 재접속을 시도하고 있습니다.");
   }
@@ -2841,15 +2843,15 @@ function renderStatus() {
   );
   refs.connectionIndicator.textContent = clientState.localMode
     ? "오프라인 솔로"
-    : offlineOnlyRuntime
-      ? "GitHub Pages 정적판"
-      : clientState.socketReady
-        ? "실시간 연결됨"
-        : clientState.reconnectPaused
-          ? "연결이 중단됨"
-          : isReconnecting
-            ? "재연결 중"
-            : "재연결 중";
+      : offlineOnlyRuntime
+        ? "GitHub Pages 정적판"
+        : clientState.socketReady
+          ? "실시간 연결됨"
+          : clientState.reconnectPaused
+            ? "연결이 중단됨"
+            : isReconnecting
+              ? `연결 복구 중${clientState.reconnectAttempts ? ` (${clientState.reconnectAttempts}회)` : ""}`
+              : "연결 복구 대기";
   refs.currentOrigin.textContent = window.location.origin;
   if (refs.gatewaySubtitle) {
     refs.gatewaySubtitle.textContent = offlineOnlyRuntime
@@ -4686,10 +4688,21 @@ window.addEventListener("online", () => {
 
 // 'offline' fires when the OS reports the network is gone. Without this, the user keeps
 // staring at "실시간 연결됨" until the WS heartbeat (30s in production) finally catches the
-// drop. Updating the indicator and showing the banner here closes that 30s blind window.
+// drop. We both surface an explicit offline state and preempt the socket close event.
 window.addEventListener("offline", () => {
+  clientState.reconnectPaused = false;
   refs.connectionIndicator.textContent = "오프라인 · 네트워크 확인 중";
-  showOfflineBanner();
+  showOfflineBanner("네트워크가 일시적으로 끊겼습니다. 인터넷 연결을 확인한 뒤 다시 시도해 주세요.", {
+    offline: true,
+    buttonLabel: "지금 다시 시도",
+  });
+  if (clientState.socket && clientState.socket.readyState === WebSocket.OPEN) {
+    try {
+      clientState.socket.close();
+    } catch {
+      // ignore
+    }
+  }
 });
 
 // When the user re-focuses a background tab whose WS has gone dormant, reset the exponential backoff and retry now.
@@ -4724,17 +4737,6 @@ window.addEventListener("beforeunload", (event) => {
   event.returnValue = "";
 });
 
-window.addEventListener("offline", () => {
-  // Preempt the socket close event so the banner appears without waiting for onclose.
-  showOfflineBanner();
-  if (clientState.socket && clientState.socket.readyState === WebSocket.OPEN) {
-    try {
-      clientState.socket.close();
-    } catch {
-      // ignore
-    }
-  }
-});
 for (const button of refs.createTeamSizeButtons) {
   button.addEventListener("click", () => {
     const nextSize = normalizeTeamSize(button.dataset.createTeamSize);
