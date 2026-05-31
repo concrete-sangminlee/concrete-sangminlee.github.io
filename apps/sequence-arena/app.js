@@ -2769,19 +2769,25 @@ function renderHistory() {
   refs.historySummary.replaceChildren();
 
   if (clientState.matchHistory.length === 0) {
-    const historyAction = clientState.roomCode
+    const historyAction = isOfflineOnlyRuntime()
       ? {
-          label: "승리 규칙 보기",
-          title: "승리 조건과 규칙을 확인해 다음 액션을 이해하세요.",
-          onAction: () => openHelpModal(),
+          label: "바로 솔로 시작",
+          title: "오프라인에서 바로 솔로 게임을 시작합니다.",
+          onAction: () => startOfflineSolo(),
         }
-      : {
-          label: "방 입장하기",
-          title: "방을 만들거나 코드로 입장하면 기록이 쌓이기 시작합니다.",
-          onAction: () => {
-            focusGatewayPrimaryInput();
-          },
-        };
+      : clientState.roomCode
+        ? {
+            label: "승리 규칙 보기",
+            title: "승리 조건과 규칙을 확인해 다음 액션을 이해하세요.",
+            onAction: () => openHelpModal(),
+          }
+        : {
+            label: "방 입장하기",
+            title: "방을 만들거나 코드로 입장하면 기록이 쌓이기 시작합니다.",
+            onAction: () => {
+              focusGatewayPrimaryInput();
+            },
+          };
     refs.historySummary.append(
       buildHistoryStat("최근", "0경기"),
       buildHistoryStat("승률", "대기 중"),
@@ -3267,14 +3273,18 @@ function renderStatus() {
     refs.cancelSelectionBtn.disabled = true;
     refs.discardDeadBtn.disabled = true;
     refs.logList.replaceChildren();
-    refs.logList.appendChild(
-      buildEmptyState(
-        "li",
-        "log-empty",
-        "•",
-        "아직 액션 없음",
-        "게임이 시작되면 카드 배치와 시퀀스가 여기에 쌓입니다.",
-        {
+    const pregameAction = isOfflineOnlyRuntime()
+      ? {
+          label: "솔로 테스트 시작",
+          title: "오프라인에서 바로 솔로 게임을 시작해 플레이를 시작하세요.",
+          onAction: () => {
+            if (refs.startTestBtn) {
+              refs.startTestBtn.focus();
+              refs.startTestBtn.click();
+            }
+          },
+        }
+      : {
           label: clientState.roomCode ? "방으로 이동" : "방 입장하기",
           title: clientState.roomCode ? "현재 로비에서 준비 중인 좌석/상태를 확인하세요." : "방을 만들거나 코드로 입장하세요.",
           onAction: () => {
@@ -3284,7 +3294,15 @@ function renderStatus() {
               focusGatewayPrimaryInput();
             }
           },
-        }
+        };
+    refs.logList.appendChild(
+      buildEmptyState(
+        "li",
+        "log-empty",
+        "•",
+        "아직 액션 없음",
+        "게임이 시작되면 카드 배치와 시퀀스가 여기에 쌓입니다.",
+        pregameAction
       )
     );
     renderHistory();
