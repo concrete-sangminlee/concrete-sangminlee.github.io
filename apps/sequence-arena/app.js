@@ -321,6 +321,48 @@ const clientState = {
   reconnectCountdownDeadline: 0,
 };
 
+function pruneOfflineRuntimeRecoveredState() {
+  if (!isOfflineOnlyRuntime() || normalizedUrlRoomCode) {
+    return;
+  }
+  if (!clientState.roomCode && !clientState.sessionId) {
+    return;
+  }
+  clientState.roomCode = "";
+  clientState.roomPhase = "idle";
+  clientState.yourRole = "none";
+  clientState.yourSeatIndex = null;
+  clientState.sessionId = "";
+  clientState.occupiedSeats = 0;
+  clientState.spectatorCount = 0;
+  clientState.spectators = [];
+  clientState.allowSpectators = true;
+  clientState.botThinkingSeatIndex = null;
+  clientState.rematchMode = "all";
+  clientState.rematchVoteSeatIndexes = [];
+  clientState.rematchRequiredVotes = 0;
+  clientState.matchHistory = [];
+  clientState.chatMessages = [];
+  clientState.game = null;
+  clientState.pendingStep = null;
+  safeLocalStorage.remove(STORAGE_KEYS.room);
+  safeLocalStorage.remove(STORAGE_KEYS.session);
+  if (refs.createName) {
+    refs.createName.value = normalizePlayerName(refs.createName.value || clientState.lastName || "");
+  }
+  if (refs.joinCode) {
+    refs.joinCode.value = "";
+  }
+  if (refs.joinName) {
+    refs.joinName.value = "";
+  }
+  clientState.reconnectAttempts = 0;
+  clientState.reconnectPaused = false;
+  clearReconnectCountdownTimer();
+  hideOfflineBanner();
+  setFlashMessage("정적판은 오프라인 모드라 기존 멀티 세션 정보를 초기화했습니다.");
+}
+
 const RECONNECT_BACKOFF_BASE_MS = 1500;
 const RECONNECT_BACKOFF_MAX_MS = 30_000;
 const RECONNECT_BACKOFF_JITTER_MS = 400;
@@ -3378,7 +3420,7 @@ function renderStatus() {
   refs.currentOrigin.textContent = window.location.origin;
   if (refs.gatewaySubtitle) {
     refs.gatewaySubtitle.textContent = offlineOnlyRuntime
-      ? "바로 솔로 플레이를 시작할 수 있습니다. 멀티 방은 WebSocket 서버가 켜진 주소에서 사용합니다."
+      ? "바로 솔로 플레이하세요."
       : "방을 만들거나 받은 코드로 입장하세요. 같은 브라우저에서는 좌석이 복구됩니다.";
   }
   if (refs.createRoomBtn) {
@@ -6223,6 +6265,7 @@ async function fetchBuildVersion() {
 
 fetchBuildVersion();
 watchNotificationPermission();
+pruneOfflineRuntimeRecoveredState();
 
 connectSocket();
 render();
