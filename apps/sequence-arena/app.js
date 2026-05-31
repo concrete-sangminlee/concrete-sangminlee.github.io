@@ -145,7 +145,7 @@ function announceAssertive(message) {
 
 const urlParams = new URLSearchParams(window.location.search);
 const urlRoomCode = urlParams.get("room");
-const URL_JOIN_ROLE = urlParams.get("role") === "spectator" ? "spectator" : "player";
+const URL_JOIN_ROLE = urlParams.get("role") === "spectator" ? "spectator" : null;
 let joinRolePreference = URL_JOIN_ROLE;
 let spectatorClosedRecoveryAttempted = false;
 
@@ -176,7 +176,9 @@ const safeLocalStorage = {
 };
 
 const STORAGE_JOIN_ROLE = safeLocalStorage.get(STORAGE_KEYS.joinAsSpectator);
-if (STORAGE_JOIN_ROLE === "player" || STORAGE_JOIN_ROLE === "spectator") {
+if (URL_JOIN_ROLE) {
+  safeLocalStorage.set(STORAGE_KEYS.joinAsSpectator, URL_JOIN_ROLE);
+} else if (STORAGE_JOIN_ROLE === "player" || STORAGE_JOIN_ROLE === "spectator") {
   joinRolePreference = STORAGE_JOIN_ROLE;
 }
 
