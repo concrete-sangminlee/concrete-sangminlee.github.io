@@ -147,6 +147,7 @@ const urlParams = new URLSearchParams(window.location.search);
 const urlRoomCode = urlParams.get("room");
 const URL_JOIN_ROLE = urlParams.get("role") === "spectator" ? "spectator" : "player";
 let joinRolePreference = URL_JOIN_ROLE;
+let spectatorClosedRecoveryAttempted = false;
 
 // Safari private mode and lockdown browsers can throw on any localStorage access. Wrap the two ops
 // the rest of the app uses so a denied storage API never turns into a blank-page boot failure.
@@ -1169,6 +1170,7 @@ function sendSocket(payload) {
 }
 
 function applyRoomSnapshot(payload) {
+  spectatorClosedRecoveryAttempted = false;
   const previousAudioSnapshot = getAudioSnapshot();
   clientState.localMode = Boolean(payload.localMode);
   clientState.roomCode = payload.roomCode;
@@ -1362,6 +1364,47 @@ function connectSocket() {
       const message = payload.message || "요청을 처리하지 못했습니다.";
       if (message.includes("관전 입장이 닫혀 있습니다") || message.includes("방이 가득 찼고 관전 입장이 닫혀 있습니다")) {
         setJoinRolePreference("player");
+        const recoveredRoomCode = normalizeRoomCode(
+          refs.joinCode?.value || clientState.roomCode || urlRoomCode || ""
+        );
+        const recoveredName = normalizePlayerName(
+          refs.joinName?.value || safeLocalStorage.get(STORAGE_KEYS.name) || clientState.lastName || ""
+        );
+        if (
+          !spectatorClosedRecoveryAttempted &&
+          recoveredRoomCode &&
+          recoveredName &&
+          clientState.socketReady &&
+          clientState.roomCode === "" &&
+          clientState.game == null &&
+          refs.joinRoomBtn
+        ) {
+          spectatorClosedRecoveryAttempted = true;
+          refs.joinRoomBtn.disabled = true;
+          window.setTimeout(() => {
+            if (clientState.roomCode === "" && clientState.yourSeatIndex == null) {
+              refs.joinRoomBtn.disabled = false;
+            }
+          }, 1500);
+          if (refs.joinName) {
+            refs.joinName.value = recoveredName;
+          }
+          if (refs.joinCode) {
+            refs.joinCode.value = recoveredRoomCode;
+          }
+          setFlashMessage(`${recoveredRoomCode} 방으로 플레이어 재입장 시도 중입니다.`);
+          clientState.lastName = recoveredName;
+          clientState.roomCode = recoveredRoomCode;
+          sendSocket({
+            type: "join_room",
+            name: recoveredName,
+            roomCode: recoveredRoomCode,
+            sessionId: clientState.sessionId,
+            role: "player",
+          });
+          render();
+          return;
+        }
         setFlashMessage("관전 입장이 닫혀 있습니다. 플레이어로 전환해 다시 입장해 주세요.");
         return;
       }
