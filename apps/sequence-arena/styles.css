@@ -60,6 +60,7 @@ button,
 #game-canvas,
 #help-close-btn,
 .offline-retry,
+.offline-offline-fallback,
 .update-reload,
 .primary-button,
 #discard-dead-btn,
@@ -390,6 +391,23 @@ label:has(input[aria-invalid="true"]) .input-hint {
 .offline-retry:hover,
 .offline-retry:focus-visible {
   background: rgba(255, 255, 255, 0.22);
+}
+
+.offline-offline-fallback {
+  border: 1px solid rgba(255, 255, 255, 0.26);
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff8e9;
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 900;
+  cursor: pointer;
+  transition: background 140ms ease-out;
+}
+
+.offline-offline-fallback:hover,
+.offline-offline-fallback:focus-visible {
+  background: rgba(255, 255, 255, 0.24);
 }
 
 @keyframes offlinePulse {

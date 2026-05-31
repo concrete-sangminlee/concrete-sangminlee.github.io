@@ -68,6 +68,7 @@ const refs = {
   offlineBanner: document.getElementById("offline-banner"),
   offlineText: document.getElementById("offline-text"),
   offlineRetryBtn: document.getElementById("offline-retry-btn"),
+  offlineFallbackSoloBtn: document.getElementById("offline-fallback-solo-btn"),
   updateBanner: document.getElementById("update-banner"),
   updateReloadBtn: document.getElementById("update-reload-btn"),
   startTestBtn: document.getElementById("start-test-btn"),
@@ -1537,6 +1538,11 @@ function connectSocket() {
     clearReconnectCountdownTimer();
     refs.connectionIndicator.textContent = "서버 없음 · 오프라인 솔로 가능";
     setFlashMessage("실시간 서버에 연결할 수 없습니다. 오프라인 솔로를 사용할 수 있습니다.");
+    showOfflineBanner("실시간 서버에 연결할 수 없습니다. 오프라인 솔로로 계속 진행할 수 있습니다.", {
+      offline: true,
+      buttonLabel: "지금 다시 시도",
+      showOfflineFallback: canFallbackToOfflineSolo(),
+    });
     render();
     return;
   }
@@ -1711,6 +1717,7 @@ function connectSocket() {
       showOfflineBanner("연결이 불안정합니다. 지금 다시 시도 버튼으로 한 번 직접 시도해 주세요.", {
         reconnectsPaused: true,
         buttonLabel: "수동 재연결",
+        showOfflineFallback: canFallbackToOfflineSolo(),
       });
       render();
       return;
@@ -1776,10 +1783,22 @@ function startOfflineSolo() {
   playSound("tap");
 }
 
+function canFallbackToOfflineSolo() {
+  if (clientState.localMode) {
+    return false;
+  }
+  if (!clientState.roomCode) {
+    return true;
+  }
+  return clientState.roomPhase !== "playing";
+}
+
 function showOfflineBanner(message, options = {}) {
   if (!refs.offlineBanner) return;
   refs.offlineBanner.hidden = false;
   const buttonLabel = typeof options.buttonLabel === "string" ? options.buttonLabel : null;
+  const fallbackLabel =
+    typeof options.fallbackLabel === "string" ? options.fallbackLabel : "오프라인 솔로로 계속";
   if (buttonLabel && refs.offlineRetryBtn) {
     refs.offlineRetryBtn.textContent = buttonLabel;
   } else if (refs.offlineRetryBtn) {
@@ -1794,6 +1813,14 @@ function showOfflineBanner(message, options = {}) {
   const isPaused = Boolean(options.reconnectsPaused);
   const state = isOffline ? "offline" : isPaused ? "stalled" : "retrying";
   refs.offlineBanner.setAttribute("data-reconnect-state", state);
+  if (refs.offlineFallbackSoloBtn) {
+    if (Boolean(options.showOfflineFallback)) {
+      refs.offlineFallbackSoloBtn.hidden = false;
+      refs.offlineFallbackSoloBtn.textContent = fallbackLabel;
+    } else {
+      refs.offlineFallbackSoloBtn.hidden = true;
+    }
+  }
   if (typeof announcePolite === "function") {
     announcePolite(message || "연결이 끊겨 재접속을 시도하고 있습니다.");
   }
@@ -1803,6 +1830,9 @@ function hideOfflineBanner() {
   if (!refs.offlineBanner) return;
   refs.offlineBanner.hidden = true;
   refs.offlineBanner.removeAttribute("data-reconnect-state");
+  if (refs.offlineFallbackSoloBtn) {
+    refs.offlineFallbackSoloBtn.hidden = true;
+  }
 }
 
 function forceReconnectNow() {
@@ -5439,6 +5469,14 @@ refs.helpModal?.addEventListener("click", (event) => {
 });
 document.addEventListener("keydown", trapHelpFocus, true);
 refs.offlineRetryBtn?.addEventListener("click", forceReconnectNow);
+refs.offlineFallbackSoloBtn?.addEventListener("click", () => {
+  if (!canFallbackToOfflineSolo()) {
+    setFlashMessage("현재 진행 중인 게임에서는 바로 오프라인 솔로로 전환할 수 없습니다.");
+    return;
+  }
+  startOfflineSolo();
+  hideOfflineBanner();
+});
 // Direct user opt-in to load the new SW's freshly cached assets. We don't auto-reload because
 // it would interrupt an in-progress game; the banner stays visible until the user agrees.
 refs.updateReloadBtn?.addEventListener("click", () => {
@@ -5464,6 +5502,7 @@ window.addEventListener("offline", () => {
   showOfflineBanner("네트워크가 일시적으로 끊겼습니다. 인터넷 연결을 확인한 뒤 다시 시도해 주세요.", {
     offline: true,
     buttonLabel: "지금 다시 시도",
+    showOfflineFallback: canFallbackToOfflineSolo(),
   });
   if (clientState.socket && clientState.socket.readyState === WebSocket.OPEN) {
     try {
