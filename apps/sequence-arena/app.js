@@ -242,6 +242,8 @@ const clientState = {
   reconnectAttempts: 0,
   reconnectPaused: false,
   reconnectDelayMs: 0,
+  reconnectCountdownTimer: null,
+  reconnectCountdownDeadline: 0,
 };
 
 const RECONNECT_BACKOFF_BASE_MS = 1500;
@@ -1073,6 +1075,49 @@ function formatRetryDelay(ms) {
   return `${seconds}초 뒤`;
 }
 
+function clearReconnectCountdownTimer() {
+  if (clientState.reconnectCountdownTimer) {
+    window.clearInterval(clientState.reconnectCountdownTimer);
+  }
+  clientState.reconnectCountdownTimer = null;
+  clientState.reconnectCountdownDeadline = 0;
+}
+
+function updateReconnectCountdownUi() {
+  if (!refs.offlineText || !refs.offlineBanner || refs.offlineBanner.hidden) {
+    clearReconnectCountdownTimer();
+    clientState.reconnectDelayMs = 0;
+    return;
+  }
+  if (clientState.socketReady || clientState.reconnectPaused) {
+    clearReconnectCountdownTimer();
+    return;
+  }
+  const remaining = Math.max(0, clientState.reconnectCountdownDeadline - Date.now());
+  clientState.reconnectDelayMs = remaining;
+  const delayLabel = formatRetryDelay(remaining);
+  const attempts = clientState.reconnectAttempts || 1;
+  const maxAttempts = RECONNECT_MAX_ATTEMPTS;
+  refs.connectionIndicator.textContent = `연결 복구 중${
+    clientState.reconnectAttempts ? ` (${clientState.reconnectAttempts}회)` : ""
+  } · ${delayLabel} 재시도`;
+  refs.offlineText.textContent = `연결이 끊겨 재접속을 시도 중입니다 (${attempts}/${maxAttempts}번째). ${delayLabel} 자동 재시도됩니다.`;
+  if (remaining <= 0) {
+    clearReconnectCountdownTimer();
+  }
+}
+
+function scheduleReconnectCountdown(delayMs) {
+  clearReconnectCountdownTimer();
+  clientState.reconnectDelayMs = Number(delayMs) > 0 ? Math.max(0, Number(delayMs)) : 0;
+  if (clientState.reconnectDelayMs <= 0) {
+    return;
+  }
+  clientState.reconnectCountdownDeadline = Date.now() + clientState.reconnectDelayMs;
+  clientState.reconnectCountdownTimer = window.setInterval(updateReconnectCountdownUi, 1000);
+  updateReconnectCountdownUi();
+}
+
 function shouldReconnectSavedRoom() {
   const savedRoomCode = normalizeRoomCode(safeLocalStorage.get(STORAGE_KEYS.room) || "");
   return Boolean(savedRoomCode && savedRoomCode === clientState.roomCode && clientState.sessionId);
@@ -1306,6 +1351,7 @@ function connectSocket() {
   }
   clientState.reconnectPaused = false;
   clientState.reconnectDelayMs = 0;
+  clearReconnectCountdownTimer();
   if (isOfflineOnlyRuntime()) {
     refs.connectionIndicator.textContent = "서버 없음 · 오프라인 솔로 가능";
     setFlashMessage("서버가 없는 정적 실행 환경입니다. 오프라인 솔로로 바로 플레이할 수 있습니다.");
@@ -1317,6 +1363,7 @@ function connectSocket() {
     clientState.socket = new WebSocket(`${protocol}://${window.location.host}/ws`);
   } catch {
     clientState.reconnectDelayMs = 0;
+    clearReconnectCountdownTimer();
     refs.connectionIndicator.textContent = "서버 없음 · 오프라인 솔로 가능";
     setFlashMessage("실시간 서버에 연결할 수 없습니다. 오프라인 솔로를 사용할 수 있습니다.");
     render();
@@ -1327,6 +1374,7 @@ function connectSocket() {
     clientState.socketReady = true;
     clientState.reconnectAttempts = 0;
     clientState.reconnectDelayMs = 0;
+    clearReconnectCountdownTimer();
     refs.connectionIndicator.textContent = "실시간 연결됨";
     clientState.reconnectPaused = false;
     hideOfflineBanner();
@@ -1473,6 +1521,7 @@ function connectSocket() {
     if (clientState.sessionTakenOver) {
       // Another tab took over this seat — do not reconnect, that would just take it back
       // and start a ping-pong. Show a quiet "this tab is dormant" banner state.
+      clearReconnectCountdownTimer();
       refs.connectionIndicator.textContent = "다른 탭에서 이어받음";
       showOfflineBanner("이 탭은 현재 비활성 상태입니다. 새로 연결하려면 화면을 새로고침하세요.", {
         reconnectsPaused: true,
@@ -1485,6 +1534,7 @@ function connectSocket() {
     if (clientState.reconnectAttempts >= RECONNECT_MAX_ATTEMPTS) {
       clientState.reconnectPaused = true;
       clientState.reconnectDelayMs = 0;
+      clearReconnectCountdownTimer();
       refs.connectionIndicator.textContent = "연결 실패 · 수동 재연결 필요";
       setFlashMessage("연결이 자주 끊겨서 자동 재연결이 중단되었습니다. 지금 다시 시도 버튼을 눌러 수동으로 재연결하세요.");
       showOfflineBanner("연결이 불안정합니다. 지금 다시 시도 버튼으로 한 번 직접 시도해 주세요.", {
@@ -1510,6 +1560,7 @@ function connectSocket() {
       } 자동 재시도됩니다.`,
       { reconnectsPaused: false, buttonLabel: "지금 다시 시도" }
     );
+    scheduleReconnectCountdown(nextDelay);
     render();
     clientState.reconnectTimer = window.setTimeout(connectSocket, nextDelay);
   });
@@ -1592,6 +1643,7 @@ function forceReconnectNow() {
     window.clearTimeout(clientState.reconnectTimer);
     clientState.reconnectTimer = null;
   }
+  clearReconnectCountdownTimer();
   // User-initiated retry resets the backoff so the next attempt is fast.
   clientState.reconnectDelayMs = 0;
   clientState.reconnectAttempts = 0;
@@ -4712,6 +4764,7 @@ window.addEventListener("online", () => {
 window.addEventListener("offline", () => {
   clientState.reconnectPaused = false;
   clientState.reconnectDelayMs = 0;
+  clearReconnectCountdownTimer();
   refs.connectionIndicator.textContent = "오프라인 · 네트워크 확인 중";
   showOfflineBanner("네트워크가 일시적으로 끊겼습니다. 인터넷 연결을 확인한 뒤 다시 시도해 주세요.", {
     offline: true,
