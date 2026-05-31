@@ -2962,6 +2962,18 @@ body[data-game="playing"] .card-note {
   line-height: 1.35;
 }
 
+.empty-state-action {
+  margin-top: 6px;
+  justify-self: start;
+  min-height: 32px;
+  padding: 6px 10px;
+  width: fit-content;
+}
+
+.empty-state-action:disabled {
+  opacity: 0.55;
+}
+
 .history-list {
   list-style: none;
 }

@@ -2716,7 +2716,7 @@ function buildHistoryMeta(text, className = "") {
   return meta;
 }
 
-function buildEmptyState(tagName, className, icon, title, body) {
+function buildEmptyState(tagName, className, icon, title, body, action = null) {
   const empty = document.createElement(tagName);
   empty.className = `empty-state ${className}`.trim();
   const mark = document.createElement("span");
@@ -2731,6 +2731,30 @@ function buildEmptyState(tagName, className, icon, title, body) {
   detail.className = "empty-state-body";
   detail.textContent = body;
   copy.append(heading, detail);
+  if (action && typeof action.label === "string") {
+    const actionButton = document.createElement("button");
+    actionButton.type = "button";
+    actionButton.className = action.className || "ghost-button empty-state-action";
+    actionButton.textContent = action.label;
+    actionButton.disabled = Boolean(action.disabled);
+    if (action.title) {
+      actionButton.title = action.title;
+    }
+    if (typeof action.onAction === "function") {
+      actionButton.addEventListener("click", () => {
+        if (actionButton.disabled) {
+          return;
+        }
+        try {
+          void Promise.resolve(action.onAction(actionButton));
+        } catch {
+          setFlashMessage("실행할 수 없습니다. 잠시 뒤 다시 시도해 주세요.");
+          render();
+        }
+      });
+    }
+    copy.append(actionButton);
+  }
   empty.append(mark, copy);
   return empty;
 }
@@ -2821,6 +2845,32 @@ function renderSpectators() {
         : "관전 입장 닫힘";
 
   if (clientState.spectators.length === 0) {
+    const spectatorCount = occupiedSeatCount();
+    const canCopySpectatorInvite = Boolean(clientState.roomCode && !clientState.localMode);
+    const spectatorAction =
+      !clientState.allowSpectators || !canCopySpectatorInvite
+        ? {
+            label: isHost() ? "관전 입장 열기" : "관전 입장 닫힘",
+            disabled: !isHost() || !canCopySpectatorInvite,
+            title: isHost()
+              ? "관전 입장을 다시 열어 관전자를 받을 수 있습니다."
+              : "방장만 관전 입장을 열 수 있습니다.",
+            onAction: async () => {
+              if (!isHost()) {
+                setFlashMessage("방장만 관전 입장을 열 수 있습니다.");
+                return;
+              }
+              setRoomSettings({ allowSpectators: true });
+            },
+          }
+        : {
+            label: "관전 링크 복사",
+            title: `${clientState.roomCode} 방 관전 링크를 복사합니다`,
+            disabled: !clientState.roomCode || clientState.localMode || !clientState.allowSpectators,
+            onAction: async () => {
+              await copySpectatorLink();
+            },
+          };
     refs.spectatorList.appendChild(
       clientState.allowSpectators
         ? buildEmptyState(
@@ -2828,14 +2878,18 @@ function renderSpectators() {
             "spectator-empty",
             "◎",
             "관전자 없음",
-            "관전 링크를 공유하면 친구도 실시간으로 보드를 볼 수 있습니다."
+            spectatorCount >= (displayRequiredPlayerCount() || 6)
+              ? "관전 링크를 공유하면 친구도 실시간으로 보드를 볼 수 있습니다."
+              : "방 인원이 더 들어오면 관전자도 동시에 볼 수 있습니다.",
+            spectatorAction
           )
         : buildEmptyState(
             "div",
             "spectator-empty",
             "×",
             "관전 입장 닫힘",
-            "방장 설정에서 관전 입장을 다시 열 수 있습니다."
+            "방장 설정에서 관전 입장을 다시 열면 친구가 즉시 볼 수 있습니다.",
+            spectatorAction
           )
     );
     return;
