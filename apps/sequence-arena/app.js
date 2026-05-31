@@ -235,6 +235,7 @@ const clientState = {
   localMode: false,
   sessionId: safeLocalStorage.get(STORAGE_KEYS.session) || "",
   roomCode: sanitizeRoomCodeCandidate(normalizedUrlRoomCode || persistedRoomCode || ""),
+  hostSessionId: null,
   lastName: safeLocalStorage.get(STORAGE_KEYS.name) || "",
   seats: [],
   roomPhase: "idle",
@@ -629,7 +630,12 @@ function updateAiModeButtons() {
 }
 
 function isHost() {
-  return Boolean(clientState.roomCode && clientState.yourSeatIndex === 0);
+  return Boolean(
+    clientState.roomCode &&
+      clientState.hostSessionId &&
+      clientState.sessionId &&
+      clientState.hostSessionId === clientState.sessionId
+  );
 }
 
 function updateHostSettingsControls() {
@@ -1353,6 +1359,7 @@ function applyRoomSnapshot(payload) {
   clientState.rematchRequiredVotes = payload.rematchRequiredVotes || 0;
   clientState.matchHistory = payload.matchHistory || [];
   clientState.chatMessages = payload.chatMessages || [];
+  clientState.hostSessionId = payload.hostSessionId || null;
   clientState.game = payload.game;
   clientState.pendingStep = payload.game?.pendingStep || null;
   clientState.sessionId = payload.yourSessionId || clientState.sessionId;
@@ -3297,7 +3304,7 @@ function renderStatus() {
     : clientState.roomPhase === "playing"
       ? "게임 진행 중에는 방 나가기가 제한됩니다"
       : "방에 입장해야 사용할 수 있습니다";
-  refs.startTestBtn.disabled = !(clientState.roomCode && clientState.roomPhase === "lobby" && clientState.yourSeatIndex === 0);
+  refs.startTestBtn.disabled = !(clientState.roomCode && clientState.roomPhase === "lobby" && isHost());
   updateInstallButton();
   updateNotificationButton();
   updateCreateTeamSizeButtons();
@@ -3347,8 +3354,8 @@ function renderStatus() {
     : clientState.roomCode
     ? clientState.yourRole === "spectator"
       ? `관전 모드입니다. ${clientState.spectatorCount}명이 함께 보드를 보고 있습니다.`
-      : clientState.roomPhase === "lobby" && clientState.yourSeatIndex === 0
-      ? `${matchLabel}로 친구를 기다리거나, 혼자 테스트 시작 버튼으로 남은 좌석을 자동 플레이 봇으로 채울 수 있습니다.`
+      : clientState.roomPhase === "lobby" && isHost()
+      ? `${matchLabel}로 친구를 기다리거나, 방장이면 혼자 테스트 시작 버튼으로 남은 좌석을 자동 플레이 봇으로 채울 수 있습니다.`
       : `${requiredPlayers}명이 모두 들어오면 자동 시작됩니다. 접속이 끊겨도 같은 브라우저면 원래 좌석으로 복구됩니다.`
     : "방을 만들거나 코드로 입장해 좌석을 확보하세요.";
   refs.spectatorCount.textContent = `${clientState.spectatorCount}명`;
@@ -3372,10 +3379,10 @@ function renderStatus() {
     refs.statusMessage.textContent = clientState.localMode
       ? "시작 버튼으로 솔로 게임을 시작하세요."
       : clientState.roomCode
-        ? clientState.yourRole === "spectator"
-          ? "관전자로 입장했습니다. 게임이 시작되면 보드와 로그를 실시간으로 볼 수 있습니다."
-          : clientState.yourSeatIndex === 0
-          ? `${filledSeats}/${requiredPlayers}명이 입장했습니다. ${lobbyReadyText} 혼자 확인하려면 혼자 테스트 시작을 누르세요.`
+          ? clientState.yourRole === "spectator"
+            ? "관전자로 입장했습니다. 게임이 시작되면 보드와 로그를 실시간으로 볼 수 있습니다."
+            : isHost()
+          ? `${filledSeats}/${requiredPlayers}명이 입장했습니다. ${lobbyReadyText} 방장이면 혼자 테스트를 시작해 바로 플레이할 수 있습니다.`
           : `${filledSeats}/${requiredPlayers}명이 입장했습니다. ${lobbyReadyText}`
         : "방을 만들거나 받은 코드로 입장하세요.";
     refs.scoreRuby.textContent = `0 / 2 시퀀스`;
@@ -3482,7 +3489,7 @@ function renderStatus() {
     const winnerName = TEAM_LABELS[clientState.game.winner] || TEAM_META[clientState.game.winner].name;
     refs.statusMessage.textContent =
       clientState.rematchMode === "host"
-        ? `${winnerName} 승리. 1번 좌석이 같은 좌석으로 리매치를 시작할 수 있습니다.`
+        ? `${winnerName} 승리. 방장이 같은 좌석으로 리매치를 시작할 수 있습니다.`
         : `${winnerName} 승리. 모든 접속 플레이어가 동의하면 같은 좌석으로 리매치가 시작됩니다.`;
   } else if (pendingStep?.type === "discard") {
     const cardLabel = pendingStep.card?.label || "사용한 카드";
