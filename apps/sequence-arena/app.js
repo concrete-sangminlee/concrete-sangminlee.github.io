@@ -1671,6 +1671,7 @@ async function copyRoomLink() {
   if (ok) {
     setFlashMessage(`초대 링크를 복사했습니다: ${clientState.roomCode}`);
     flashCopiedButton(refs.copyRoomBtn);
+    flashCopiedButton(refs.roomLinkPreview);
     flashCopiedButton(refs.shareRoomBtn);
     playSound("tap");
   } else {
@@ -2773,18 +2774,26 @@ function renderStatus() {
       delete refs.joinCode.dataset.staticDisabled;
     }
   }
+  const inviteUrl = clientState.roomCode ? buildInviteUrl() : "";
   refs.activeRoomCode.textContent = clientState.roomCode || "미접속";
-  refs.roomLinkPreview.textContent = clientState.localMode
-    ? "오프라인 솔로는 이 브라우저에서만 진행됩니다."
-    : clientState.roomCode
-    ? buildInviteUrl()
-    : "방을 만들면 초대 링크가 여기에 표시됩니다.";
+  if (clientState.localMode) {
+    refs.roomLinkPreview.textContent = "오프라인 솔로는 이 브라우저에서만 진행됩니다.";
+  } else if (clientState.roomCode) {
+    refs.roomLinkPreview.textContent = inviteUrl;
+  } else {
+    refs.roomLinkPreview.textContent = "방을 만들면 초대 링크가 여기에 표시됩니다.";
+  }
   const canShareRoom = Boolean(clientState.roomCode && !clientState.localMode);
   const canCopyRoomCode = canShareRoom;
   refs.activeRoomCode.disabled = !canCopyRoomCode;
   refs.activeRoomCode.classList.toggle("copyable", canCopyRoomCode);
   refs.activeRoomCode.setAttribute("aria-label", canCopyRoomCode ? `${clientState.roomCode} 방 코드 복사` : "방 코드가 없습니다");
   refs.activeRoomCode.title = canCopyRoomCode ? "현재 방 코드를 복사하려면 클릭하세요" : "방 코드를 만들면 복사 버튼이 활성화됩니다.";
+  refs.roomLinkPreview.disabled = !canShareRoom;
+  refs.roomLinkPreview.classList.toggle("copyable", canShareRoom);
+  refs.roomLinkPreview.setAttribute("aria-label", canShareRoom ? "초대 링크 복사" : "방을 만든 뒤 링크를 복사하세요");
+  refs.roomLinkPreview.title = canShareRoom ? "클릭하면 초대 링크를 복사합니다" : "방을 만든 뒤 링크를 복사할 수 있습니다.";
+  refs.roomLinkPreview.setAttribute("aria-describedby", canShareRoom ? "room-link-preview-desc" : "");
   refs.openRoomLink.href = canShareRoom ? buildInviteUrl() : window.location.origin;
   refs.openRoomLink.setAttribute("aria-disabled", canShareRoom ? "false" : "true");
   refs.copyCodeBtn.disabled = !canShareRoom;
@@ -4274,6 +4283,13 @@ refs.activeRoomCode?.addEventListener("click", () => {
     render();
   });
 });
+refs.roomLinkPreview?.addEventListener("click", () => {
+  if (!clientState.roomCode || clientState.localMode) return;
+  copyRoomLink().catch(() => {
+    setFlashMessage("초대 링크 복사에 실패했습니다.");
+    render();
+  });
+});
 refs.shareRoomBtn.addEventListener("click", () => {
   shareRoom().catch((error) => {
     // User-cancelled share sheets are now swallowed inside shareRoom(), so any error here is a real failure.
@@ -4741,6 +4757,16 @@ function confirmBoardCursorPlay() {
 document.addEventListener("keydown", (event) => {
   ensureAudioContext();
   const key = event.key.toLowerCase();
+  const activeElement = document.activeElement;
+  const isTypingTarget =
+    activeElement instanceof HTMLInputElement ||
+    activeElement instanceof HTMLTextAreaElement ||
+    (activeElement && activeElement.isContentEditable);
+
+  // Keep global shortcuts from hijacking typing in chat/input fields.
+  if (isTypingTarget) {
+    return;
+  }
 
   // Help modal shortcuts take precedence when it is open or invoked.
   if (refs.helpModal && !refs.helpModal.hidden && key === "escape") {
@@ -4760,6 +4786,15 @@ document.addEventListener("keydown", (event) => {
 
   if (key === "f") {
     toggleFullscreen();
+    return;
+  }
+
+  if (key === "c" && !event.ctrlKey && !event.metaKey && !event.altKey && clientState.roomCode && !clientState.localMode) {
+    event.preventDefault();
+    copyRoomLink().catch(() => {
+      setFlashMessage("초대 링크 복사에 실패했습니다.");
+      render();
+    });
     return;
   }
 

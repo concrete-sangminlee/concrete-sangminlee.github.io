@@ -1486,10 +1486,37 @@ body[data-static-host="true"][data-has-room="false"] .game-layout {
 }
 
 .room-link-preview {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  width: 100%;
+  text-align: left;
   color: var(--muted);
   font-size: 0.84rem;
   line-height: 1.35;
   overflow-wrap: anywhere;
+}
+
+.room-link-preview.copyable {
+  cursor: copy;
+}
+
+.room-link-preview.copyable:hover,
+.room-link-preview.copyable:focus-visible {
+  color: #2a4b3f;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+}
+
+.room-link-preview.copyable:focus-visible {
+  outline: 2px solid #3e6f5a;
+  outline-offset: 3px;
+  border-radius: 8px;
+}
+
+.room-link-preview:disabled {
+  cursor: not-allowed;
 }
 
 .invite-progress-card {

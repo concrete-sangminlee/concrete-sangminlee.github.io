@@ -221,9 +221,17 @@
               >
                 미접속
               </button>
-              <span id="room-link-preview" class="room-link-preview">
+              <button
+                id="room-link-preview"
+                class="room-link-preview"
+                type="button"
+                aria-live="polite"
+                aria-atomic="true"
+                disabled
+              >
                 방을 만들면 초대 링크가 여기에 표시됩니다.
-              </span>
+              </button>
+              <span id="room-link-preview-desc" class="sr-only">방 링크를 클릭하면 클립보드로 링크를 복사합니다.</span>
               <div class="invite-progress-card" id="invite-progress-card">
                 <div class="invite-progress-topline">
                   <span>입장 인원</span>
@@ -486,10 +494,10 @@
           <section class="help-section">
             <h3>키보드 · 접근성</h3>
             <ul>
-              <li>손패에서 ← → ↑ ↓로 카드 이동, <kbd>Enter</kbd>로 선택.</li>
-              <li>카드 선택 후 ← → ↑ ↓로 보드 커서 이동, <kbd>Enter</kbd>/<kbd>Space</kbd>로 확정.</li>
-              <li><kbd>Esc</kbd>로 선택 취소, <kbd>A</kbd>로 가장 먼저 쓸 수 있는 카드 선택, <kbd>B</kbd>로 첫 수 자동 실행.</li>
-              <li><kbd>F</kbd>로 전체화면 전환. 화면 낭독기 안내와 모바일 진동 피드백을 지원합니다.</li>
+                <li>손패에서 ← → ↑ ↓로 카드 이동, <kbd>Enter</kbd>로 선택.</li>
+                <li>카드 선택 후 ← → ↑ ↓로 보드 커서 이동, <kbd>Enter</kbd>/<kbd>Space</kbd>로 확정.</li>
+                <li><kbd>Esc</kbd>로 선택 취소, <kbd>A</kbd>로 가장 먼저 쓸 수 있는 카드 선택, <kbd>B</kbd>로 첫 수 자동 실행, <kbd>C</kbd>로 초대 링크 복사.</li>
+                <li><kbd>F</kbd>로 전체화면 전환. 화면 낭독기 안내와 모바일 진동 피드백을 지원합니다.</li>
             </ul>
           </section>
           <section class="help-section" id="help-privacy-section">
