@@ -5146,6 +5146,7 @@ refs.themeToggleBtn?.addEventListener("click", toggleTheme);
 // without a cached copy, an upstream string change would silently desync.
 const JOIN_CODE_HINT_DEFAULT = refs.joinCodeHint?.textContent || "4~6자리 영문/숫자";
 const JOIN_CODE_HINT_ERROR = "방 코드는 4~6자 영문/숫자여야 합니다.";
+const JOIN_CODE_HINT_INVALID_CHARS = "영문/숫자만 입력하세요. (하이픈, 공백은 제거됩니다)";
 const CREATE_NAME_HINT_DEFAULT = "이름은 1~20자 이내여야 합니다.";
 const CREATE_NAME_HINT_ERROR = "이름을 1~20자로 입력하세요.";
 const JOIN_NAME_HINT_DEFAULT = "이름을 입력하세요.";
@@ -5163,9 +5164,12 @@ function announceJoinCodeHint(message) {
   }
 }
 
-function updateJoinCodeValidity() {
+function updateJoinCodeValidity(hasInvalidCharacters = false) {
   if (!refs.joinCode) return;
-  const value = normalizeRoomCodeDraft(refs.joinCode.value);
+  const rawValue = refs.joinCode.value || "";
+  const value = normalizeRoomCodeDraft(rawValue);
+  const hasInputCharacters =
+    hasInvalidCharacters || /[^A-Za-z0-9]/.test(rawValue);
   const hint = refs.joinCodeHint;
   // Empty stays neutral — pre-typing aria-invalid would set off SR alerts before the user
   // has had a chance to do anything, which is hostile UX. Only flip to invalid once the
@@ -5178,8 +5182,15 @@ function updateJoinCodeValidity() {
   }
   if (value.length < 4) {
     refs.joinCode.setAttribute("aria-invalid", "true");
-    if (hint) hint.textContent = JOIN_CODE_HINT_ERROR;
-    announceJoinCodeHint(JOIN_CODE_HINT_ERROR);
+    const message = hasInputCharacters ? JOIN_CODE_HINT_INVALID_CHARS : JOIN_CODE_HINT_ERROR;
+    if (hint) hint.textContent = message;
+    announceJoinCodeHint(message);
+    return;
+  }
+  if (hasInputCharacters) {
+    refs.joinCode.setAttribute("aria-invalid", "true");
+    if (hint) hint.textContent = JOIN_CODE_HINT_INVALID_CHARS;
+    announceJoinCodeHint(JOIN_CODE_HINT_INVALID_CHARS);
     return;
   }
   refs.joinCode.removeAttribute("aria-invalid");
@@ -5278,6 +5289,7 @@ function handleJoinNameInput() {
 
 function handleJoinCodeInput() {
   if (!refs.joinCode) return;
+  const hasInvalidCharacters = /[^A-Za-z0-9]/.test(refs.joinCode.value || "");
   const caret = refs.joinCode.selectionStart;
   const normalized = normalizeJoinCodeInput(refs.joinCode.value);
   if (refs.joinCode.value !== normalized) {
@@ -5291,7 +5303,7 @@ function handleJoinCodeInput() {
       }
     }
   }
-  updateJoinCodeValidity();
+  updateJoinCodeValidity(hasInvalidCharacters);
   refreshJoinFormState();
 }
 window.matchMedia?.("(prefers-color-scheme: dark)").addEventListener?.("change", (event) => {
@@ -5408,6 +5420,25 @@ function normalizeJoinCodeInput(value = "") {
   return normalizeRoomCodeDraft(value);
 }
 
+function extractJoinCodeFromText(value = "") {
+  const raw = String(value || "").trim();
+  if (!raw) return "";
+
+  const direct = sanitizeRoomCodeCandidate(raw);
+  if (direct) return direct;
+
+  try {
+    const pastedUrl = new URL(raw);
+    const fromQuery = sanitizeRoomCodeCandidate(pastedUrl.searchParams.get("room") || "");
+    if (fromQuery) return fromQuery;
+  } catch {
+    // Not a URL-like string; continue with token fallback.
+  }
+
+  const match = raw.match(/[A-Za-z0-9]{4,6}/gi)?.at(0);
+  return match ? sanitizeRoomCodeCandidate(match) : "";
+}
+
 async function handleJoinCodePaste() {
   if (!refs.joinCode) return;
   if (!navigator.clipboard || typeof navigator.clipboard.readText !== "function") {
@@ -5423,11 +5454,28 @@ async function handleJoinCodePaste() {
     return;
   }
 
-  const next = normalizeJoinCodeInput(pasted);
+  const next = extractJoinCodeFromText(pasted);
   if (!next) {
     setFlashMessage("클립보드에 유효한 방 코드(4~6자리 영문/숫자)가 없습니다.");
     return;
   }
+  refs.joinCode.value = next;
+  handleJoinCodeInput();
+  setFlashMessage(`방 코드를 붙여넣었습니다: ${next}`);
+  if (typeof refs.joinCode.focus === "function") {
+    refs.joinCode.focus();
+  }
+  if (typeof refs.joinCode.setSelectionRange === "function") {
+    refs.joinCode.setSelectionRange(0, refs.joinCode.value.length);
+  }
+}
+
+function handleJoinCodePasteFromClipboard(event) {
+  const text = event.clipboardData?.getData?.("text");
+  if (!text || !refs.joinCode) return;
+  const next = extractJoinCodeFromText(text);
+  if (!next) return;
+  event.preventDefault();
   refs.joinCode.value = next;
   handleJoinCodeInput();
   setFlashMessage(`방 코드를 붙여넣었습니다: ${next}`);
@@ -5515,6 +5563,7 @@ refs.createName?.addEventListener("input", handleCreateNameInput);
 refs.createName?.addEventListener("blur", handleCreateNameInput);
 refs.joinCode?.addEventListener("input", handleJoinCodeInput);
 refs.joinCode?.addEventListener("blur", handleJoinCodeInput);
+refs.joinCode?.addEventListener("paste", handleJoinCodePasteFromClipboard);
 refs.joinCodePasteBtn?.addEventListener("click", () => {
   void handleJoinCodePaste();
 });
