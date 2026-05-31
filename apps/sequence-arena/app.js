@@ -1927,6 +1927,9 @@ function forceReconnectNow() {
 function handleCreateRoom(event) {
   event.preventDefault();
   if (refs.createRoomBtn?.disabled) return;
+  if (typeof dismissWelcome === "function") {
+    dismissWelcome();
+  }
   if (isOfflineOnlyRuntime()) {
     setFlashMessage("현재 공개 URL은 오프라인 솔로로 바로 플레이할 수 있습니다.");
     render();
@@ -1999,6 +2002,9 @@ function handleCreateRoom(event) {
 function handleJoinRoom(event) {
   event.preventDefault();
   if (refs.joinRoomBtn?.disabled) return;
+  if (typeof dismissWelcome === "function") {
+    dismissWelcome();
+  }
   if (isOfflineOnlyRuntime()) {
     setFlashMessage("멀티플레이 방 입장은 WebSocket 서버가 켜진 주소에서 사용할 수 있습니다.");
     render();
@@ -5431,6 +5437,7 @@ refs.helpCloseBtn?.addEventListener("click", closeHelpModal);
 function shouldShowWelcome() {
   if (!refs.welcomeCard) return false;
   if (safeLocalStorage.get(STORAGE_KEYS.welcomed) === "true") return false;
+  if (clientState.localMode) return false;
   if (clientState.roomCode) return false;
   const params = new URLSearchParams(window.location.search);
   if (params.get("room")) return false;
