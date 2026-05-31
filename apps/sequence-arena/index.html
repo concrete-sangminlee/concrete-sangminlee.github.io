@@ -451,9 +451,12 @@
             </section>
 
             <section class="panel history-panel">
-              <div class="panel-head compact">
-                <h2>경기 기록</h2>
-                <p>이 방에서 끝난 최근 결과입니다.</p>
+              <div class="panel-head compact panel-head-with-actions">
+                <div class="panel-head-copy">
+                  <h2>경기 기록</h2>
+                  <p>이 방에서 끝난 최근 결과입니다.</p>
+                </div>
+                <button id="clear-history-btn" class="ghost-button warning-action" type="button" hidden>경기 기록 없음</button>
               </div>
               <div id="history-summary" class="history-summary">Ruby 0% · Cobalt 0%</div>
               <ol id="history-list" class="history-list"></ol>

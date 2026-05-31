@@ -119,6 +119,7 @@ const refs = {
   emojiButtons: [...document.querySelectorAll("[data-chat-emoji]")],
   historySummary: document.getElementById("history-summary"),
   historyList: document.getElementById("history-list"),
+  clearHistoryBtn: document.getElementById("clear-history-btn"),
   livePolite: document.getElementById("live-polite"),
   liveAssertive: document.getElementById("live-assertive"),
 };
@@ -600,6 +601,13 @@ function updateHostSettingsControls() {
     button.setAttribute("aria-pressed", String(isActive));
     button.disabled = !host;
   }
+  if (refs.clearHistoryBtn) {
+    const hasHistory = clientState.matchHistory.length > 0;
+    refs.clearHistoryBtn.hidden = !host;
+    refs.clearHistoryBtn.disabled = !host || !hasHistory;
+    refs.clearHistoryBtn.setAttribute("aria-disabled", String(refs.clearHistoryBtn.disabled));
+    refs.clearHistoryBtn.textContent = hasHistory ? "경기 기록 지우기" : "경기 기록 없음";
+  }
 }
 
 function setBotDifficulty(mode) {
@@ -624,6 +632,26 @@ function setRoomSettings(settings) {
     type: "set_room_settings",
     ...settings,
   });
+}
+
+function clearMatchHistory() {
+  if (!refs.clearHistoryBtn || refs.clearHistoryBtn.disabled) {
+    return;
+  }
+  if (!isHost() || clientState.localMode) {
+    setFlashMessage("방장만 경기 기록을 초기화할 수 있습니다.");
+    return;
+  }
+  if (!clientState.matchHistory.length) {
+    setFlashMessage("삭제할 경기 기록이 없습니다.");
+    return;
+  }
+  const confirmed = window.confirm("해당 방의 경기 기록을 모두 삭제할까요?");
+  if (!confirmed) {
+    return;
+  }
+  playSound("tap");
+  sendSocket({ type: "clear_match_history" });
 }
 
 function hasVotedForRematch() {
@@ -4840,6 +4868,7 @@ refs.allowSpectatorsToggle.addEventListener("change", () => {
 for (const button of refs.rematchModeButtons) {
   button.addEventListener("click", () => setRoomSettings({ rematchMode: button.dataset.rematchMode }));
 }
+refs.clearHistoryBtn?.addEventListener("click", clearMatchHistory);
 refs.startTestBtn.addEventListener("click", () => {
   if (refs.startTestBtn.disabled) return;
   refs.startTestBtn.disabled = true;

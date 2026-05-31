@@ -925,6 +925,23 @@ a {
   padding-bottom: 8px;
 }
 
+.panel-head-with-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 9px;
+  align-items: start;
+}
+
+.panel-head-copy {
+  min-width: 0;
+}
+
+.panel-head-with-actions .warning-action {
+  min-height: 36px;
+  min-width: 104px;
+  white-space: nowrap;
+}
+
 .panel-head h2,
 .panel-head h3,
 .stack-card h3 {
@@ -1031,6 +1048,13 @@ a {
 @media (max-width: 680px) {
   .welcome-card {
     padding: 14px 14px 12px;
+  }
+  .panel-head-with-actions {
+    grid-template-columns: 1fr;
+  }
+  .panel-head-with-actions .warning-action {
+    justify-self: start;
+    min-width: 124px;
   }
 }
 
@@ -1262,6 +1286,25 @@ body[data-static-host="true"][data-has-room="false"] .game-layout {
 
 .ghost-button:hover:not(:disabled) {
   background: rgba(23, 33, 29, 0.12);
+}
+
+.warning-action {
+  border-color: rgba(185, 52, 55, 0.45);
+  color: #7a2229;
+  background:
+    linear-gradient(180deg, rgba(255, 226, 231, 0.58), rgba(255, 236, 239, 0.28)),
+    rgba(255, 241, 243, 0.54);
+}
+
+.warning-action:hover:not(:disabled) {
+  background:
+    linear-gradient(180deg, rgba(255, 221, 227, 0.78), rgba(255, 230, 234, 0.42)),
+    rgba(255, 230, 234, 0.62);
+}
+
+.warning-action[aria-disabled="true"],
+.warning-action:disabled {
+  opacity: 0.56;
 }
 
 .share-grid {
