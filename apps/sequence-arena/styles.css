@@ -1439,12 +1439,39 @@ body[data-static-host="true"][data-has-room="false"] .game-layout {
 }
 
 .room-code-display {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  width: max-content;
+  text-align: left;
   font-family: "SFMono-Regular", Menlo, Consolas, monospace;
   font-size: 2.1rem;
   letter-spacing: 0.1em;
   line-height: 1.05;
   color: #111915;
   text-shadow: 0 1px 0 rgba(255, 255, 255, 0.68);
+  cursor: default;
+}
+
+.room-code-display.copyable {
+  cursor: pointer;
+}
+
+.room-code-display.copyable:hover,
+.room-code-display.copyable:focus-visible {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.22em;
+}
+
+.room-code-display.copyable:focus-visible {
+  outline: 2px solid #3e6f5a;
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+.room-code-display:disabled {
+  color: var(--muted);
 }
 
 .room-link-preview {

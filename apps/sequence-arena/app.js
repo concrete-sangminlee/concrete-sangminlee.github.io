@@ -290,6 +290,10 @@ function normalizeRoomCode(value) {
     .slice(0, 6);
 }
 
+function normalizePlayerName(value) {
+  return String(value || "플레이어").trim().slice(0, 20).replace(/\s+/g, " ");
+}
+
 function normalizeTeamSize(value) {
   const teamSize = Number(value);
   return [1, 2, 3].includes(teamSize) ? teamSize : 3;
@@ -1140,10 +1144,10 @@ function reconnectToSavedRoom() {
 
 function maybeAutoJoinSharedRoom() {
   const sharedRoomCode = normalizeRoomCode(urlRoomCode || "");
+  const joinName = normalizePlayerName(clientState.lastName || refs.joinName?.value || refs.createName?.value);
   if (
     !sharedRoomCode ||
     clientState.autoJoinAttempted ||
-    !clientState.lastName ||
     !clientState.socketReady ||
     clientState.game ||
     clientState.yourSeatIndex != null
@@ -1152,9 +1156,16 @@ function maybeAutoJoinSharedRoom() {
   }
 
   clientState.autoJoinAttempted = true;
+  clientState.lastName = joinName;
+  if (refs.createName) {
+    refs.createName.value = joinName;
+  }
+  if (refs.joinName) {
+    refs.joinName.value = joinName;
+  }
   sendSocket({
     type: "join_room",
-    name: clientState.lastName,
+    name: joinName,
     roomCode: sharedRoomCode,
     sessionId: clientState.sessionId,
     role: urlJoinRole,
@@ -1576,7 +1587,7 @@ async function copySpectatorLink() {
   render();
 }
 
-async function copyRoomCode() {
+async function copyRoomCode(button = null) {
   if (!clientState.roomCode) {
     setFlashMessage("복사할 방 코드가 아직 없습니다.");
     render();
@@ -1586,7 +1597,7 @@ async function copyRoomCode() {
   const ok = await writeToClipboard(clientState.roomCode);
   if (ok) {
     setFlashMessage(`방 코드 ${clientState.roomCode}를 복사했습니다.`);
-    flashCopiedButton(refs.copyRoomBtn);
+    flashCopiedButton(button || refs.copyCodeBtn);
     playSound("tap");
   } else {
     setFlashMessage(`방 코드 ${clientState.roomCode} 복사를 지원하지 않는 환경입니다. 직접 적어주세요.`);
@@ -2586,6 +2597,11 @@ function renderStatus() {
     ? buildInviteUrl()
     : "방을 만들면 초대 링크가 여기에 표시됩니다.";
   const canShareRoom = Boolean(clientState.roomCode && !clientState.localMode);
+  const canCopyRoomCode = canShareRoom;
+  refs.activeRoomCode.disabled = !canCopyRoomCode;
+  refs.activeRoomCode.classList.toggle("copyable", canCopyRoomCode);
+  refs.activeRoomCode.setAttribute("aria-label", canCopyRoomCode ? `${clientState.roomCode} 방 코드 복사` : "방 코드가 없습니다");
+  refs.activeRoomCode.title = canCopyRoomCode ? "현재 방 코드를 복사하려면 클릭하세요" : "방 코드를 만들면 복사 버튼이 활성화됩니다.";
   refs.openRoomLink.href = canShareRoom ? buildInviteUrl() : window.location.origin;
   refs.openRoomLink.setAttribute("aria-disabled", canShareRoom ? "false" : "true");
   refs.copyCodeBtn.disabled = !canShareRoom;
@@ -4026,6 +4042,13 @@ refs.copySpectatorLinkBtn.addEventListener("click", () => {
 });
 refs.copyCodeBtn.addEventListener("click", () => {
   copyRoomCode().catch(() => {
+    setFlashMessage("방 코드 복사에 실패했습니다.");
+    render();
+  });
+});
+refs.activeRoomCode?.addEventListener("click", () => {
+  if (!clientState.roomCode || clientState.localMode) return;
+  copyRoomCode(refs.activeRoomCode).catch(() => {
     setFlashMessage("방 코드 복사에 실패했습니다.");
     render();
   });

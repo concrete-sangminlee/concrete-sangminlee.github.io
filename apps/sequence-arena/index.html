@@ -209,7 +209,18 @@
 
             <div class="invite-card">
               <span class="invite-label">현재 방 코드</span>
-              <strong id="active-room-code" class="room-code-display" aria-live="polite" aria-atomic="true" aria-label="현재 방 코드">미접속</strong>
+              <button
+                id="active-room-code"
+                class="room-code-display"
+                type="button"
+                aria-live="polite"
+                aria-atomic="true"
+                aria-label="현재 방 코드"
+                title="방 코드 복사"
+                disabled
+              >
+                미접속
+              </button>
               <span id="room-link-preview" class="room-link-preview">
                 방을 만들면 초대 링크가 여기에 표시됩니다.
               </span>
