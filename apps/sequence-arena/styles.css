@@ -1053,6 +1053,19 @@ a {
   line-height: 1.45;
 }
 
+.gateway-mode-hint {
+  margin-top: 8px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #3c2a14;
+  border: 1px solid rgba(80, 54, 18, 0.26);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.66), rgba(255, 255, 255, 0.34)),
+    rgba(243, 215, 150, 0.14);
+}
+
 .gateway-grid,
 .share-grid,
 .share-status-card,

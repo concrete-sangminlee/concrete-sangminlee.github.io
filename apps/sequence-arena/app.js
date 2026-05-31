@@ -28,6 +28,7 @@ const refs = {
   offlineSoloBtn: document.getElementById("offline-solo-btn"),
   joinRoomBtn: document.getElementById("join-room-btn"),
   gatewaySubtitle: document.getElementById("gateway-subtitle"),
+  gatewayModeHint: document.getElementById("gateway-mode-hint"),
   joinAsSpectator: document.getElementById("join-as-spectator"),
   createName: document.getElementById("create-name"),
   joinName: document.getElementById("join-name"),
@@ -5555,6 +5556,11 @@ function updateWelcomeModePanel() {
       return node;
     })
   );
+  if (refs.gatewayModeHint) {
+    refs.gatewayModeHint.textContent = isStatic
+      ? "게임 모드: 오프라인 솔로 (서버 연결 없이 즉시 플레이)"
+      : "게임 모드: 실시간 멀티플레이 (초대/입장 시 동시 대전 가능)";
+  }
 }
 
 refs.welcomeDismissBtn?.addEventListener("click", dismissWelcome);
