@@ -47,6 +47,7 @@ const refs = {
   welcomeHelpBtn: document.getElementById("welcome-help-btn"),
   themeToggleBtn: document.getElementById("theme-toggle-btn"),
   offlineBanner: document.getElementById("offline-banner"),
+  offlineText: document.getElementById("offline-text"),
   offlineRetryBtn: document.getElementById("offline-retry-btn"),
   updateBanner: document.getElementById("update-banner"),
   updateReloadBtn: document.getElementById("update-reload-btn"),
@@ -228,11 +229,13 @@ const clientState = {
   victoryWash: null,
   reconnectTimer: null,
   reconnectAttempts: 0,
+  reconnectPaused: false,
 };
 
 const RECONNECT_BACKOFF_BASE_MS = 1500;
 const RECONNECT_BACKOFF_MAX_MS = 30_000;
 const RECONNECT_BACKOFF_JITTER_MS = 400;
+const RECONNECT_MAX_ATTEMPTS = 8;
 const CHAT_MAX_LENGTH = 140;
 const CHAT_COOLDOWN_MS = 600;
 const CHAT_REPEAT_COOLDOWN_MS = CHAT_COOLDOWN_MS * 2;
@@ -1197,6 +1200,7 @@ function connectSocket() {
   if (clientState.localMode) {
     return;
   }
+  clientState.reconnectPaused = false;
   if (isOfflineOnlyRuntime()) {
     refs.connectionIndicator.textContent = "서버 없음 · 오프라인 솔로 가능";
     setFlashMessage("서버가 없는 정적 실행 환경입니다. 오프라인 솔로로 바로 플레이할 수 있습니다.");
@@ -1217,6 +1221,7 @@ function connectSocket() {
     clientState.socketReady = true;
     clientState.reconnectAttempts = 0;
     refs.connectionIndicator.textContent = "실시간 연결됨";
+    clientState.reconnectPaused = false;
     hideOfflineBanner();
     render();
   });
@@ -1316,17 +1321,34 @@ function connectSocket() {
       // Another tab took over this seat — do not reconnect, that would just take it back
       // and start a ping-pong. Show a quiet "this tab is dormant" banner state.
       refs.connectionIndicator.textContent = "다른 탭에서 이어받음";
-      showOfflineBanner();
+      showOfflineBanner("이 탭은 현재 비활성 상태입니다. 새로 연결하려면 화면을 새로고침하세요.", {
+        reconnectsPaused: true,
+        buttonLabel: "재연결",
+      });
       render();
       return;
     }
     clientState.reconnectAttempts = Math.min(clientState.reconnectAttempts + 1, 10);
+    if (clientState.reconnectAttempts >= RECONNECT_MAX_ATTEMPTS) {
+      clientState.reconnectPaused = true;
+      refs.connectionIndicator.textContent = "연결 실패 · 수동 재연결 필요";
+      setFlashMessage("연결이 자주 끊겨서 자동 재연결이 중단되었습니다. 지금 다시 시도 버튼을 눌러 수동으로 재연결하세요.");
+      showOfflineBanner("연결이 불안정합니다. 지금 다시 시도 버튼으로 한 번 직접 시도해 주세요.", {
+        reconnectsPaused: true,
+        buttonLabel: "수동 재연결",
+      });
+      render();
+      return;
+    }
     // Surface the attempt count so the user has a progress signal — without it, a permanently
     // broken network looks identical to a healthy retry loop and the user can't tell whether
     // to wait or click "지금 다시 시도". `aria-live="polite"` on the indicator means the
     // screen reader announces each attempt change.
     refs.connectionIndicator.textContent = `연결 끊김 · 재시도 중 (${clientState.reconnectAttempts}번째)`;
-    showOfflineBanner();
+    showOfflineBanner(
+      `연결이 끊겨 재접속을 시도 중입니다 (${clientState.reconnectAttempts}/${RECONNECT_MAX_ATTEMPTS}번째).`,
+      { reconnectsPaused: false, buttonLabel: "지금 다시 시도" }
+    );
     render();
     const exponential = RECONNECT_BACKOFF_BASE_MS * Math.pow(2, clientState.reconnectAttempts - 1);
     const capped = Math.min(exponential, RECONNECT_BACKOFF_MAX_MS);
@@ -1374,20 +1396,38 @@ function startOfflineSolo() {
   playSound("tap");
 }
 
-function showOfflineBanner() {
+function showOfflineBanner(message, options = {}) {
   if (!refs.offlineBanner) return;
   refs.offlineBanner.hidden = false;
+  const buttonLabel = typeof options.buttonLabel === "string" ? options.buttonLabel : null;
+  if (buttonLabel && refs.offlineRetryBtn) {
+    refs.offlineRetryBtn.textContent = buttonLabel;
+  } else if (refs.offlineRetryBtn) {
+    refs.offlineRetryBtn.textContent = "지금 다시 시도";
+  }
+  if (refs.offlineText && typeof message === "string") {
+    refs.offlineText.textContent = message;
+  } else if (!message && options.message) {
+    refs.offlineText.textContent = options.message;
+  }
+  const isPaused = Boolean(options.reconnectsPaused);
+  refs.offlineBanner.setAttribute("data-reconnect-state", isPaused ? "stalled" : "retrying");
   if (typeof announcePolite === "function") {
-    announcePolite("연결이 끊겨 재접속을 시도하고 있습니다.");
+    announcePolite(message || "연결이 끊겨 재접속을 시도하고 있습니다.");
   }
 }
 
 function hideOfflineBanner() {
   if (!refs.offlineBanner) return;
   refs.offlineBanner.hidden = true;
+  refs.offlineBanner.removeAttribute("data-reconnect-state");
 }
 
 function forceReconnectNow() {
+  if (clientState.localMode) {
+    return;
+  }
+  clientState.reconnectPaused = false;
   if (clientState.reconnectTimer) {
     window.clearTimeout(clientState.reconnectTimer);
     clientState.reconnectTimer = null;
@@ -2632,13 +2672,24 @@ function renderStatus() {
   document.body.dataset.spectatorsAllowed = clientState.allowSpectators ? "true" : "false";
   document.body.dataset.rematchMode = clientState.rematchMode || "all";
   document.body.dataset.pendingStep = clientState.pendingStep?.type || "none";
+  const isReconnecting = Boolean(
+    !clientState.localMode &&
+      !offlineOnlyRuntime &&
+      !clientState.socketReady &&
+      !clientState.reconnectPaused &&
+      !clientState.sessionTakenOver
+  );
   refs.connectionIndicator.textContent = clientState.localMode
     ? "오프라인 솔로"
     : offlineOnlyRuntime
       ? "GitHub Pages 정적판"
       : clientState.socketReady
         ? "실시간 연결됨"
-        : "재연결 중";
+        : clientState.reconnectPaused
+          ? "연결이 중단됨"
+          : isReconnecting
+            ? "재연결 중"
+            : "재연결 중";
   refs.currentOrigin.textContent = window.location.origin;
   if (refs.gatewaySubtitle) {
     refs.gatewaySubtitle.textContent = offlineOnlyRuntime

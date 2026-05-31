@@ -323,6 +323,11 @@ label:has(input[aria-invalid="true"]) .input-hint {
   animation: offlinePulse 2.4s ease-in-out infinite;
 }
 
+.offline-banner[data-reconnect-state="stalled"] {
+  background: rgba(95, 60, 20, 0.95);
+  animation: none;
+}
+
 .offline-banner[hidden] {
   display: none;
 }
@@ -334,6 +339,12 @@ label:has(input[aria-invalid="true"]) .input-hint {
   background: #fff8e9;
   box-shadow: 0 0 0 4px rgba(255, 248, 233, 0.28);
   animation: offlineDotPulse 1.2s ease-in-out infinite;
+}
+
+.offline-banner[data-reconnect-state="stalled"] .offline-dot {
+  background: #ffe3af;
+  box-shadow: 0 0 0 4px rgba(255, 227, 175, 0.28);
+  animation: none;
 }
 
 .offline-text {
