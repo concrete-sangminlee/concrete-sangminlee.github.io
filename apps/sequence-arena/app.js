@@ -3046,29 +3046,36 @@ function buildEmptyState(tagName, className, icon, title, body, action = null) {
   detail.className = "empty-state-body";
   detail.textContent = body;
   copy.append(heading, detail);
-  if (action && typeof action.label === "string") {
-    const actionButton = document.createElement("button");
-    actionButton.type = "button";
-    actionButton.className = action.className || "ghost-button empty-state-action";
-    actionButton.textContent = action.label;
-    actionButton.disabled = Boolean(action.disabled);
-    if (action.title) {
-      actionButton.title = action.title;
+  const actions = Array.isArray(action) ? action : action ? [action] : [];
+  const visibleActions = actions.filter((entry) => entry && typeof entry.label === "string");
+  if (visibleActions.length > 0) {
+    const actionGroup = document.createElement("div");
+    actionGroup.className = "empty-state-actions";
+    for (const currentAction of visibleActions) {
+      const actionButton = document.createElement("button");
+      actionButton.type = "button";
+      actionButton.className = currentAction.className || "ghost-button empty-state-action";
+      actionButton.textContent = currentAction.label;
+      actionButton.disabled = Boolean(currentAction.disabled);
+      if (currentAction.title) {
+        actionButton.title = currentAction.title;
+      }
+      if (typeof currentAction.onAction === "function") {
+        actionButton.addEventListener("click", () => {
+          if (actionButton.disabled) {
+            return;
+          }
+          try {
+            void Promise.resolve(currentAction.onAction(actionButton));
+          } catch {
+            setFlashMessage("실행할 수 없습니다. 잠시 뒤 다시 시도해 주세요.");
+            render();
+          }
+        });
+      }
+      actionGroup.append(actionButton);
     }
-    if (typeof action.onAction === "function") {
-      actionButton.addEventListener("click", () => {
-        if (actionButton.disabled) {
-          return;
-        }
-        try {
-          void Promise.resolve(action.onAction(actionButton));
-        } catch {
-          setFlashMessage("실행할 수 없습니다. 잠시 뒤 다시 시도해 주세요.");
-          render();
-        }
-      });
-    }
-    copy.append(actionButton);
+    copy.append(actionGroup);
   }
   empty.append(mark, copy);
   return empty;
@@ -3622,6 +3629,17 @@ function renderStatus() {
             }
           },
         };
+    const reconnectHint = !clientState.localMode && !isOfflineOnlyRuntime() && !clientState.socketReady;
+    const pregameActions = Array.isArray(pregameAction) ? pregameAction : [pregameAction];
+    if (reconnectHint) {
+      pregameActions.push({
+        label: "재연결 시도",
+        title: "오프라인 상태가 해제되면 자동 복구됩니다. 지금 즉시 재접속을 시도합니다.",
+        onAction: () => {
+          forceReconnectNow();
+        },
+      });
+    }
     refs.logList.appendChild(
       buildEmptyState(
         "li",
@@ -3629,7 +3647,7 @@ function renderStatus() {
         "•",
         "아직 액션 없음",
         "게임이 시작되면 카드 배치와 시퀀스가 여기에 쌓입니다.",
-        pregameAction
+        pregameActions
       )
     );
     renderHistory();

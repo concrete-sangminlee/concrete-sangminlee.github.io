@@ -3041,6 +3041,13 @@ body[data-game="playing"] .card-note {
   gap: 2px;
 }
 
+.empty-state-actions {
+  margin-top: 6px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
 .empty-state-title {
   min-width: 0;
   color: #3f2d0f;
@@ -3055,7 +3062,6 @@ body[data-game="playing"] .card-note {
 }
 
 .empty-state-action {
-  margin-top: 6px;
   justify-self: start;
   min-height: 32px;
   padding: 6px 10px;
