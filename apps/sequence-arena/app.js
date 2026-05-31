@@ -3979,6 +3979,7 @@ function render() {
     refs.activeRoomCode.textContent = clientState.roomCode || "미접속";
     refs.flashMessage.textContent = clientState.flashMessage;
     updateSoundButton();
+    updateWelcomeCreateLabel();
     if (typeof maybeShowWelcome === "function") maybeShowWelcome();
     drawBoard();
     renderStatus();
@@ -4384,9 +4385,24 @@ function maybeShowWelcome() {
   refs.welcomeCard.hidden = !shouldShowWelcome();
 }
 
+function updateWelcomeCreateLabel() {
+  if (!refs.welcomeCreateBtn) return;
+  refs.welcomeCreateBtn.textContent = isOfflineOnlyRuntime() ? "바로 솔로 플레이" : "바로 방 만들기";
+}
+
 refs.welcomeDismissBtn?.addEventListener("click", dismissWelcome);
 refs.welcomeCreateBtn?.addEventListener("click", () => {
-  startOfflineSolo();
+  if (isOfflineOnlyRuntime()) {
+    startOfflineSolo();
+    return;
+  }
+
+  if (clientState.socketReady) {
+    dismissWelcome();
+  }
+  // Keep welcome card visible when socket is unavailable so users keep the onboarding
+  // context and can retry with a new state hint from the flash message.
+  handleCreateRoom({ preventDefault() {} });
 });
 refs.welcomeHelpBtn?.addEventListener("click", () => {
   dismissWelcome();
