@@ -302,7 +302,7 @@
             <div class="share-actions-card">
               <button id="start-test-btn" class="primary-button" type="button">혼자 테스트 시작</button>
               <button id="copy-code-btn" class="ghost-button" type="button">코드 복사</button>
-              <button id="copy-room-btn" class="ghost-button" type="button">링크 복사</button>
+              <button id="copy-room-btn" class="ghost-button" type="button" aria-keyshortcuts="C" title="링크 복사 (C)">링크 복사</button>
               <button id="copy-spectator-link-btn" class="ghost-button" type="button">관전 링크</button>
               <button id="share-room-btn" class="primary-button secondary-tone" type="button">공유</button>
               <a id="open-room-link" class="ghost-button button-link" href="./" target="_blank" rel="noopener noreferrer">
@@ -372,7 +372,7 @@
                 <span class="victory-kicker">최종 결과</span>
                 <strong id="victory-winner">-</strong>
                 <span id="victory-score">0 : 0</span>
-                <button id="rematch-btn" class="primary-button" type="button">리매치 투표</button>
+                <button id="rematch-btn" class="primary-button" type="button" aria-keyshortcuts="R" title="리매치 투표 (R)">리매치 투표</button>
                 <span id="rematch-vote-status" class="rematch-vote-status">0 / 0 동의</span>
               </div>
               <p id="status-message" class="status-message">방에 필요한 인원이 모두 들어오면 자동으로 게임이 시작됩니다.</p>
@@ -508,8 +508,8 @@
             <ul>
                 <li>손패에서 ← → ↑ ↓로 카드 이동, <kbd>Enter</kbd>로 선택.</li>
                 <li>카드 선택 후 ← → ↑ ↓로 보드 커서 이동, <kbd>Enter</kbd>/<kbd>Space</kbd>로 확정.</li>
-                <li><kbd>Esc</kbd>로 선택 취소, <kbd>A</kbd>로 가장 먼저 쓸 수 있는 카드 선택, <kbd>B</kbd>로 첫 수 자동 실행, <kbd>C</kbd>로 초대 링크 복사.</li>
-                <li><kbd>F</kbd>로 전체화면 전환. 화면 낭독기 안내와 모바일 진동 피드백을 지원합니다.</li>
+                <li><kbd>Esc</kbd>로 선택 취소 또는 열린 모달 닫기, <kbd>A</kbd>로 가장 먼저 쓸 수 있는 카드 선택, <kbd>B</kbd>로 첫 수 자동 실행.</li>
+                <li><kbd>C</kbd>로 현재 방 초대 링크 복사, <kbd>F</kbd>로 전체화면 전환, <kbd>R</kbd>로 리매치(동의/시작).</li>
             </ul>
           </section>
           <section class="help-section" id="help-privacy-section">

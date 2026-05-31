@@ -3221,21 +3221,24 @@ function renderStatus() {
     const alreadyVoted = hasVotedForRematch();
     refs.victoryWinner.textContent = `${TEAM_LABELS[clientState.game.winner] || winnerMeta.name} 승리`;
     refs.victoryScore.textContent = `Ruby ${clientState.game.scores.A} : ${clientState.game.scores.B} Cobalt`;
-    if (clientState.rematchMode === "host") {
+  if (clientState.rematchMode === "host") {
       refs.rematchVoteStatus.textContent = isHost() ? "방장 시작 가능" : "방장 시작 대기";
       refs.rematchBtn.disabled = clientState.roomPhase !== "finished" || !isHost();
       refs.rematchBtn.textContent = isHost() ? "리매치 시작" : "방장 대기";
+      refs.rematchBtn.setAttribute("aria-label", isHost() ? "방장만 리매치 시작 (R)" : "방장 대기 (R)");
     } else {
       refs.rematchVoteStatus.textContent = `${voteCount} / ${requiredVotes} 동의`;
       // Toggle UX: a player who already voted can click again to retract, so we keep the
       // button enabled and re-label it. Spectators and pre-finish phase stay disabled.
       refs.rematchBtn.disabled = clientState.roomPhase !== "finished" || clientState.yourRole !== "player";
       refs.rematchBtn.textContent = alreadyVoted ? "동의 취소" : "리매치 동의";
+      refs.rematchBtn.setAttribute("aria-label", `${refs.rematchBtn.textContent} (R)`);
     }
   } else {
     refs.rematchBtn.disabled = true;
     refs.rematchBtn.textContent = "리매치 동의";
     refs.rematchVoteStatus.textContent = "0 / 0 동의";
+    refs.rematchBtn.setAttribute("aria-label", "리매치 동의 (R)");
   }
 
   if (clientState.game.winner) {
@@ -4794,6 +4797,17 @@ function dismissWelcome() {
   if (!refs.welcomeCard) return;
   refs.welcomeCard.hidden = true;
   safeLocalStorage.set(STORAGE_KEYS.welcomed, "true");
+  // Move focus out of the hidden modal path so keyboard users land on the primary
+  // lobby action instead of stopping on the overlay trigger context.
+  const focusTarget = refs.createName || refs.joinName;
+  if (focusTarget) {
+    window.setTimeout(() => {
+      focusTarget.focus();
+      if (typeof focusTarget.setSelectionRange === "function") {
+        focusTarget.setSelectionRange(0, focusTarget.value.length);
+      }
+    }, 0);
+  }
 }
 
 function maybeShowWelcome() {
@@ -5111,6 +5125,15 @@ document.addEventListener("keydown", (event) => {
 
   if (key === "f") {
     toggleFullscreen();
+    return;
+  }
+
+  if (key === "r") {
+    if (!refs.rematchBtn || refs.rematchBtn.disabled || refs.rematchBtn.hidden) {
+      return;
+    }
+    event.preventDefault();
+    refs.rematchBtn.click();
     return;
   }
 
