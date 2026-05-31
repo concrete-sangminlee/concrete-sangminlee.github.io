@@ -1348,6 +1348,11 @@ function connectSocket() {
     }
     if (payload.type === "error") {
       const message = payload.message || "요청을 처리하지 못했습니다.";
+      if (message.includes("관전 입장이 닫혀 있습니다") || message.includes("방이 가득 찼고 관전 입장이 닫혀 있습니다")) {
+        setJoinRolePreference("player");
+        setFlashMessage("관전 입장이 닫혀 있습니다. 플레이어로 전환해 다시 입장해 주세요.");
+        return;
+      }
       setFlashMessage(message);
       if (message.includes("채팅")) {
         setChatFeedback(message, "error");
