@@ -3100,6 +3100,33 @@ body[data-game="playing"] .card-note {
   padding: 0 10px;
 }
 
+.chat-char-count {
+  min-height: 16px;
+  text-align: right;
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.chat-feedback {
+  min-height: 18px;
+  color: var(--ink);
+  font-size: 0.78rem;
+}
+
+.chat-feedback[data-status="hidden"] {
+  opacity: 0;
+}
+
+.chat-feedback[data-status="info"] {
+  opacity: 0.9;
+  color: var(--ruby);
+}
+
+.chat-feedback[data-status="error"] {
+  opacity: 0.95;
+  color: #7b2a2a;
+}
+
 body[data-turn="yours"] .turn-banner {
   border-color: rgba(36, 122, 81, 0.32);
   box-shadow:

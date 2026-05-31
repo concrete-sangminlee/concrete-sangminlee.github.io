@@ -108,6 +108,9 @@ const refs = {
   chatLog: document.getElementById("chat-log"),
   chatForm: document.getElementById("chat-form"),
   chatInput: document.getElementById("chat-input"),
+  chatSendBtn: document.getElementById("chat-send-btn"),
+  chatCharCount: document.getElementById("chat-char-count"),
+  chatFeedback: document.getElementById("chat-feedback"),
   emojiButtons: [...document.querySelectorAll("[data-chat-emoji]")],
   historySummary: document.getElementById("history-summary"),
   historyList: document.getElementById("history-list"),
@@ -205,6 +208,11 @@ const clientState = {
   keyboardHandIndex: 0,
   legalTargets: [],
   keyboardBoardIndex: 0,
+  chatLastSentAt: 0,
+  chatLastMessage: "",
+  chatCooldownUntil: 0,
+  chatCooldownTimer: null,
+  chatFeedbackTimer: null,
   flashMessage: "방을 만들거나 받은 코드로 입장하세요.",
   reconnectAttempted: false,
   autoJoinAttempted: false,
@@ -225,6 +233,10 @@ const clientState = {
 const RECONNECT_BACKOFF_BASE_MS = 1500;
 const RECONNECT_BACKOFF_MAX_MS = 30_000;
 const RECONNECT_BACKOFF_JITTER_MS = 400;
+const CHAT_MAX_LENGTH = 140;
+const CHAT_COOLDOWN_MS = 600;
+const CHAT_REPEAT_COOLDOWN_MS = CHAT_COOLDOWN_MS * 2;
+const CHAT_FEEDBACK_MS = 2800;
 
 const CHIP_PLACE_ANIM_MS = 420;
 const CHIP_REMOVE_ANIM_MS = 440;
@@ -1251,17 +1263,21 @@ function connectSocket() {
       return;
     }
     if (payload.type === "error") {
-      setFlashMessage(payload.message);
+      const message = payload.message || "요청을 처리하지 못했습니다.";
+      setFlashMessage(message);
+      if (message.includes("채팅")) {
+        setChatFeedback(message, "error");
+      }
       playSound("error");
       // A non-existent room code in the URL would otherwise auto-rejoin and fail again on
       // every reload — drop the ?room= param so the user lands on the lobby clean.
-      if (payload.message.includes("존재하지 않는 방")) {
+      if (message.includes("존재하지 않는 방")) {
         clientState.roomCode = "";
         updateUrlRoom();
         render();
         return;
       }
-      if (payload.message.includes("재접속")) {
+      if (message.includes("재접속")) {
         clientState.roomCode = "";
         clientState.roomPhase = "idle";
         clientState.yourRole = "none";
@@ -2520,6 +2536,68 @@ function renderChat() {
   refs.chatLog.scrollTop = refs.chatLog.scrollHeight;
 }
 
+function getChatSendCooldownMs() {
+  return Math.max(0, clientState.chatCooldownUntil - Date.now());
+}
+
+function normalizeChatText(rawText) {
+  return String(rawText || "").slice(0, CHAT_MAX_LENGTH).trim().replace(/\s+/g, " ");
+}
+
+function setChatFeedback(message, status = "info") {
+  if (!refs.chatFeedback) return;
+  const safe = typeof message === "string" ? message : "";
+  const text = safe.trim();
+  if (!text) {
+    refs.chatFeedback.textContent = "";
+    refs.chatFeedback.dataset.status = "hidden";
+    return;
+  }
+  if (clientState.chatFeedbackTimer) {
+    window.clearTimeout(clientState.chatFeedbackTimer);
+    clientState.chatFeedbackTimer = null;
+  }
+  refs.chatFeedback.textContent = text;
+  refs.chatFeedback.dataset.status = status;
+  clientState.chatFeedbackTimer = window.setTimeout(() => {
+    if (!refs.chatFeedback) return;
+    refs.chatFeedback.textContent = "";
+    refs.chatFeedback.dataset.status = "hidden";
+    clientState.chatFeedbackTimer = null;
+  }, CHAT_FEEDBACK_MS);
+}
+
+function updateChatUi() {
+  if (!refs.chatInput || !refs.chatSendBtn || !refs.chatCharCount) return;
+  const text = refs.chatInput.value || "";
+  const length = text.length;
+  const cooldownMs = getChatSendCooldownMs();
+  const hasRoom = Boolean(clientState.roomCode && !clientState.localMode);
+  const hasText = text.trim().length > 0;
+  refs.chatCharCount.textContent = `${length} / ${CHAT_MAX_LENGTH}`;
+  refs.chatSendBtn.disabled = !hasRoom || !hasText || cooldownMs > 0;
+  if (!hasRoom) {
+    setChatFeedback("채팅은 멀티 방에서만 가능합니다.", "info");
+  } else if (hasText) {
+    setChatFeedback("", "hidden");
+  }
+  refs.chatCharCount.setAttribute(
+    "data-status",
+    cooldownMs > 0 ? `cooldown-${Math.max(1, Math.ceil(cooldownMs / 100))}` : "ready"
+  );
+  if (clientState.chatCooldownTimer) {
+    window.clearTimeout(clientState.chatCooldownTimer);
+    clientState.chatCooldownTimer = null;
+  }
+  if (cooldownMs > 0) {
+    const timerId = window.setTimeout(() => {
+      clientState.chatCooldownTimer = null;
+      updateChatUi();
+    }, 100);
+    clientState.chatCooldownTimer = timerId;
+  }
+}
+
 function renderPileActions() {
   const topCard = clientState.game?.discardTopCard;
   refs.discardTopCard.textContent = topCard ? topCard.label : "비어 있음";
@@ -2628,6 +2706,7 @@ function renderStatus() {
   renderHand();
   renderSpectators();
   renderChat();
+  updateChatUi();
   renderPileActions();
 
   const requiredPlayers = displayRequiredPlayerCount();
@@ -4022,20 +4101,56 @@ function serializeState() {
 refs.createForm.addEventListener("submit", handleCreateRoom);
 refs.offlineSoloBtn?.addEventListener("click", startOfflineSolo);
 refs.joinForm.addEventListener("submit", handleJoinRoom);
+
+function sendChatMessage(rawText) {
+  const text = normalizeChatText(rawText);
+  if (!text) return;
+  if (!clientState.roomCode || clientState.localMode) {
+    setChatFeedback("채팅은 멀티 방에서만 사용할 수 있습니다.", "error");
+    render();
+    return;
+  }
+
+  const now = Date.now();
+  const repeatWindow = now - clientState.chatLastSentAt;
+  if (repeatWindow < CHAT_REPEAT_COOLDOWN_MS && text === clientState.chatLastMessage) {
+    setChatFeedback("같은 메시지를 연속으로 보내지 마세요.", "error");
+    render();
+    return;
+  }
+  const remainingCooldown = getChatSendCooldownMs();
+  if (remainingCooldown > 0) {
+    const seconds = Math.max(1, Math.ceil(remainingCooldown / 1000));
+    setChatFeedback(`채팅이 너무 빠릅니다. ${seconds}초 뒤 전송 가능합니다.`, "error");
+    render();
+    return;
+  }
+
+  sendSocket({ type: "send_chat", text });
+  clientState.chatLastSentAt = now;
+  clientState.chatLastMessage = text;
+  clientState.chatCooldownUntil = now + CHAT_COOLDOWN_MS;
+  refs.chatInput.value = "";
+  if (refs.chatCharCount) {
+    refs.chatCharCount.textContent = `0 / ${CHAT_MAX_LENGTH}`;
+  }
+  updateChatUi();
+  setChatFeedback("전송됨", "info");
+  render();
+}
+
 refs.chatForm?.addEventListener("submit", (event) => {
   event.preventDefault();
-  const text = refs.chatInput?.value?.trim();
-  if (!text) return;
-  sendSocket({ type: "send_chat", text });
-  refs.chatInput.value = "";
+  sendChatMessage(refs.chatInput?.value || "");
 });
 for (const button of refs.emojiButtons || []) {
   button.addEventListener("click", () => {
     const text = button.dataset.chatEmoji;
     if (!text) return;
-    sendSocket({ type: "send_chat", text });
+    sendChatMessage(text);
   });
 }
+refs.chatInput?.addEventListener("input", updateChatUi);
 refs.copyRoomBtn.addEventListener("click", () => {
   copyRoomLink().catch(() => {
     setFlashMessage("초대 링크 복사에 실패했습니다.");
