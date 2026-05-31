@@ -46,8 +46,8 @@
   ],
   "shortcuts": [
     {
-      "name": "새 방 만들기",
-      "short_name": "새 방",
+      "name": "게임 열기",
+      "short_name": "게임",
       "description": "오프라인 솔로 게임을 엽니다.",
       "url": "./"
     }
