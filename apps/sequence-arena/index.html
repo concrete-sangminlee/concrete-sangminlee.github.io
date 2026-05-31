@@ -133,6 +133,7 @@
                 <input
                   id="create-name"
                   type="text"
+                  required
                   maxlength="20"
                   placeholder="예: 민수"
                   value="플레이어"
@@ -165,6 +166,7 @@
                 <input
                   id="join-name"
                   type="text"
+                  required
                   maxlength="20"
                   placeholder="예: 지연"
                   value="플레이어"
@@ -181,6 +183,7 @@
                 <input
                   id="join-code"
                   type="text"
+                  minlength="4"
                   maxlength="6"
                   placeholder="ABC123"
                   autocomplete="off"
@@ -190,7 +193,7 @@
                   autocorrect="off"
                   enterkeyhint="go"
                   pattern="[A-Za-z0-9]{4,6}"
-                  aria-describedby="join-code-hint"
+                  aria-describedby="join-code-hint join-code-live-feedback"
                 />
                 <button id="join-code-paste-btn" class="ghost-button join-code-paste-btn" type="button">
                   클립보드 붙여넣기
