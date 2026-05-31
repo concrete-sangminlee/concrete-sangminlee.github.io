@@ -4816,10 +4816,16 @@ refs.themeToggleBtn?.addEventListener("click", toggleTheme);
 // without a cached copy, an upstream string change would silently desync.
 const JOIN_CODE_HINT_DEFAULT = refs.joinCodeHint?.textContent || "4~6자리 영문/숫자";
 const JOIN_CODE_HINT_ERROR = "방 코드는 4~6자 영문/숫자여야 합니다.";
+let lastJoinCodeLiveMessage = "";
 
 function announceJoinCodeHint(message) {
+  const nextMessage = message || "";
+  if (!refs.joinCodeLiveFeedback || nextMessage === lastJoinCodeLiveMessage) {
+    return;
+  }
+  lastJoinCodeLiveMessage = nextMessage;
   if (refs.joinCodeLiveFeedback) {
-    refs.joinCodeLiveFeedback.textContent = message || "";
+    refs.joinCodeLiveFeedback.textContent = nextMessage;
   }
 }
 
