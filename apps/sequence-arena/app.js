@@ -50,6 +50,8 @@ const refs = {
   welcomeDismissBtn: document.getElementById("welcome-dismiss-btn"),
   welcomeCreateBtn: document.getElementById("welcome-create-btn"),
   welcomeHelpBtn: document.getElementById("welcome-help-btn"),
+  welcomeModeBanner: document.getElementById("welcome-mode-banner"),
+  welcomeModeSteps: document.getElementById("welcome-mode-steps"),
   themeToggleBtn: document.getElementById("theme-toggle-btn"),
   offlineBanner: document.getElementById("offline-banner"),
   offlineText: document.getElementById("offline-text"),
@@ -3033,6 +3035,9 @@ function renderStatus() {
       delete refs.joinCode.dataset.staticDisabled;
     }
   }
+  if (typeof updateWelcomeModePanel === "function") {
+    updateWelcomeModePanel();
+  }
   const inviteUrl = clientState.roomCode ? buildInviteUrl(clientState.roomCode, getInviteRole()) : "";
   refs.activeRoomCode.textContent = clientState.roomCode || "미접속";
   if (clientState.localMode) {
@@ -4475,8 +4480,14 @@ function serializeState() {
 }
 
 refs.createForm.addEventListener("submit", handleCreateRoom);
+if (refs.createRoomBtn) {
+  refs.createRoomBtn.setAttribute("aria-describedby", "welcome-mode-banner");
+}
 refs.offlineSoloBtn?.addEventListener("click", startOfflineSolo);
 refs.joinForm.addEventListener("submit", handleJoinRoom);
+if (refs.joinRoomBtn) {
+  refs.joinRoomBtn.setAttribute("aria-describedby", "welcome-mode-banner");
+}
 
 function sendChatMessage(rawText) {
   const text = normalizeChatText(rawText);
@@ -4778,6 +4789,23 @@ function maybeShowWelcome() {
 function updateWelcomeCreateLabel() {
   if (!refs.welcomeCreateBtn) return;
   refs.welcomeCreateBtn.textContent = isOfflineOnlyRuntime() ? "바로 솔로 플레이" : "바로 방 만들기";
+}
+
+function updateWelcomeModePanel() {
+  if (!refs.welcomeModeBanner || !refs.welcomeModeSteps) return;
+  const isStatic = isOfflineOnlyRuntime();
+  refs.welcomeModeBanner.textContent = isStatic
+    ? "정적판: 오프라인 솔로로 시작, 멀티는 WebSocket 서버 필요"
+    : "멀티플레이를 위한 방 만들기/입장 준비";
+  const stepA = isStatic ? "오프라인 솔로" : "방 만들기";
+  const stepB = isStatic ? "서버 주소에서 방 생성" : "코드/링크 공유";
+  refs.welcomeModeSteps.replaceChildren(
+    ...[stepA, stepB, "도움말 확인"].map((text, index) => {
+      const node = document.createElement("li");
+      node.textContent = `${index + 1}단계: ${text}`;
+      return node;
+    })
+  );
 }
 
 refs.welcomeDismissBtn?.addEventListener("click", dismissWelcome);
