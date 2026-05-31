@@ -16,6 +16,7 @@ const STORAGE_KEYS = {
 };
 
 const ROOM_CODE_PATTERN = /^[A-Z0-9]{4,6}$/;
+const MAX_ROOM_CODE_LENGTH = 6;
 
 const canvas = document.getElementById("game-canvas");
 const ctx = canvas.getContext("2d");
@@ -30,6 +31,8 @@ const refs = {
   joinAsSpectator: document.getElementById("join-as-spectator"),
   createName: document.getElementById("create-name"),
   joinName: document.getElementById("join-name"),
+  createNameHint: document.getElementById("create-name-hint"),
+  joinNameHint: document.getElementById("join-name-hint"),
   joinCode: document.getElementById("join-code"),
   joinCodeHint: document.getElementById("join-code-hint"),
   joinCodeLiveFeedback: document.getElementById("join-code-live-feedback"),
@@ -161,6 +164,16 @@ let spectatorClosedRecoveryAttempted = false;
 function sanitizeRoomCodeCandidate(value) {
   const normalized = normalizeRoomCode(value);
   return ROOM_CODE_PATTERN.test(normalized) ? normalized : "";
+}
+
+function normalizeRoomCodeDraft(value = "") {
+  if (typeof value !== "string") {
+    return "";
+  }
+  return value
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, "")
+    .slice(0, MAX_ROOM_CODE_LENGTH);
 }
 
 const normalizedUrlRoomCode = sanitizeRoomCodeCandidate(urlRoomCode);
@@ -401,10 +414,17 @@ function focusInviteJoinForm() {
   return true;
 }
 
+function sanitizePlayerName(value) {
+  return String(value || "")
+    .normalize("NFKC")
+    .trim()
+    .replace(/\s+/g, " ")
+    .slice(0, 20);
+}
+
 function normalizePlayerName(value) {
-  const fallback = "플레이어";
-  const normalized = String(value || fallback).normalize("NFKC").trim().slice(0, 20).replace(/\s+/g, " ");
-  return normalized || fallback;
+  const normalized = sanitizePlayerName(value);
+  return normalized || "플레이어";
 }
 
 function normalizeTeamSize(value) {
@@ -1749,11 +1769,27 @@ function handleCreateRoom(event) {
     render();
     return;
   }
-  const name = normalizePlayerName(refs.createName.value);
+  const name = sanitizePlayerName(refs.createName?.value || "");
   if (!name) {
-    setFlashMessage("방을 만들려면 이름이 필요합니다.");
+    if (refs.createNameHint) {
+      refs.createNameHint.textContent = CREATE_NAME_HINT_ERROR;
+    }
+    refs.createName?.setAttribute("aria-invalid", "true");
+    if (refs.createName && typeof refs.createName.focus === "function") {
+      refs.createName.focus();
+      if (typeof refs.createName.setSelectionRange === "function") {
+        refs.createName.setSelectionRange(0, refs.createName.value.length);
+      }
+    }
+    setFlashMessage("방을 만들려면 이름을 입력하세요.");
     render();
     return;
+  }
+  if (refs.createName) {
+    refs.createName.removeAttribute("aria-invalid");
+  }
+  if (refs.createNameHint) {
+    refs.createNameHint.textContent = CREATE_NAME_HINT_DEFAULT;
   }
   if (refs.createRoomBtn) {
     refs.createRoomBtn.disabled = true;
@@ -1803,16 +1839,27 @@ function handleJoinRoom(event) {
     render();
     return;
   }
-  const name = normalizePlayerName(refs.joinName.value);
+  const name = sanitizePlayerName(refs.joinName.value);
   const roomCode = normalizeRoomCode(refs.joinCode.value);
 
-  if (!name || !roomCode) {
+  const isNameValid = hasValidJoinName();
+  const isCodeValid = hasValidJoinCode();
+
+  if (!isNameValid || !isCodeValid) {
     if (!name && refs.joinName) {
+      refs.joinName.setAttribute("aria-invalid", "true");
+      if (refs.joinNameHint) {
+        refs.joinNameHint.textContent = JOIN_NAME_HINT_ERROR;
+      }
       refs.joinName.focus();
       if (typeof refs.joinName.setSelectionRange === "function") {
         refs.joinName.setSelectionRange(0, refs.joinName.value.length);
       }
     } else if (!roomCode && refs.joinCode) {
+      refs.joinCode.setAttribute("aria-invalid", "true");
+      if (refs.joinCodeHint) {
+        refs.joinCodeHint.textContent = JOIN_CODE_HINT_ERROR;
+      }
       refs.joinCode.focus();
       if (typeof refs.joinCode.setSelectionRange === "function") {
         refs.joinCode.setSelectionRange(0, refs.joinCode.value.length);
@@ -1836,6 +1883,12 @@ function handleJoinRoom(event) {
     setFlashMessage("방 코드는 4~6자 영문/숫자여야 합니다.");
     render();
     return;
+  }
+  if (refs.joinName) {
+    refs.joinName.removeAttribute("aria-invalid");
+  }
+  if (refs.joinNameHint) {
+    refs.joinNameHint.textContent = JOIN_NAME_HINT_DEFAULT;
   }
 
   if (refs.joinRoomBtn) {
@@ -3127,6 +3180,7 @@ function renderStatus() {
     refs.createRoomBtn.textContent = offlineOnlyRuntime ? "멀티 서버 필요" : "방 만들기";
     refs.createRoomBtn.title = offlineOnlyRuntime ? "현재 공개 URL은 오프라인 솔로 전용입니다." : "새 멀티플레이 방 만들기";
   }
+  refreshCreateFormState();
   if (refs.joinRoomBtn) {
     if (offlineOnlyRuntime) {
       refs.joinRoomBtn.disabled = true;
@@ -4816,6 +4870,10 @@ refs.themeToggleBtn?.addEventListener("click", toggleTheme);
 // without a cached copy, an upstream string change would silently desync.
 const JOIN_CODE_HINT_DEFAULT = refs.joinCodeHint?.textContent || "4~6자리 영문/숫자";
 const JOIN_CODE_HINT_ERROR = "방 코드는 4~6자 영문/숫자여야 합니다.";
+const CREATE_NAME_HINT_DEFAULT = "이름은 1~20자 이내여야 합니다.";
+const CREATE_NAME_HINT_ERROR = "이름을 1~20자로 입력하세요.";
+const JOIN_NAME_HINT_DEFAULT = "이름을 입력하세요.";
+const JOIN_NAME_HINT_ERROR = "이름을 1~20자로 입력하세요.";
 let lastJoinCodeLiveMessage = "";
 
 function announceJoinCodeHint(message) {
@@ -4831,7 +4889,7 @@ function announceJoinCodeHint(message) {
 
 function updateJoinCodeValidity() {
   if (!refs.joinCode) return;
-  const value = normalizeRoomCode(refs.joinCode.value);
+  const value = normalizeRoomCodeDraft(refs.joinCode.value);
   const hint = refs.joinCodeHint;
   // Empty stays neutral — pre-typing aria-invalid would set off SR alerts before the user
   // has had a chance to do anything, which is hostile UX. Only flip to invalid once the
@@ -4854,13 +4912,36 @@ function updateJoinCodeValidity() {
 }
 
 function hasValidJoinName() {
-  return String(refs.joinName?.value || "").trim().length > 0;
+  return sanitizePlayerName(refs.joinName?.value || "").length > 0;
+}
+
+function hasValidCreateName() {
+  return sanitizePlayerName(refs.createName?.value || "").length > 0;
 }
 
 function hasValidJoinCode() {
   if (!refs.joinCode) return false;
-  const code = normalizeRoomCode(refs.joinCode.value);
+  const code = normalizeRoomCodeDraft(refs.joinCode.value);
   return code.length >= 4 && code.length <= 6;
+}
+
+function refreshCreateFormState() {
+  if (!refs.createRoomBtn) return;
+  if (refs.createRoomBtn.dataset.staticDisabled === "true") {
+    refs.createRoomBtn.disabled = true;
+    return;
+  }
+  const canCreate = !isOfflineOnlyRuntime() && clientState.socketReady && hasValidCreateName();
+  refs.createRoomBtn.disabled = !canCreate;
+  if (!canCreate && !isOfflineOnlyRuntime() && clientState.socketReady) {
+    refs.createRoomBtn.title = hasValidCreateName()
+      ? "이름을 입력하면 방을 만들 수 있습니다."
+      : CREATE_NAME_HINT_ERROR;
+    return;
+  }
+  if (!clientState.socketReady) {
+    refs.createRoomBtn.title = "서버 연결이 끊겼습니다. 다시 연결 후 시도해 주세요.";
+  }
 }
 
 function refreshJoinFormState() {
@@ -4879,7 +4960,44 @@ function refreshJoinFormState() {
     refs.joinRoomBtn.title = hasValidJoinCode()
       ? "이름을 입력하면 방에 입장할 수 있습니다."
       : "방 코드는 4~6자 영문/숫자로 입력해야 합니다.";
+    return;
   }
+  if (!clientState.socketReady) {
+    refs.joinRoomBtn.title = "서버 연결이 끊겼습니다. 다시 연결 후 시도해 주세요.";
+  }
+}
+
+function handleCreateNameInput() {
+  if (!refs.createName || !refs.createNameHint) {
+    refreshCreateFormState();
+    return;
+  }
+  const isValid = hasValidCreateName();
+  if (isValid) {
+    refs.createName.removeAttribute("aria-invalid");
+    refs.createNameHint.textContent = CREATE_NAME_HINT_DEFAULT;
+    return;
+  }
+  refs.createName.setAttribute("aria-invalid", "true");
+  refs.createNameHint.textContent = CREATE_NAME_HINT_ERROR;
+  refreshCreateFormState();
+}
+
+function handleJoinNameInput() {
+  if (!refs.joinName || !refs.joinNameHint) {
+    refreshJoinFormState();
+    return;
+  }
+  const isValid = hasValidJoinName();
+  if (isValid) {
+    refs.joinName.removeAttribute("aria-invalid");
+    refs.joinNameHint.textContent = JOIN_NAME_HINT_DEFAULT;
+    refreshJoinFormState();
+    return;
+  }
+  refs.joinName.setAttribute("aria-invalid", "true");
+  refs.joinNameHint.textContent = JOIN_NAME_HINT_ERROR;
+  refreshJoinFormState();
 }
 
 function handleJoinCodeInput() {
@@ -5011,7 +5129,7 @@ function shouldShowWelcome() {
 }
 
 function normalizeJoinCodeInput(value = "") {
-  return normalizeRoomCode(value).slice(0, 6);
+  return normalizeRoomCodeDraft(value);
 }
 
 async function handleJoinCodePaste() {
@@ -5114,8 +5232,11 @@ refs.welcomeHelpBtn?.addEventListener("click", () => {
   openHelpModal();
 });
 refs.joinName?.addEventListener("input", () => {
-  refreshJoinFormState();
+  handleJoinNameInput();
 });
+refs.joinName?.addEventListener("blur", handleJoinNameInput);
+refs.createName?.addEventListener("input", handleCreateNameInput);
+refs.createName?.addEventListener("blur", handleCreateNameInput);
 refs.joinCode?.addEventListener("input", handleJoinCodeInput);
 refs.joinCode?.addEventListener("blur", handleJoinCodeInput);
 refs.joinCodePasteBtn?.addEventListener("click", () => {
@@ -5125,6 +5246,8 @@ refs.joinAsSpectator?.addEventListener("change", (event) => {
   setJoinRolePreference(event.currentTarget?.checked ? "spectator" : "player");
 });
 
+handleCreateNameInput();
+handleJoinNameInput();
 handleJoinCodeInput();
 
 maybeShowWelcome();
