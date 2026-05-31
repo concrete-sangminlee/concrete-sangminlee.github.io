@@ -1173,6 +1173,42 @@ input {
   content: "♟";
 }
 
+body[data-static-host="true"] #offline-solo-btn {
+  color: #fff8e9;
+  border-color: rgba(15, 48, 36, 0.28);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.14), transparent 44%),
+    linear-gradient(135deg, #14392f 0%, #28674b 100%);
+  box-shadow: 0 12px 22px rgba(15, 48, 36, 0.22);
+}
+
+body[data-static-host="true"] .create-match-setting,
+body[data-static-host="true"] #join-form {
+  opacity: 0.56;
+}
+
+body[data-static-host="true"] #create-room-btn,
+body[data-static-host="true"] #join-room-btn {
+  cursor: not-allowed;
+  color: #6d604f;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.62), rgba(34, 31, 22, 0.04)),
+    rgba(23, 33, 29, 0.08);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72);
+}
+
+body[data-static-host="true"][data-has-room="false"] .share-grid {
+  grid-template-columns: 1fr;
+}
+
+body[data-static-host="true"][data-has-room="false"] .invite-card,
+body[data-static-host="true"][data-has-room="false"] .host-settings-card,
+body[data-static-host="true"][data-has-room="false"] .share-actions-card,
+body[data-static-host="true"][data-has-room="false"] .room-panel,
+body[data-static-host="true"][data-has-room="false"] .game-layout {
+  display: none;
+}
+
 #copy-code-btn::before,
 #copy-room-btn::before,
 #copy-spectator-link-btn::before {

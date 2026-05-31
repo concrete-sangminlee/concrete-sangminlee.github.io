@@ -22,6 +22,7 @@ const refs = {
   createRoomBtn: document.getElementById("create-room-btn"),
   offlineSoloBtn: document.getElementById("offline-solo-btn"),
   joinRoomBtn: document.getElementById("join-room-btn"),
+  gatewaySubtitle: document.getElementById("gateway-subtitle"),
   createName: document.getElementById("create-name"),
   joinName: document.getElementById("join-name"),
   joinCode: document.getElementById("join-code"),
@@ -968,6 +969,10 @@ function isStaticPagesHost() {
   return window.location.hostname.endsWith(".github.io") || window.location.pathname.startsWith("/sequence-arena/");
 }
 
+function isOfflineOnlyRuntime() {
+  return !window.location.host || window.location.protocol === "file:" || isStaticPagesHost();
+}
+
 function shouldReconnectSavedRoom() {
   const savedRoomCode = normalizeRoomCode(safeLocalStorage.get(STORAGE_KEYS.room) || "");
   return Boolean(savedRoomCode && savedRoomCode === clientState.roomCode && clientState.sessionId);
@@ -1166,7 +1171,7 @@ function connectSocket() {
   if (clientState.localMode) {
     return;
   }
-  if (!window.location.host || window.location.protocol === "file:" || isStaticPagesHost()) {
+  if (isOfflineOnlyRuntime()) {
     refs.connectionIndicator.textContent = "서버 없음 · 오프라인 솔로 가능";
     setFlashMessage("서버가 없는 정적 실행 환경입니다. 오프라인 솔로로 바로 플레이할 수 있습니다.");
     render();
@@ -1302,6 +1307,9 @@ function connectSocket() {
 
 function startOfflineSolo() {
   const name = (refs.createName?.value || clientState.lastName || "플레이어").trim() || "플레이어";
+  if (typeof dismissWelcome === "function") {
+    dismissWelcome();
+  }
   clientState.lastName = name;
   clientState.localMode = true;
   clientState.socketReady = false;
@@ -1328,6 +1336,7 @@ function startOfflineSolo() {
     sessionId: clientState.sessionId,
     difficulty: clientState.botDifficulty,
   });
+  setFlashMessage("오프라인 솔로를 시작했습니다.");
   playSound("tap");
 }
 
@@ -1364,6 +1373,11 @@ function forceReconnectNow() {
 function handleCreateRoom(event) {
   event.preventDefault();
   if (refs.createRoomBtn?.disabled) return;
+  if (isOfflineOnlyRuntime()) {
+    setFlashMessage("현재 공개 URL은 오프라인 솔로로 바로 플레이할 수 있습니다.");
+    render();
+    return;
+  }
   // Refuse the click outright when the WS is not ready, so the user gets a clear hint
   // instead of clicking an apparently-active button that produces no result.
   if (!clientState.socketReady) {
@@ -1414,6 +1428,11 @@ function handleCreateRoom(event) {
 function handleJoinRoom(event) {
   event.preventDefault();
   if (refs.joinRoomBtn?.disabled) return;
+  if (isOfflineOnlyRuntime()) {
+    setFlashMessage("멀티플레이 방 입장은 WebSocket 서버가 켜진 주소에서 사용할 수 있습니다.");
+    render();
+    return;
+  }
   if (!clientState.socketReady) {
     setFlashMessage("서버 연결이 끊겼습니다. 잠시 후 자동으로 재연결됩니다.");
     render();
@@ -2501,9 +2520,11 @@ function renderPileActions() {
 }
 
 function renderStatus() {
+  const offlineOnlyRuntime = isOfflineOnlyRuntime();
   document.body.dataset.phase = clientState.roomPhase;
   document.body.dataset.game = clientState.game?.phase || "none";
   document.body.dataset.hasRoom = clientState.roomCode ? "true" : "false";
+  document.body.dataset.staticHost = offlineOnlyRuntime ? "true" : "false";
   document.body.dataset.turn = isYourTurn() ? "yours" : "waiting";
   document.body.dataset.team = yourPlayer()?.team || "";
   document.body.dataset.role = clientState.yourRole || "none";
@@ -2516,10 +2537,48 @@ function renderStatus() {
   document.body.dataset.pendingStep = clientState.pendingStep?.type || "none";
   refs.connectionIndicator.textContent = clientState.localMode
     ? "오프라인 솔로"
-    : clientState.socketReady
-      ? "실시간 연결됨"
-      : "재연결 중";
+    : offlineOnlyRuntime
+      ? "GitHub Pages 정적판"
+      : clientState.socketReady
+        ? "실시간 연결됨"
+        : "재연결 중";
   refs.currentOrigin.textContent = window.location.origin;
+  if (refs.gatewaySubtitle) {
+    refs.gatewaySubtitle.textContent = offlineOnlyRuntime
+      ? "바로 솔로 플레이를 시작할 수 있습니다. 멀티 방은 WebSocket 서버가 켜진 주소에서 사용합니다."
+      : "방을 만들거나 받은 코드로 입장하세요. 같은 브라우저에서는 좌석이 복구됩니다.";
+  }
+  if (refs.createRoomBtn) {
+    if (offlineOnlyRuntime) {
+      refs.createRoomBtn.disabled = true;
+      refs.createRoomBtn.dataset.staticDisabled = "true";
+    } else if (refs.createRoomBtn.dataset.staticDisabled === "true") {
+      refs.createRoomBtn.disabled = false;
+      delete refs.createRoomBtn.dataset.staticDisabled;
+    }
+    refs.createRoomBtn.textContent = offlineOnlyRuntime ? "멀티 서버 필요" : "방 만들기";
+    refs.createRoomBtn.title = offlineOnlyRuntime ? "현재 공개 URL은 오프라인 솔로 전용입니다." : "새 멀티플레이 방 만들기";
+  }
+  if (refs.joinRoomBtn) {
+    if (offlineOnlyRuntime) {
+      refs.joinRoomBtn.disabled = true;
+      refs.joinRoomBtn.dataset.staticDisabled = "true";
+    } else if (refs.joinRoomBtn.dataset.staticDisabled === "true") {
+      refs.joinRoomBtn.disabled = false;
+      delete refs.joinRoomBtn.dataset.staticDisabled;
+    }
+    refs.joinRoomBtn.textContent = offlineOnlyRuntime ? "멀티 서버 필요" : "방 입장";
+    refs.joinRoomBtn.title = offlineOnlyRuntime ? "WebSocket 서버가 켜진 주소에서 사용할 수 있습니다." : "방 코드로 입장";
+  }
+  if (refs.joinCode) {
+    if (offlineOnlyRuntime) {
+      refs.joinCode.disabled = true;
+      refs.joinCode.dataset.staticDisabled = "true";
+    } else if (refs.joinCode.dataset.staticDisabled === "true") {
+      refs.joinCode.disabled = false;
+      delete refs.joinCode.dataset.staticDisabled;
+    }
+  }
   refs.activeRoomCode.textContent = clientState.roomCode || "미접속";
   refs.roomLinkPreview.textContent = clientState.localMode
     ? "오프라인 솔로는 이 브라우저에서만 진행됩니다."
@@ -4181,10 +4240,7 @@ function maybeShowWelcome() {
 
 refs.welcomeDismissBtn?.addEventListener("click", dismissWelcome);
 refs.welcomeCreateBtn?.addEventListener("click", () => {
-  dismissWelcome();
-  refs.createName?.focus();
-  refs.createName?.select();
-  refs.createForm?.scrollIntoView({ behavior: "smooth", block: "center" });
+  startOfflineSolo();
 });
 refs.welcomeHelpBtn?.addEventListener("click", () => {
   dismissWelcome();
