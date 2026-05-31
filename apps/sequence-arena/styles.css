@@ -1519,6 +1519,23 @@ body[data-static-host="true"][data-has-room="false"] .game-layout {
   cursor: not-allowed;
 }
 
+.room-link-hint {
+  display: inline-block;
+  margin-top: 4px;
+  color: var(--muted-strong);
+  font-size: 0.76rem;
+}
+
+.room-link-hint kbd {
+  margin: 0 2px;
+  padding: 1px 5px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: color-mix(in oklab, var(--panel) 86%, var(--surface-raised) 14%);
+  color: var(--ink);
+  font-weight: 700;
+}
+
 .invite-progress-card {
   display: grid;
   gap: 8px;

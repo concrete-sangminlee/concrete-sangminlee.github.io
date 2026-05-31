@@ -71,6 +71,7 @@ const refs = {
   inviteProgressHint: document.getElementById("invite-progress-hint"),
   connectionIndicator: document.getElementById("connection-indicator"),
   activeRoomCode: document.getElementById("active-room-code"),
+  roomLinkHint: document.getElementById("room-link-hint"),
   flashMessage: document.getElementById("flash-message"),
   seatGrid: document.getElementById("seat-grid"),
   roomSubtitle: document.getElementById("room-subtitle"),
@@ -2794,6 +2795,9 @@ function renderStatus() {
   refs.roomLinkPreview.setAttribute("aria-label", canShareRoom ? "초대 링크 복사" : "방을 만든 뒤 링크를 복사하세요");
   refs.roomLinkPreview.title = canShareRoom ? "클릭하면 초대 링크를 복사합니다" : "방을 만든 뒤 링크를 복사할 수 있습니다.";
   refs.roomLinkPreview.setAttribute("aria-describedby", canShareRoom ? "room-link-preview-desc" : "");
+  if (refs.roomLinkHint) {
+    refs.roomLinkHint.hidden = !canShareRoom;
+  }
   refs.openRoomLink.href = canShareRoom ? buildInviteUrl() : window.location.origin;
   refs.openRoomLink.setAttribute("aria-disabled", canShareRoom ? "false" : "true");
   refs.copyCodeBtn.disabled = !canShareRoom;
