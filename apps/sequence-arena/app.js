@@ -2937,6 +2937,7 @@ function renderChat() {
   refs.chatLog.replaceChildren();
   if (!clientState.chatMessages.length) {
     const hasGateway = Boolean(refs.createName || refs.joinName);
+    const chatOfflineContext = isOfflineOnlyRuntime() || clientState.localMode;
     const chatAction = clientState.roomCode && !clientState.localMode
       ? {
           label: "첫 메시지 쓰기",
@@ -2948,13 +2949,13 @@ function renderChat() {
           },
         }
       : {
-          label: isOfflineOnlyRuntime() ? "채팅은 멀티에서만 가능" : "방 입장하기",
-          disabled: isOfflineOnlyRuntime() || !hasGateway,
-          title: isOfflineOnlyRuntime()
-            ? "오프라인 솔로에서는 채팅이 비활성입니다."
+          label: chatOfflineContext ? "채팅은 멀티에서만 가능" : "방 입장하기",
+          disabled: chatOfflineContext || !hasGateway,
+          title: chatOfflineContext
+            ? "솔로 진행 중에는 채팅이 비활성입니다."
             : "방에 입장하면 채팅이 활성화됩니다.",
           onAction: () => {
-            if (isOfflineOnlyRuntime() || !hasGateway) {
+            if (chatOfflineContext || !hasGateway) {
               return;
             }
             focusGatewayPrimaryInput();
