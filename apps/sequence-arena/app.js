@@ -2769,7 +2769,8 @@ function renderHistory() {
   refs.historySummary.replaceChildren();
 
   if (clientState.matchHistory.length === 0) {
-    const historyAction = isOfflineOnlyRuntime()
+    const soloHintContext = isOfflineOnlyRuntime() || clientState.localMode;
+    const historyAction = soloHintContext
       ? {
           label: "바로 솔로 시작",
           title: "오프라인에서 바로 솔로 게임을 시작합니다.",
@@ -3273,7 +3274,8 @@ function renderStatus() {
     refs.cancelSelectionBtn.disabled = true;
     refs.discardDeadBtn.disabled = true;
     refs.logList.replaceChildren();
-    const pregameAction = isOfflineOnlyRuntime()
+    const soloHintContext = isOfflineOnlyRuntime() || clientState.localMode;
+    const pregameAction = soloHintContext
       ? {
           label: "솔로 테스트 시작",
           title: "오프라인에서 바로 솔로 게임을 시작해 플레이를 시작하세요.",
@@ -3432,7 +3434,8 @@ function renderStatus() {
 
   refs.logList.replaceChildren();
   if (clientState.game.logs.length === 0) {
-    const logAction = isOfflineOnlyRuntime()
+    const soloHintContext = isOfflineOnlyRuntime() || clientState.localMode;
+    const logAction = soloHintContext
       ? {
           label: "솔로 테스트 시작",
           title: "오프라인 솔로 시작 버튼으로 즉시 플레이를 시작해보세요.",
