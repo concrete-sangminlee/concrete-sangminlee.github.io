@@ -450,7 +450,14 @@
                 <button class="emoji-btn" type="button" data-chat-emoji="😭">😭</button>
               </div>
               <form id="chat-form" class="chat-form">
-                <input id="chat-input" type="text" maxlength="140" placeholder="메시지 입력" autocomplete="off" />
+                <input
+                  id="chat-input"
+                  type="text"
+                  maxlength="140"
+                  placeholder="메시지 입력"
+                  aria-label="메시지 입력"
+                  autocomplete="off"
+                />
                 <button id="chat-send-btn" class="primary-button" type="submit">전송</button>
               </form>
               <small id="chat-char-count" class="chat-char-count" aria-live="polite" aria-atomic="true">0 / 140</small>
