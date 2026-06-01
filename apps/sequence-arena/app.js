@@ -1906,6 +1906,7 @@ function connectSocket() {
       const message = payload.message || "요청을 처리하지 못했습니다.";
       if (message.includes("관전 입장이 닫혀 있습니다") || message.includes("방이 가득 찼고 관전 입장이 닫혀 있습니다")) {
         setJoinRolePreference("player");
+        applyJoinServerErrorHint(message);
         const recoveredRoomCode = normalizeRoomCode(
           refs.joinCode?.value || clientState.roomCode || urlRoomCode || ""
         );
@@ -1951,6 +1952,7 @@ function connectSocket() {
         return;
       }
       setFlashMessage(message);
+      applyJoinServerErrorHint(message);
       if (message.includes("채팅")) {
         setChatFeedback(message, "error");
       }
@@ -2258,6 +2260,7 @@ function handleJoinRoom(event) {
   }
   const name = sanitizePlayerName(refs.joinName.value);
   const roomCode = normalizeRoomCode(refs.joinCode.value);
+  clearJoinServerErrorHint();
 
   const isNameValid = hasValidJoinName();
   const isCodeValid = hasValidJoinCode();
@@ -5474,6 +5477,12 @@ refs.themeToggleBtn?.addEventListener("click", toggleTheme);
 const JOIN_CODE_HINT_DEFAULT = refs.joinCodeHint?.textContent || "4~6자리 영문/숫자";
 const JOIN_CODE_HINT_ERROR = "방 코드는 4~6자 영문/숫자여야 합니다.";
 const JOIN_CODE_HINT_INVALID_CHARS = "영문/숫자만 입력하세요. (하이픈, 공백은 제거됩니다)";
+const JOIN_CODE_HINT_SERVER_NOT_FOUND =
+  "방 코드를 찾지 못했어요. 초대 링크나 표시된 방 코드를 다시 확인해 주세요.";
+const JOIN_CODE_HINT_SERVER_SPECTATOR_CLOSED =
+  "현재 관전 입장이 닫혔습니다. 플레이어로 전환해 다시 입장해 주세요.";
+const JOIN_CODE_HINT_SERVER_RECONNECT_MISSING =
+  "재접속 가능한 저장된 좌석이 없습니다. 방을 새로 연결해서 다시 입장해 주세요.";
 const CREATE_NAME_HINT_DEFAULT = "이름은 1~20자 이내여야 합니다.";
 const CREATE_NAME_HINT_ERROR = "이름을 1~20자로 입력하세요.";
 const JOIN_NAME_HINT_DEFAULT = "이름을 입력하세요.";
@@ -5488,6 +5497,56 @@ function announceJoinCodeHint(message) {
   lastJoinCodeLiveMessage = nextMessage;
   if (refs.joinCodeLiveFeedback) {
     refs.joinCodeLiveFeedback.textContent = nextMessage;
+  }
+}
+
+function clearJoinServerErrorHint() {
+  if (!refs.joinCode) return;
+  refs.joinCode.removeAttribute("aria-invalid");
+  if (refs.joinCodeHint) {
+    refs.joinCodeHint.textContent = JOIN_CODE_HINT_DEFAULT;
+  }
+  lastJoinCodeLiveMessage = "";
+}
+
+function applyJoinServerErrorHint(message = "") {
+  if (!refs.joinCode) return;
+  const text = String(message || "");
+  if (text.includes("존재하지 않는 방 코드입니다.") || text.includes("존재하지 않는 방")) {
+    refs.joinCode.setAttribute("aria-invalid", "true");
+    if (refs.joinCodeHint) {
+      refs.joinCodeHint.textContent = JOIN_CODE_HINT_SERVER_NOT_FOUND;
+      announceJoinCodeHint(JOIN_CODE_HINT_SERVER_NOT_FOUND);
+    }
+    return;
+  }
+
+  if (
+    text.includes("이 방은 현재 관전 입장이 닫혀 있습니다.") ||
+    text.includes("방이 가득 찼고 관전 입장이 닫혀 있습니다.") ||
+    text.includes("관전 입장이 닫혀 있습니다")
+  ) {
+    refs.joinCode.setAttribute("aria-invalid", "true");
+    if (refs.joinCodeHint) {
+      refs.joinCodeHint.textContent = JOIN_CODE_HINT_SERVER_SPECTATOR_CLOSED;
+      announceJoinCodeHint(JOIN_CODE_HINT_SERVER_SPECTATOR_CLOSED);
+    }
+    return;
+  }
+
+  if (
+    text.includes("재접속할 저장된 좌석이나 관전 권한이 없습니다.") ||
+    text.includes("재접속할 저장된 좌석이 없습니다.") ||
+    text.includes("재접속할 방을 찾지 못했습니다.") ||
+    text.includes("재접속 정보가 올바르지 않습니다")
+  ) {
+    if (refs.joinCode) {
+      refs.joinCode.setAttribute("aria-invalid", "true");
+    }
+    if (refs.joinCodeHint) {
+      refs.joinCodeHint.textContent = JOIN_CODE_HINT_SERVER_RECONNECT_MISSING;
+      announceJoinCodeHint(JOIN_CODE_HINT_SERVER_RECONNECT_MISSING);
+    }
   }
 }
 
@@ -6341,6 +6400,12 @@ window.advanceTime = () => {
 window.sequenceTest = {
   send(payload) {
     sendSocket(payload);
+  },
+  applyJoinServerErrorHint(message) {
+    applyJoinServerErrorHint(message);
+  },
+  clearJoinServerErrorHint() {
+    clearJoinServerErrorHint();
   },
   // Test-only: lets ui-regression simulate a server protocol bump without spinning up a
   // separate server build. Only sets UI state (banner + flash); a malicious caller could
