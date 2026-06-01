@@ -1463,7 +1463,7 @@ function applyRoomSnapshot(payload) {
   clientState.rematchMode = payload.rematchMode || "all";
   clientState.rematchVoteSeatIndexes = payload.rematchVoteSeatIndexes || [];
   clientState.rematchRequiredVotes = payload.rematchRequiredVotes || 0;
-  clientState.matchHistory = payload.matchHistory || [];
+  clientState.matchHistory = normalizeMatchHistory(payload.matchHistory);
   clientState.chatMessages = payload.chatMessages || [];
   clientState.hostSessionId = payload.hostSessionId || null;
   clientState.game = payload.game;
@@ -3009,6 +3009,42 @@ function formatMatchDuration(ms) {
   const minutes = Math.floor(totalSeconds / 60);
   const seconds = totalSeconds % 60;
   return seconds > 0 ? `${minutes}분 ${seconds}초` : `${minutes}분`;
+}
+
+function normalizeMatchHistory(rawHistory) {
+  if (!Array.isArray(rawHistory)) {
+    return [];
+  }
+  return rawHistory
+    .map((entry, index) => {
+      if (!entry || typeof entry !== "object") {
+        return null;
+      }
+      const winner = entry.winner === "A" || entry.winner === "B" ? entry.winner : null;
+      if (!winner) {
+        return null;
+      }
+      const scoreA = Number(entry.scores?.A);
+      const scoreB = Number(entry.scores?.B);
+      const winnerName = typeof entry.winnerName === "string" ? entry.winnerName.trim() : "";
+      const rawMode = typeof entry.mode === "string" ? entry.mode.trim() : "";
+      const finishedAt = typeof entry.finishedAt === "string" ? entry.finishedAt : "";
+      const durationMs = Number(entry.durationMs);
+      const matchNumber = Number(entry.matchNumber);
+      return {
+        winner,
+        winnerName,
+        matchNumber: Number.isFinite(matchNumber) ? matchNumber : index + 1,
+        scores: {
+          A: Number.isFinite(scoreA) ? Math.max(0, Math.round(scoreA)) : 0,
+          B: Number.isFinite(scoreB) ? Math.max(0, Math.round(scoreB)) : 0,
+        },
+        mode: rawMode || "multiplayer",
+        finishedAt,
+        durationMs: Number.isFinite(durationMs) && durationMs > 0 ? Math.max(0, Math.round(durationMs)) : 0,
+      };
+    })
+    .filter(Boolean);
 }
 
 function getHistoryStreak(history) {
