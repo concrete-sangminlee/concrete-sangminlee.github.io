@@ -507,6 +507,212 @@ function normalizeBotDifficulty(value) {
   return value === "easy" || value === "aggressive" ? value : "smart";
 }
 
+function asSafeArray(value) {
+  return Array.isArray(value) ? value : [];
+}
+
+function asObject(value) {
+  return value && typeof value === "object" && !Array.isArray(value) ? value : null;
+}
+
+function clampInt(value, fallback, min = Number.NEGATIVE_INFINITY, max = Number.POSITIVE_INFINITY) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) {
+    return fallback;
+  }
+  const integer = Math.trunc(numeric);
+  if (integer < min || integer > max) {
+    return fallback;
+  }
+  return integer;
+}
+
+function trimText(value, maxLength = 40) {
+  if (typeof value !== "string") {
+    return "";
+  }
+  const normalized = value.trim();
+  return normalized.length > maxLength ? `${normalized.slice(0, maxLength)}` : normalized;
+}
+
+function normalizeRematchMode(value) {
+  return value === "host" ? "host" : "all";
+}
+
+function normalizeSeat(raw, fallbackSeatIndex = 0) {
+  const source = asObject(raw) || {};
+  const seatIndex = clampInt(source.seatIndex, fallbackSeatIndex, 0, 9999);
+  const team = source.team === "B" ? "B" : seatIndex % 2 === 0 ? "A" : "B";
+  return {
+    seatIndex,
+    team,
+    teamName: trimText(source.teamName || TEAM_LABELS[team], 12),
+    name: trimText(source.name || "", 20) || "",
+    occupied: Boolean(source.occupied),
+    connected: Boolean(source.connected),
+    isBot: Boolean(source.isBot),
+    handCount: Math.max(0, clampInt(source.handCount, 0, 0, 10_000)),
+  };
+}
+
+function normalizeSeats(rawSeats, fallbackCount = 0) {
+  const seats = asSafeArray(rawSeats);
+  if (seats.length === 0) {
+    return [];
+  }
+  return seats.slice(0, Math.max(fallbackCount, seats.length)).map((seat, index) => normalizeSeat(seat, index));
+}
+
+function normalizeSpectators(rawSpectators) {
+  const spectators = asSafeArray(rawSpectators);
+  return spectators.map((entry, index) => {
+    const source = asObject(entry) || {};
+    return {
+      connected: source.connected !== false,
+      name: trimText(source.name || `관전자${index + 1}`, 20) || `관전자${index + 1}`,
+      joinedAt: typeof source.joinedAt === "string" ? source.joinedAt : "",
+    };
+  });
+}
+
+function normalizeChatMessages(rawMessages) {
+  const messages = asSafeArray(rawMessages);
+  return messages
+    .map((entry, index) => {
+      if (typeof entry === "string") {
+        return { author: `관전자${index + 1}`, text: entry.slice(0, CHAT_MAX_LENGTH) };
+      }
+      if (!asObject(entry)) {
+        return null;
+      }
+      return {
+        author: trimText(entry.author || `관전자${index + 1}`, 20) || "관전자",
+        text: trimText(entry.text || "", CHAT_MAX_LENGTH),
+      };
+    })
+    .filter(Boolean);
+}
+
+function normalizeCard(rawCard) {
+  if (!asObject(rawCard)) {
+    return null;
+  }
+  const rawId = rawCard.id;
+  const numericId = Number(rawId);
+  return {
+    id: Number.isFinite(numericId) ? Math.trunc(numericId) : String(rawId || ""),
+    rank: trimText(rawCard.rank || "", 4),
+    suit: trimText(rawCard.suit || "", 4),
+    label: trimText(rawCard.label || "", 8),
+    isRed: Boolean(rawCard.isRed),
+    action: rawCard.action || "normal",
+  };
+}
+
+function normalizeBoardCell(rawCell, fallbackId = 0) {
+  const source = asObject(rawCell) || {};
+  const id = clampInt(source.id, fallbackId, 0, BOARD_SIZE * BOARD_SIZE - 1);
+  const row = Number.isFinite(Number(source.row))
+    ? Math.min(Math.max(Math.trunc(Number(source.row)), 0), BOARD_SIZE - 1)
+    : Math.floor(id / BOARD_SIZE);
+  const col = Number.isFinite(Number(source.col))
+    ? Math.min(Math.max(Math.trunc(Number(source.col)), 0), BOARD_SIZE - 1)
+    : id % BOARD_SIZE;
+  return {
+    id,
+    row,
+    col,
+    label:
+      typeof source.label === "string" && source.label.trim().length > 0
+        ? source.label.trim().slice(0, 12)
+        : `${row + 1}-${col + 1}`,
+    corner: Boolean(source.corner),
+    chip: source.chip === "A" || source.chip === "B" ? source.chip : null,
+    seqCount: clampInt(source.seqCount, 0, 0, 10),
+    locked: Boolean(source.locked),
+  };
+}
+
+function normalizeBoard(rawBoard) {
+  const source = asSafeArray(rawBoard);
+  const boardSize = BOARD_SIZE * BOARD_SIZE;
+  const size = Math.min(Math.max(source.length, boardSize > 0 ? boardSize : 0), boardSize || source.length);
+  const board = [];
+  for (let id = 0; id < Math.max(boardSize, size); id += 1) {
+    board.push(normalizeBoardCell(source[id], id));
+  }
+  return board;
+}
+
+function normalizeGamePlayer(rawPlayer, fallbackSeatIndex = 0) {
+  const source = asObject(rawPlayer) || {};
+  const seatIndex = clampInt(source.seatIndex, fallbackSeatIndex, 0, BOARD_SIZE * BOARD_SIZE - 1);
+  const team = source.team === "B" ? "B" : seatIndex % 2 === 0 ? "A" : "B";
+  return {
+    seatIndex,
+    name: trimText(source.name || `Player ${seatIndex + 1}`, 20),
+    team,
+    handCount: Math.max(0, clampInt(source.handCount, 0, 0, 52)),
+  };
+}
+
+function normalizeSequences(rawSequences) {
+  const source = asObject(rawSequences) || {};
+  return {
+    A: asSafeArray(source.A).map((sequence) => ({
+      key: trimText(sequence?.key, 32),
+      cells: asSafeArray(sequence?.cells).filter((cellId) => Number.isFinite(Number(cellId))),
+    })),
+    B: asSafeArray(source.B).map((sequence) => ({
+      key: trimText(sequence?.key, 32),
+      cells: asSafeArray(sequence?.cells).filter((cellId) => Number.isFinite(Number(cellId))),
+    })),
+  };
+}
+
+function normalizeGameSnapshot(rawGame) {
+  const source = asObject(rawGame);
+  if (!source) {
+    return null;
+  }
+  const board = normalizeBoard(source.board);
+  const players = asSafeArray(source.players).map((player, index) => normalizeGamePlayer(player, index));
+  return {
+    phase: trimText(source.phase, 20) || "lobby",
+    winner: source.winner === "A" || source.winner === "B" ? source.winner : null,
+    lastPlacedCellId: Number.isFinite(Number(source.lastPlacedCellId))
+      ? Math.trunc(Number(source.lastPlacedCellId))
+      : null,
+    currentPlayerIndex: Number.isFinite(Number(source.currentPlayerIndex))
+      ? Math.trunc(Number(source.currentPlayerIndex))
+      : null,
+    currentSeatIndex: Number.isFinite(Number(source.currentSeatIndex))
+      ? Math.trunc(Number(source.currentSeatIndex))
+      : null,
+    scores: {
+      A: Math.max(0, Math.round(Number(source.scores?.A) || 0)),
+      B: Math.max(0, Math.round(Number(source.scores?.B) || 0)),
+    },
+    deckCount: Math.max(0, Math.trunc(Number(source.deckCount) || 0)),
+    discardCount: Math.max(0, Math.trunc(Number(source.discardCount) || 0)),
+    discardTopCard: normalizeCard(source.discardTopCard),
+    pendingStep: asObject(source.pendingStep)
+      ? { ...source.pendingStep }
+      : null,
+    logs: asSafeArray(source.logs)
+      .map((entry) => (typeof entry === "string" ? entry.slice(0, 180) : ""))
+      .filter(Boolean),
+    board,
+    players,
+    sequences: normalizeSequences(source.sequences),
+    yourHand: asSafeArray(source.yourHand).map((card, index) => normalizeCard(card) || { id: `fallback-card-${index}` }),
+  };
+}
+
+function normalizeRematchVoteSeatIndexes(rawIndexes) {
+  return asSafeArray(rawIndexes).map((index) => clampInt(index, -1, 0, 9999)).filter((index) => index >= 0);
+}
+
 function requiredPlayerCount() {
   return clientState.requiredPlayers || clientState.seats.length || clientState.teamSize * 2 || 6;
 }
@@ -1000,11 +1206,10 @@ function playJackFeedback(card) {
 
 function getAudioSnapshot() {
   const boardChips = {};
-  if (clientState.game?.board) {
-    for (const cell of clientState.game.board) {
-      if (cell.chip) {
-        boardChips[cell.id] = cell.chip;
-      }
+  const board = clientState.game?.board || [];
+  for (const cell of board) {
+    if (cell.chip) {
+      boardChips[cell.id] = cell.chip;
     }
   }
   return {
@@ -1343,14 +1548,14 @@ function currentPlayer() {
   if (!clientState.game) {
     return null;
   }
-  return clientState.game.players.find((player) => player.seatIndex === clientState.game.currentSeatIndex) || null;
+  return clientState.game.players?.find((player) => player.seatIndex === clientState.game.currentSeatIndex) || null;
 }
 
 function yourPlayer() {
   if (!clientState.game || clientState.yourSeatIndex == null) {
     return null;
   }
-  return clientState.game.players.find((player) => player.seatIndex === clientState.yourSeatIndex) || null;
+  return clientState.game.players?.find((player) => player.seatIndex === clientState.yourSeatIndex) || null;
 }
 
 function yourHand() {
@@ -1444,33 +1649,58 @@ function sendSocket(payload) {
 function applyRoomSnapshot(payload) {
   spectatorClosedRecoveryAttempted = false;
   const previousAudioSnapshot = getAudioSnapshot();
-  clientState.localMode = Boolean(payload.localMode);
-  clientState.roomCode = payload.roomCode;
-  clientState.roomPhase = payload.phase;
-  clientState.seats = payload.seats;
-  clientState.yourRole = payload.yourRole || (payload.yourSeatIndex == null ? "none" : "player");
-  clientState.yourSeatIndex = payload.yourSeatIndex;
-  clientState.teamSize = normalizeTeamSize(payload.teamSize || 3);
-  clientState.requiredPlayers = payload.requiredPlayers || payload.seats?.length || clientState.teamSize * 2;
+  const source = asObject(payload);
+  if (!source) {
+    return;
+  }
+  clientState.localMode = Boolean(source.localMode);
+  clientState.roomCode = sanitizeRoomCodeCandidate(source.roomCode || "");
+  clientState.roomPhase = source.phase || "lobby";
+  const seats = normalizeSeats(source.seats);
+  clientState.seats = seats;
+  const requestedTeamSize = normalizeTeamSize(source.teamSize || 3);
+  const requiredPlayers = Number.isFinite(Number(source.requiredPlayers))
+    ? Math.max(requestedTeamSize * 2, Math.trunc(Number(source.requiredPlayers)))
+    : requestedTeamSize * 2;
+  const snapshotYourRole = source.yourRole === "spectator" ? "spectator" : source.yourRole === "player" ? "player" : source.yourSeatIndex == null ? "none" : "player";
+  clientState.yourRole = snapshotYourRole;
+  clientState.yourSeatIndex =
+    snapshotYourRole === "spectator" ? null : clampInt(source.yourSeatIndex, null, 0, Math.max(0, seats.length - 1));
+  clientState.teamSize = requestedTeamSize;
+  clientState.requiredPlayers = Math.max(requestedTeamSize * 2, Math.max(requiredPlayers, seats.length || requestedTeamSize * 2));
   clientState.occupiedSeats =
-    payload.occupiedSeats ?? payload.seats?.filter((seat) => seat.occupied).length ?? 0;
+    Number.isFinite(Number(source.occupiedSeats)) && source.occupiedSeats >= 0
+      ? Math.trunc(Number(source.occupiedSeats))
+      : seats.filter((seat) => seat.occupied).length;
   clientState.preferredTeamSize = clientState.teamSize;
-  clientState.spectatorCount = payload.spectatorCount || 0;
-  clientState.spectators = payload.spectators || [];
-  clientState.allowSpectators = payload.allowSpectators !== false;
-  clientState.botThinkingSeatIndex = payload.botThinkingSeatIndex ?? null;
-  clientState.botDifficulty = payload.botDifficulty || "smart";
-  clientState.rematchMode = payload.rematchMode || "all";
-  clientState.rematchVoteSeatIndexes = payload.rematchVoteSeatIndexes || [];
-  clientState.rematchRequiredVotes = payload.rematchRequiredVotes || 0;
-  clientState.matchHistory = normalizeMatchHistory(payload.matchHistory);
-  clientState.chatMessages = payload.chatMessages || [];
-  clientState.hostSessionId = payload.hostSessionId || null;
-  clientState.game = payload.game;
-  clientState.pendingStep = payload.game?.pendingStep || null;
-  clientState.sessionId = payload.yourSessionId || clientState.sessionId;
-  if (payload.systemMessage) {
-    setFlashMessage(payload.systemMessage);
+  clientState.spectatorCount = Math.max(0, Math.trunc(Number(source.spectatorCount) || 0));
+  clientState.spectators = normalizeSpectators(source.spectators);
+  clientState.allowSpectators = source.allowSpectators !== false;
+  const normalizedBotThinkingSeatIndex = Number.isFinite(Number(source.botThinkingSeatIndex))
+    ? Math.trunc(Number(source.botThinkingSeatIndex))
+    : null;
+  clientState.botDifficulty = normalizeBotDifficulty(source.botDifficulty);
+  clientState.rematchMode = normalizeRematchMode(source.rematchMode);
+  clientState.rematchVoteSeatIndexes = normalizeRematchVoteSeatIndexes(source.rematchVoteSeatIndexes);
+  clientState.rematchRequiredVotes = Math.max(0, Math.trunc(Number(source.rematchRequiredVotes) || 0));
+  clientState.matchHistory = normalizeMatchHistory(source.matchHistory);
+  clientState.chatMessages = normalizeChatMessages(source.chatMessages);
+  clientState.hostSessionId = source.hostSessionId || null;
+  clientState.game = normalizeGameSnapshot(source.game);
+  clientState.pendingStep = clientState.game?.pendingStep || null;
+
+  const currentSeat = clientState.game?.currentSeatIndex;
+  const activeSeat = Number.isFinite(currentSeat) ? seats.find((seat) => seat.seatIndex === currentSeat) : null;
+  clientState.botThinkingSeatIndex =
+    clientState.game?.phase === "playing" &&
+    clientState.pendingStep == null &&
+    (currentSeat == null || normalizedBotThinkingSeatIndex !== currentSeat || !activeSeat?.isBot)
+      ? null
+      : normalizedBotThinkingSeatIndex;
+
+  clientState.sessionId = source.yourSessionId || clientState.sessionId;
+  if (source.systemMessage) {
+    setFlashMessage(source.systemMessage);
   }
 
   saveSessionMeta();
@@ -3823,7 +4053,8 @@ function renderStatus() {
     clientState.legalTargets.length > 0;
 
   refs.logList.replaceChildren();
-  if (clientState.game.logs.length === 0) {
+  const logs = clientState.game?.logs || [];
+  if (logs.length === 0) {
     const soloHintContext = isSoloContext();
     const logAction = soloHintContext
       ? {
@@ -3854,7 +4085,7 @@ function renderStatus() {
       )
     );
   }
-  for (const entry of clientState.game.logs) {
+  for (const entry of logs) {
     const item = document.createElement("li");
     item.textContent = entry;
     refs.logList.appendChild(item);
@@ -4414,7 +4645,8 @@ function drawBoard() {
   drawRoundedRect(14, 14, size - 28, size - 28, 26, "rgba(0,0,0,0)", ctx.strokeStyle, ctx.lineWidth);
   ctx.restore();
 
-  for (const cell of clientState.game.board) {
+  const board = clientState.game?.board || [];
+  for (const cell of board) {
     // 2026-05-25 — real playing-card aspect (~0.72 width:height like Bicycle poker
     // cards). Cards are full inner height but narrower; felt shows through on the
     // left/right of each card. Corner (wild) cells use the same card-rectangle box
@@ -4945,11 +5177,12 @@ function updateBoardSummary() {
     summary.textContent = "아직 게임이 시작되지 않았습니다.";
     return;
   }
-  const rubyChips = game.board.filter((cell) => cell.chip === "A").length;
-  const cobaltChips = game.board.filter((cell) => cell.chip === "B").length;
+  const board = game.board || [];
+  const rubyChips = board.filter((cell) => cell?.chip === "A").length;
+  const cobaltChips = board.filter((cell) => cell?.chip === "B").length;
   const rubyScore = game.scores?.A ?? 0;
   const cobaltScore = game.scores?.B ?? 0;
-  const currentPlayer = game.players.find((player) => player.seatIndex === game.currentSeatIndex);
+  const currentPlayer = game.players?.find((player) => player.seatIndex === game.currentSeatIndex);
   const turnText = currentPlayer ? `${currentPlayer.name}님 차례 (${currentPlayer.team === "A" ? "루비" : "코발트"} 팀).` : "";
   const winnerText = game.winner ? (game.winner === "A" ? "루비 팀 승리." : "코발트 팀 승리.") : "";
   summary.textContent = `${winnerText} ${turnText} 루비 칩 ${rubyChips}개 · 시퀀스 ${rubyScore}/2. 코발트 칩 ${cobaltChips}개 · 시퀀스 ${cobaltScore}/2. 덱 ${game.deckCount}장, 버림 ${game.discardCount}장.`.trim();
