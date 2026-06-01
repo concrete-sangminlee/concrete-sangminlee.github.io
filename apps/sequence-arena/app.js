@@ -5866,10 +5866,10 @@ function updateWelcomeModePanel() {
   if (!refs.welcomeModeBanner || !refs.welcomeModeSteps) return;
   const isStatic = isOfflineOnlyRuntime();
   refs.welcomeModeBanner.textContent = isStatic
-    ? "정적판: 오프라인 솔로만"
-    : "실시간 멀티플레이 대기";
+    ? "정적판: 오프라인 솔로만 (멀티 서버 없이 즉시 시작)"
+    : "실시간 멀티플레이: 서버에 연결해 방/초대로 함께 플레이";
   const stepA = isStatic ? "내 이름 입력" : "방 만들기";
-  const stepB = isStatic ? "바로 솔로 플레이 시작" : "코드/링크 공유";
+  const stepB = isStatic ? "바로 솔로 플레이 시작" : "코드/링크 공유 후 친구 초대";
   refs.welcomeModeSteps.replaceChildren(
     ...[stepA, stepB, "도움말 확인"].map((text, index) => {
       const node = document.createElement("li");
