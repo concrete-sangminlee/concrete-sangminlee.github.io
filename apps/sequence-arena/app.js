@@ -260,6 +260,10 @@ const startupFeedbackSettings = {
   soundVolume: readPercentPreference(STORAGE_KEYS.soundVolume, 70),
   hapticsIntensity: readPercentPreference(STORAGE_KEYS.hapticsIntensity, 70),
 };
+
+const HISTORY_RENDER_LIMIT = 8;
+const DEFAULT_MAX_MATCH_HISTORY = 12;
+
 const clientState = {
   socket: null,
   socketReady: false,
@@ -289,6 +293,7 @@ const clientState = {
   rematchVoteSeatIndexes: [],
   rematchRequiredVotes: 0,
   matchHistory: [],
+  maxMatchHistory: DEFAULT_MAX_MATCH_HISTORY,
   chatMessages: [],
   game: null,
   pendingStep: null,
@@ -345,6 +350,7 @@ function pruneOfflineRuntimeRecoveredState() {
   clientState.rematchVoteSeatIndexes = [];
   clientState.rematchRequiredVotes = 0;
   clientState.matchHistory = [];
+  clientState.maxMatchHistory = DEFAULT_MAX_MATCH_HISTORY;
   clientState.chatMessages = [];
   clientState.game = null;
   clientState.pendingStep = null;
@@ -1683,6 +1689,7 @@ function applyRoomSnapshot(payload) {
   clientState.rematchMode = normalizeRematchMode(source.rematchMode);
   clientState.rematchVoteSeatIndexes = normalizeRematchVoteSeatIndexes(source.rematchVoteSeatIndexes);
   clientState.rematchRequiredVotes = Math.max(0, Math.trunc(Number(source.rematchRequiredVotes) || 0));
+  clientState.maxMatchHistory = normalizeMaxMatchHistory(source.maxMatchHistory);
   clientState.matchHistory = normalizeMatchHistory(source.matchHistory);
   clientState.chatMessages = normalizeChatMessages(source.chatMessages);
   clientState.hostSessionId = source.hostSessionId || null;
@@ -1968,13 +1975,14 @@ function connectSocket() {
         clientState.spectators = [];
         clientState.allowSpectators = true;
         clientState.botThinkingSeatIndex = null;
-        clientState.rematchMode = "all";
-        clientState.rematchVoteSeatIndexes = [];
-        clientState.rematchRequiredVotes = 0;
-        clientState.matchHistory = [];
-        clientState.game = null;
-        clientState.pendingStep = null;
-        saveSessionMeta();
+      clientState.rematchMode = "all";
+      clientState.rematchVoteSeatIndexes = [];
+      clientState.rematchRequiredVotes = 0;
+      clientState.matchHistory = [];
+      clientState.maxMatchHistory = DEFAULT_MAX_MATCH_HISTORY;
+      clientState.game = null;
+      clientState.pendingStep = null;
+      saveSessionMeta();
         updateUrlRoom();
       }
       render();
@@ -2219,6 +2227,7 @@ function handleCreateRoom(event) {
   clientState.allowSpectators = true;
   clientState.rematchMode = "all";
   clientState.matchHistory = [];
+  clientState.maxMatchHistory = DEFAULT_MAX_MATCH_HISTORY;
   clientState.game = null;
   clientState.pendingStep = null;
   clientState.reconnectAttempted = false;
@@ -2320,6 +2329,7 @@ function handleJoinRoom(event) {
   clientState.allowSpectators = true;
   clientState.rematchMode = "all";
   clientState.matchHistory = [];
+  clientState.maxMatchHistory = DEFAULT_MAX_MATCH_HISTORY;
   clientState.game = null;
   clientState.pendingStep = null;
   clientState.reconnectAttempted = false;
@@ -3277,6 +3287,15 @@ function normalizeMatchHistory(rawHistory) {
     .filter(Boolean);
 }
 
+function normalizeMaxMatchHistory(rawMaxMatchHistory) {
+  const parsed = Number(rawMaxMatchHistory);
+  if (!Number.isFinite(parsed)) {
+    return DEFAULT_MAX_MATCH_HISTORY;
+  }
+  const normalized = Math.max(1, Math.trunc(parsed));
+  return Math.min(normalized, 200);
+}
+
 function getHistoryStreak(history) {
   const firstWinner = history[0]?.winner;
   if (!firstWinner) return { winner: null, count: 0 };
@@ -3359,6 +3378,9 @@ function buildEmptyState(tagName, className, icon, title, body, action = null) {
 function renderHistory() {
   refs.historyList.replaceChildren();
   const total = clientState.matchHistory.length;
+  const visibleHistory = clientState.matchHistory.slice(0, HISTORY_RENDER_LIMIT);
+  const visibleCount = visibleHistory.length;
+  const maxMatchHistory = clientState.maxMatchHistory || DEFAULT_MAX_MATCH_HISTORY;
   const rubyWins = clientState.matchHistory.filter((record) => record.winner === "A").length;
   const cobaltWins = clientState.matchHistory.filter((record) => record.winner === "B").length;
   const rubyRate = total ? Math.round((rubyWins / total) * 100) : 0;
@@ -3421,7 +3443,7 @@ function renderHistory() {
     `최근 ${total}경기, 루비 ${rubyRate}퍼센트, 코발트 ${cobaltRate}퍼센트, ${streakLabel}`
   );
 
-  for (const [index, record] of clientState.matchHistory.slice(0, 8).entries()) {
+  for (const [index, record] of visibleHistory.entries()) {
     const item = document.createElement("li");
     item.className = `history-item ${record.winner === "A" ? "ruby" : "cobalt"}${index === 0 ? " latest" : ""}`;
 
@@ -3450,6 +3472,13 @@ function renderHistory() {
 
     item.append(head, meta);
     refs.historyList.appendChild(item);
+  }
+
+  if (total > HISTORY_RENDER_LIMIT) {
+    const trimNotice = document.createElement("li");
+    trimNotice.className = "history-trim-notice";
+    trimNotice.textContent = `총 ${total}경기 중 최근 ${Math.min(total, visibleCount)}개만 표시됩니다 · 보존 정책: 최대 ${maxMatchHistory}경기`;
+    refs.historyList.appendChild(trimNotice);
   }
 }
 

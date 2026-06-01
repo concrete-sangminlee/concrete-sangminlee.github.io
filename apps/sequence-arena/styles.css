@@ -3112,6 +3112,18 @@ body[data-game="playing"] .card-note {
   list-style: none;
 }
 
+.history-trim-notice {
+  margin: 0;
+  padding: 7px 10px;
+  list-style: none;
+  border: 1px dashed rgba(132, 96, 32, 0.28);
+  border-radius: var(--radius);
+  color: var(--muted);
+  background: rgba(255, 253, 246, 0.38);
+  font-size: 0.74rem;
+  line-height: 1.35;
+}
+
 .history-summary {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
