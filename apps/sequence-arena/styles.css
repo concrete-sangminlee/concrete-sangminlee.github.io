@@ -1116,6 +1116,29 @@ a {
   color: #5a3c10;
 }
 
+.welcome-mode-banner {
+  margin: 0;
+  font-size: 0.84rem;
+  font-weight: 800;
+  letter-spacing: 0;
+  color: #5a3c10;
+  text-wrap: balance;
+}
+
+.welcome-steps {
+  margin: 0;
+  padding: 0 0 0 16px;
+  color: #3d2a14;
+  display: grid;
+  gap: 4px;
+  font-size: 0.84rem;
+  line-height: 1.3;
+}
+
+.welcome-steps li {
+  margin: 0;
+}
+
 .welcome-actions {
   display: grid;
   grid-template-columns: 1fr;

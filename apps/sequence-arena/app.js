@@ -62,6 +62,7 @@ const refs = {
   welcomeCard: document.getElementById("welcome-card"),
   welcomeDismissBtn: document.getElementById("welcome-dismiss-btn"),
   welcomeCreateBtn: document.getElementById("welcome-create-btn"),
+  welcomeRejoinBtn: document.getElementById("welcome-rejoin-btn"),
   welcomeHelpBtn: document.getElementById("welcome-help-btn"),
   welcomeModeBanner: document.getElementById("welcome-mode-banner"),
   welcomeModeSteps: document.getElementById("welcome-mode-steps"),
@@ -251,6 +252,7 @@ const IS_IOS =
   (window.navigator.platform === "MacIntel" && window.navigator.maxTouchPoints > 1);
 
 const persistedRoomCode = safeLocalStorage.get(STORAGE_KEYS.room);
+const normalizedPersistedRoomCode = sanitizeRoomCodeCandidate(persistedRoomCode);
 const initialFlashMessage = hasMalformedRoomParam
   ? "방 코드 링크 형식이 올바르지 않습니다. 새로 입장해서 시작해 주세요."
   : "방을 만들거나 받은 코드로 입장하세요.";
@@ -5444,6 +5446,20 @@ function shouldShowWelcome() {
   return true;
 }
 
+function getWelcomeRejoinRoomCode() {
+  if (isOfflineOnlyRuntime()) {
+    return "";
+  }
+  if (clientState.roomCode) {
+    return "";
+  }
+  const inviteRoomCode = sanitizeRoomCodeCandidate(new URLSearchParams(window.location.search).get("room") || "");
+  if (inviteRoomCode) {
+    return "";
+  }
+  return normalizedPersistedRoomCode;
+}
+
 function normalizeJoinCodeInput(value = "") {
   return normalizeRoomCodeDraft(value);
 }
@@ -5568,6 +5584,13 @@ function updateWelcomeModePanel() {
       ? "게임 모드: 오프라인 솔로 (서버 연결 없이 즉시 플레이)"
       : "게임 모드: 실시간 멀티플레이 (초대/입장 시 동시 대전 가능)";
   }
+  if (refs.welcomeRejoinBtn) {
+    const rejoinCode = getWelcomeRejoinRoomCode();
+    refs.welcomeRejoinBtn.hidden = !rejoinCode;
+    refs.welcomeRejoinBtn.textContent = rejoinCode
+      ? `직전 방 ${rejoinCode} 이어하기`
+      : "직전 방으로 이어하기";
+  }
 }
 
 refs.welcomeDismissBtn?.addEventListener("click", dismissWelcome);
@@ -5583,6 +5606,31 @@ refs.welcomeCreateBtn?.addEventListener("click", () => {
   // Keep welcome card visible when socket is unavailable so users keep the onboarding
   // context and can retry with a new state hint from the flash message.
   handleCreateRoom({ preventDefault() {} });
+});
+refs.welcomeRejoinBtn?.addEventListener("click", () => {
+  const rejoinCode = getWelcomeRejoinRoomCode();
+  if (!rejoinCode || isOfflineOnlyRuntime()) {
+    setFlashMessage("직전 방 이어보기는 실시간 멀티플레이에서만 가능합니다.");
+    render();
+    return;
+  }
+  if (!clientState.socketReady) {
+    setFlashMessage("서버 연결이 끊겼습니다. 잠시 후 자동으로 재연결됩니다.");
+    render();
+    return;
+  }
+  if (refs.joinCode) {
+    refs.joinCode.value = rejoinCode;
+  }
+  const fallbackName =
+    sanitizePlayerName(safeLocalStorage.get(STORAGE_KEYS.name) || clientState.lastName || "") ||
+    "플레이어";
+  if (refs.joinName && !refs.joinName.value) {
+    refs.joinName.value = fallbackName;
+  }
+  handleJoinNameInput();
+  handleJoinCodeInput();
+  handleJoinRoom({ preventDefault() {} });
 });
 refs.welcomeHelpBtn?.addEventListener("click", () => {
   dismissWelcome();
