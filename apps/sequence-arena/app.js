@@ -55,6 +55,7 @@ const refs = {
   soundVolumeValue: document.getElementById("sound-volume-value"),
   hapticIntensitySlider: document.getElementById("haptic-intensity-slider"),
   hapticIntensityValue: document.getElementById("haptic-intensity-value"),
+  hapticSupportNote: document.getElementById("haptic-support-note"),
   helpBtn: document.getElementById("help-btn"),
   helpModal: document.getElementById("help-modal"),
   helpCloseBtn: document.getElementById("help-close-btn"),
@@ -405,6 +406,7 @@ let boardSurfacePattern = null;
 let boardSurfacePatternTheme = null;
 
 let audioContext = null;
+let mediaFeedbackUnlocked = false;
 let lastJackFeedback = { key: "", at: 0 };
 let localSoloRuntime = null;
 
@@ -762,6 +764,20 @@ function saveSessionMeta() {
   safeLocalStorage.set(STORAGE_KEYS.hapticsIntensity, String(clientState.hapticsIntensity));
 }
 
+function isVibrationSupported() {
+  return "vibrate" in navigator && typeof navigator.vibrate === "function";
+}
+
+function ensureMediaFeedbackUnlocked() {
+  if (mediaFeedbackUnlocked) {
+    return;
+  }
+  mediaFeedbackUnlocked = true;
+  if (!clientState.audioMuted) {
+    ensureAudioContext();
+  }
+}
+
 function setFlashMessage(message) {
   clientState.flashMessage = message;
   refs.flashMessage.textContent = message;
@@ -783,9 +799,31 @@ function updateFeedbackControls() {
   }
   if (refs.hapticIntensitySlider) {
     refs.hapticIntensitySlider.value = String(clientState.hapticsIntensity);
+    refs.hapticIntensitySlider.disabled = !isVibrationSupported();
   }
   if (refs.hapticIntensityValue) {
     refs.hapticIntensityValue.textContent = `${clientState.hapticsIntensity}%`;
+  }
+
+  if (refs.hapticSupportNote) {
+    const isSupported = isVibrationSupported();
+    refs.hapticSupportNote.hidden = isSupported;
+    refs.hapticSupportNote.textContent = isSupported
+      ? ""
+      : "이 브라우저는 진동 API(vibrate)를 지원하지 않습니다.";
+  }
+}
+
+function attachMediaUnlockListeners() {
+  const events = ["pointerdown", "keydown", "mousedown", "touchstart"]; 
+  const handler = () => {
+    ensureMediaFeedbackUnlocked();
+    for (const eventName of events) {
+      document.removeEventListener(eventName, handler);
+    }
+  };
+  for (const eventName of events) {
+    document.addEventListener(eventName, handler, { capture: true, passive: true });
   }
 }
 
@@ -1028,6 +1066,9 @@ function canLeaveRoom() {
 }
 
 function ensureAudioContext() {
+  if (!mediaFeedbackUnlocked) {
+    return null;
+  }
   if (clientState.audioMuted) {
     return null;
   }
@@ -1156,6 +1197,9 @@ const HAPTIC = Object.freeze({
 });
 
 function triggerHaptic(pattern) {
+  if (!mediaFeedbackUnlocked) {
+    return;
+  }
   const normalized = Array.isArray(pattern) ? pattern : [pattern];
   const safePattern = normalized.map((v) => {
     const level = Number(v);
@@ -1170,6 +1214,9 @@ function triggerHaptic(pattern) {
   window.__sequenceHapticHistory.push(safePattern);
   if (window.__sequenceHapticHistory.length > 8) window.__sequenceHapticHistory.shift();
   if (clientState.hapticsMuted) {
+    return;
+  }
+  if (!isVibrationSupported()) {
     return;
   }
   const intensity = clamp01(clientState.hapticsIntensity / 100, 0);
@@ -2566,6 +2613,11 @@ function setSoundVolume(percent) {
 }
 
 function toggleHaptics() {
+  if (!isVibrationSupported()) {
+    setFlashMessage("이 브라우저는 진동 피드백을 지원하지 않습니다.");
+    updateHapticsButton();
+    return;
+  }
   clientState.hapticsMuted = !clientState.hapticsMuted;
   safeLocalStorage.set(STORAGE_KEYS.hapticsMuted, String(clientState.hapticsMuted));
   if (!clientState.hapticsMuted && clientState.hapticsIntensity === 0) {
@@ -2582,11 +2634,25 @@ function toggleHaptics() {
 
 function updateHapticsButton() {
   if (!refs.hapticsToggleBtn) return;
-  const muted = clientState.hapticsMuted;
+  const supported = isVibrationSupported();
+  const muted = clientState.hapticsMuted || !supported;
   refs.hapticsToggleBtn.textContent = muted ? "◌" : "◉";
+  refs.hapticsToggleBtn.disabled = !supported;
+  refs.hapticsToggleBtn.setAttribute("aria-disabled", String(!supported));
   refs.hapticsToggleBtn.setAttribute("aria-pressed", String(!muted));
-  refs.hapticsToggleBtn.setAttribute("aria-label", muted ? "진동 피드백 켜기" : "진동 피드백 끄기");
-  refs.hapticsToggleBtn.title = muted ? "진동 켜기" : "진동 끄기";
+  refs.hapticsToggleBtn.setAttribute(
+    "aria-label",
+    muted
+      ? supported
+        ? "진동 피드백 켜기"
+        : "진동 피드백이 지원되지 않습니다"
+      : "진동 피드백 끄기"
+  );
+  refs.hapticsToggleBtn.title = muted
+    ? supported
+      ? "진동 켜기"
+      : "진동 피드백 미지원"
+    : "진동 끄기";
 }
 
 function setHapticsIntensity(percent) {
@@ -5434,6 +5500,7 @@ refs.hapticIntensitySlider?.addEventListener("change", () => {
   saveSessionMeta();
 });
 updateHapticsButton();
+attachMediaUnlockListeners();
 
 function resolveInitialTheme() {
   const stored = safeLocalStorage.get(STORAGE_KEYS.theme);
@@ -6423,6 +6490,8 @@ window.sequenceTest = {
     get hapticHistory() { return [...(window.__sequenceHapticHistory || [])]; },
     get audioMuted() { return clientState.audioMuted; },
     get hapticsMuted() { return clientState.hapticsMuted; },
+    get mediaFeedbackUnlocked() { return mediaFeedbackUnlocked; },
+    get hapticsSupported() { return isVibrationSupported(); },
     get soundVolumePercent() { return clientState.soundVolume; },
     get hapticsIntensityPercent() { return clientState.hapticsIntensity; },
     reset() {
