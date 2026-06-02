@@ -1951,7 +1951,7 @@ function connectSocket() {
     }
     if (payload.type === "error") {
       const message = payload.message || "요청을 처리하지 못했습니다.";
-      if (message.includes("관전 입장이 닫혀 있습니다") || message.includes("방이 가득 찼고 관전 입장이 닫혀 있습니다")) {
+      if (message.includes("관전 입장이 닫혀 있습니다") && !message.includes("방이 가득 찼고")) {
         setJoinRolePreference("player");
         applyJoinServerErrorHint(message);
         const recoveredRoomCode = normalizeRoomCode(
@@ -1996,6 +1996,11 @@ function connectSocket() {
           return;
         }
         setFlashMessage("관전 입장이 닫혀 있습니다. 플레이어로 전환해 다시 입장해 주세요.");
+        return;
+      }
+      if (message.includes("방이 가득 찼고 관전 입장이 닫혀 있습니다")) {
+        applyJoinServerErrorHint(message);
+        setFlashMessage("방이 가득 찼고 관전 입장이 닫혀 있습니다.");
         return;
       }
       setFlashMessage(message);
@@ -5548,6 +5553,8 @@ const JOIN_CODE_HINT_SERVER_NOT_FOUND =
   "방 코드를 찾지 못했어요. 초대 링크나 표시된 방 코드를 다시 확인해 주세요.";
 const JOIN_CODE_HINT_SERVER_SPECTATOR_CLOSED =
   "현재 관전 입장이 닫혔습니다. 플레이어로 전환해 다시 입장해 주세요.";
+const JOIN_CODE_HINT_SERVER_FULL_ROOM =
+  "방이 가득 찼고 관전 입장도 닫혀 있습니다. 플레이어 인원이 다 찼습니다.";
 const JOIN_CODE_HINT_SERVER_RECONNECT_MISSING =
   "재접속 가능한 저장된 좌석이 없습니다. 방을 새로 연결해서 다시 입장해 주세요.";
 const CREATE_NAME_HINT_DEFAULT = "이름은 1~20자 이내여야 합니다.";
@@ -5588,11 +5595,15 @@ function applyJoinServerErrorHint(message = "") {
     return;
   }
 
-  if (
-    text.includes("이 방은 현재 관전 입장이 닫혀 있습니다.") ||
-    text.includes("방이 가득 찼고 관전 입장이 닫혀 있습니다.") ||
-    text.includes("관전 입장이 닫혀 있습니다")
-  ) {
+  if (text.includes("방이 가득 찼고 관전 입장이 닫혀 있습니다.")) {
+    refs.joinCode.setAttribute("aria-invalid", "true");
+    if (refs.joinCodeHint) {
+      refs.joinCodeHint.textContent = JOIN_CODE_HINT_SERVER_FULL_ROOM;
+      announceJoinCodeHint(JOIN_CODE_HINT_SERVER_FULL_ROOM);
+    }
+    return;
+  }
+  if (text.includes("이 방은 현재 관전 입장이 닫혀 있습니다.") || text.includes("관전 입장이 닫혀 있습니다")) {
     refs.joinCode.setAttribute("aria-invalid", "true");
     if (refs.joinCodeHint) {
       refs.joinCodeHint.textContent = JOIN_CODE_HINT_SERVER_SPECTATOR_CLOSED;
