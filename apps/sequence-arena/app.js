@@ -4110,6 +4110,8 @@ function renderStatus() {
   const isBotThinking = clientState.botThinkingSeatIndex != null;
   const winnerMeta = clientState.game.winner ? TEAM_META[clientState.game.winner] : null;
   const pendingStep = clientState.pendingStep;
+  const thinkingSeat =
+    clientState.game?.seats?.find((seat) => seat.seatIndex === clientState.botThinkingSeatIndex) || null;
 
   if (isBotThinking) {
     syncBotThinkingTimer(clientState.botThinkingSeatIndex);
