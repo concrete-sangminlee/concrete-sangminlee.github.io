@@ -104,6 +104,8 @@ const refs = {
   turnSubtitle: document.getElementById("turn-subtitle"),
   turnPlayer: document.getElementById("turn-player"),
   turnTeam: document.getElementById("turn-team"),
+  turnTeamName: document.getElementById("turn-team-name"),
+  turnThinkingTimer: document.getElementById("turn-thinking-timer"),
   lobbyProgressCard: document.getElementById("lobby-progress-card"),
   lobbyProgressCount: document.getElementById("lobby-progress-count"),
   lobbyProgressFill: document.getElementById("lobby-progress-fill"),
@@ -138,6 +140,7 @@ const refs = {
   chatFeedback: document.getElementById("chat-feedback"),
   emojiButtons: [...document.querySelectorAll("[data-chat-emoji]")],
   historySummary: document.getElementById("history-summary"),
+  historyPolicy: document.getElementById("history-policy"),
   historyList: document.getElementById("history-list"),
   clearHistoryBtn: document.getElementById("clear-history-btn"),
   livePolite: document.getElementById("live-polite"),
@@ -289,6 +292,9 @@ const clientState = {
   spectators: [],
   allowSpectators: true,
   botThinkingSeatIndex: null,
+  botThinkingObservedSeatIndex: null,
+  botThinkingStartedAt: 0,
+  botThinkingTickerId: null,
   botDifficulty: normalizeBotDifficulty(safeLocalStorage.get(STORAGE_KEYS.preferredBotDifficulty)),
   rematchMode: "all",
   rematchVoteSeatIndexes: [],
@@ -347,6 +353,16 @@ function pruneOfflineRuntimeRecoveredState() {
   clientState.spectators = [];
   clientState.allowSpectators = true;
   clientState.botThinkingSeatIndex = null;
+  clientState.botThinkingObservedSeatIndex = null;
+  clientState.botThinkingStartedAt = 0;
+  if (clientState.botThinkingTickerId) {
+    window.clearInterval(clientState.botThinkingTickerId);
+    clientState.botThinkingTickerId = null;
+  }
+  if (refs.turnThinkingTimer) {
+    refs.turnThinkingTimer.hidden = true;
+    refs.turnThinkingTimer.textContent = "";
+  }
   clientState.rematchMode = "all";
   clientState.rematchVoteSeatIndexes = [];
   clientState.rematchRequiredVotes = 0;
@@ -431,6 +447,49 @@ const TEAM_LABELS = {
   A: "루비 팀",
   B: "코발트 팀",
 };
+
+function clearBotThinkingTimer() {
+  if (clientState.botThinkingTickerId) {
+    window.clearInterval(clientState.botThinkingTickerId);
+    clientState.botThinkingTickerId = null;
+  }
+  clientState.botThinkingSeatIndex = null;
+  clientState.botThinkingObservedSeatIndex = null;
+  clientState.botThinkingStartedAt = 0;
+  if (refs.turnThinkingTimer) {
+    refs.turnThinkingTimer.textContent = "";
+    refs.turnThinkingTimer.hidden = true;
+  }
+}
+
+function updateBotThinkingTimer() {
+  if (!refs.turnThinkingTimer || clientState.botThinkingSeatIndex == null) {
+    clearBotThinkingTimer();
+    return;
+  }
+  const elapsedMs = Date.now() - (clientState.botThinkingStartedAt || Date.now());
+  const seconds = Math.max(0, Math.floor(elapsedMs / 1000));
+  refs.turnThinkingTimer.hidden = false;
+  refs.turnThinkingTimer.textContent = `생각 중 ${seconds}초`;
+}
+
+function syncBotThinkingTimer(nextSeatIndex) {
+  const currentSeat = Number.isFinite(Number(nextSeatIndex)) ? Math.trunc(Number(nextSeatIndex)) : null;
+  if (currentSeat == null) {
+    clearBotThinkingTimer();
+    return;
+  }
+
+  if (clientState.botThinkingObservedSeatIndex !== currentSeat) {
+    clearBotThinkingTimer();
+    clientState.botThinkingObservedSeatIndex = currentSeat;
+    clientState.botThinkingStartedAt = Date.now();
+    updateBotThinkingTimer();
+    clientState.botThinkingTickerId = window.setInterval(updateBotThinkingTimer, 1000);
+  } else {
+    updateBotThinkingTimer();
+  }
+}
 
 if (clientState.lastName) {
   refs.createName.value = clientState.lastName;
@@ -1706,6 +1765,7 @@ function applyRoomSnapshot(payload) {
   if (!source) {
     return;
   }
+  const previousBotThinkingSeatIndex = clientState.botThinkingSeatIndex;
   clientState.localMode = Boolean(source.localMode);
   clientState.roomCode = sanitizeRoomCodeCandidate(source.roomCode || "");
   clientState.roomPhase = source.phase || "lobby";
@@ -1743,14 +1803,10 @@ function applyRoomSnapshot(payload) {
   clientState.game = normalizeGameSnapshot(source.game);
   clientState.pendingStep = clientState.game?.pendingStep || null;
 
-  const currentSeat = clientState.game?.currentSeatIndex;
-  const activeSeat = Number.isFinite(currentSeat) ? seats.find((seat) => seat.seatIndex === currentSeat) : null;
-  clientState.botThinkingSeatIndex =
-    clientState.game?.phase === "playing" &&
-    clientState.pendingStep == null &&
-    (currentSeat == null || normalizedBotThinkingSeatIndex !== currentSeat || !activeSeat?.isBot)
-      ? null
-      : normalizedBotThinkingSeatIndex;
+  clientState.botThinkingSeatIndex = normalizedBotThinkingSeatIndex;
+  if (previousBotThinkingSeatIndex !== clientState.botThinkingSeatIndex) {
+    syncBotThinkingTimer(clientState.botThinkingSeatIndex);
+  }
 
   clientState.sessionId = source.yourSessionId || clientState.sessionId;
   if (source.systemMessage) {
@@ -2028,15 +2084,15 @@ function connectSocket() {
         clientState.spectatorCount = 0;
         clientState.spectators = [];
         clientState.allowSpectators = true;
-        clientState.botThinkingSeatIndex = null;
-      clientState.rematchMode = "all";
-      clientState.rematchVoteSeatIndexes = [];
-      clientState.rematchRequiredVotes = 0;
-      clientState.matchHistory = [];
-      clientState.maxMatchHistory = DEFAULT_MAX_MATCH_HISTORY;
-      clientState.game = null;
-      clientState.pendingStep = null;
-      saveSessionMeta();
+        clearBotThinkingTimer();
+        clientState.rematchMode = "all";
+        clientState.rematchVoteSeatIndexes = [];
+        clientState.rematchRequiredVotes = 0;
+        clientState.matchHistory = [];
+        clientState.maxMatchHistory = DEFAULT_MAX_MATCH_HISTORY;
+        clientState.game = null;
+        clientState.pendingStep = null;
+        saveSessionMeta();
         updateUrlRoom();
       }
       render();
@@ -2118,6 +2174,7 @@ function startOfflineSolo() {
   clientState.socketReady = false;
   clientState.reconnectAttempted = false;
   clientState.reconnectAttempts = 0;
+  clearBotThinkingTimer();
   if (clientState.reconnectTimer) {
     window.clearTimeout(clientState.reconnectTimer);
     clientState.reconnectTimer = null;
@@ -2279,6 +2336,7 @@ function handleCreateRoom(event) {
   clientState.spectatorCount = 0;
   clientState.spectators = [];
   clientState.allowSpectators = true;
+  clearBotThinkingTimer();
   clientState.rematchMode = "all";
   clientState.matchHistory = [];
   clientState.maxMatchHistory = DEFAULT_MAX_MATCH_HISTORY;
@@ -2313,6 +2371,7 @@ function handleJoinRoom(event) {
   const name = sanitizePlayerName(refs.joinName.value);
   const roomCode = normalizeRoomCode(refs.joinCode.value);
   clearJoinServerErrorHint();
+  clearBotThinkingTimer();
 
   const isNameValid = hasValidJoinName();
   const isCodeValid = hasValidJoinCode();
@@ -2382,6 +2441,7 @@ function handleJoinRoom(event) {
   clientState.spectatorCount = 0;
   clientState.spectators = [];
   clientState.allowSpectators = true;
+  clearBotThinkingTimer();
   clientState.rematchMode = "all";
   clientState.matchHistory = [];
   clientState.maxMatchHistory = DEFAULT_MAX_MATCH_HISTORY;
@@ -3459,6 +3519,14 @@ function renderHistory() {
   const cobaltWins = clientState.matchHistory.filter((record) => record.winner === "B").length;
   const rubyRate = total ? Math.round((rubyWins / total) * 100) : 0;
   const cobaltRate = total ? Math.round((cobaltWins / total) * 100) : 0;
+  const keepPolicyLabel = isSoloContext()
+    ? `솔로 기록 보존: 최근 ${maxMatchHistory}경기`
+    : `방 기록 보존: 완료된 경기 최신 ${maxMatchHistory}경기까지`
+
+  if (refs.historyPolicy) {
+    refs.historyPolicy.textContent = keepPolicyLabel;
+  }
+
   refs.historySummary.replaceChildren();
 
   if (clientState.matchHistory.length === 0) {
@@ -4035,9 +4103,16 @@ function renderStatus() {
   }
 
   const player = currentPlayer();
-  const thinkingSeat = clientState.seats.find((seat) => seat.seatIndex === clientState.botThinkingSeatIndex);
+  const isBotThinking = clientState.botThinkingSeatIndex != null;
   const winnerMeta = clientState.game.winner ? TEAM_META[clientState.game.winner] : null;
   const pendingStep = clientState.pendingStep;
+
+  if (isBotThinking) {
+    syncBotThinkingTimer(clientState.botThinkingSeatIndex);
+  } else {
+    clearBotThinkingTimer();
+  }
+
   refs.turnSubtitle.textContent =
     clientState.game.phase === "finished"
       ? "게임 종료"
@@ -4045,20 +4120,29 @@ function renderStatus() {
         ? "카드 내려놓기"
       : pendingStep?.type === "draw"
         ? "덱에서 뽑기"
-      : thinkingSeat
+      : isBotThinking
         ? "AI 계산 중"
       : `${player?.seatIndex + 1 || "-"}번 좌석 차례`;
   refs.turnPlayer.textContent = player?.name || "알 수 없음";
   const turnTeamLabel = player ? TEAM_LABELS[player.team] || TEAM_META[player.team].name : "-";
-  refs.turnTeam.className = player?.team === "A" ? "team-ruby" : "team-cobalt";
-  refs.turnTeam.replaceChildren(document.createTextNode(turnTeamLabel));
-  if (thinkingSeat) {
+  refs.turnTeam.className = player?.team === "A" ? "team-ruby" : player?.team === "B" ? "team-cobalt" : "";
+  if (refs.turnTeamName) {
+    refs.turnTeamName.textContent = turnTeamLabel;
+  } else {
+    refs.turnTeam.textContent = turnTeamLabel;
+  }
+  if (isBotThinking) {
     refs.turnTeam.classList.add("turn-thinking");
     const dots = document.createElement("span");
     dots.className = "thinking-dots";
     dots.setAttribute("aria-hidden", "true");
     dots.append(document.createElement("i"), document.createElement("i"), document.createElement("i"));
     refs.turnTeam.appendChild(dots);
+  } else {
+    const thinkingDots = refs.turnTeam.querySelector(".thinking-dots");
+    if (thinkingDots) {
+      thinkingDots.remove();
+    }
   }
 
   refs.victoryCard.hidden = !winnerMeta;
