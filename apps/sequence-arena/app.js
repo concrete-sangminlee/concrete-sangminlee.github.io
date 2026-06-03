@@ -1789,9 +1789,13 @@ function applyRoomSnapshot(payload) {
   clientState.spectatorCount = Math.max(0, Math.trunc(Number(source.spectatorCount) || 0));
   clientState.spectators = normalizeSpectators(source.spectators);
   clientState.allowSpectators = source.allowSpectators !== false;
-  const normalizedBotThinkingSeatIndex = Number.isFinite(Number(source.botThinkingSeatIndex))
-    ? Math.trunc(Number(source.botThinkingSeatIndex))
-    : null;
+  let normalizedBotThinkingSeatIndex = null;
+  if (source.botThinkingSeatIndex !== null && source.botThinkingSeatIndex !== undefined && source.botThinkingSeatIndex !== "") {
+    const parsedBotThinkingSeatIndex = Number(source.botThinkingSeatIndex);
+    if (Number.isFinite(parsedBotThinkingSeatIndex) && Number.isInteger(parsedBotThinkingSeatIndex) && parsedBotThinkingSeatIndex >= 0) {
+      normalizedBotThinkingSeatIndex = parsedBotThinkingSeatIndex;
+    }
+  }
   clientState.botDifficulty = normalizeBotDifficulty(source.botDifficulty);
   clientState.rematchMode = normalizeRematchMode(source.rematchMode);
   clientState.rematchVoteSeatIndexes = normalizeRematchVoteSeatIndexes(source.rematchVoteSeatIndexes);
