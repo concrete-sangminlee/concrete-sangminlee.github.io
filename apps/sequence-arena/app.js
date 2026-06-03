@@ -4052,7 +4052,9 @@ function renderStatus() {
     refs.deckCount.textContent = "0장";
     refs.discardCount.textContent = "0장";
     refs.handCaption.textContent = "게임이 시작되면 이 칸에 내 손패가 보입니다.";
-    refs.selectionHint.textContent = clientState.localMode
+    refs.selectionHint.textContent = selectedCardHint
+      ? selectedCardHint
+      : clientState.localMode
       ? "시작 버튼으로 시작하세요. 조작법은 도움말(?)에서 확인할 수 있습니다."
       : "멀티플레이 대기 중입니다. 도움말에서 키보드 조작도 확인하세요.";
     refs.cancelSelectionBtn.disabled = true;
@@ -4112,6 +4114,10 @@ function renderStatus() {
   const pendingStep = clientState.pendingStep;
   const thinkingSeat =
     clientState.game?.seats?.find((seat) => seat.seatIndex === clientState.botThinkingSeatIndex) || null;
+  const selectedCardHint =
+    clientState.selectedCardId && clientState.legalTargets.length > 0
+      ? `가능한 칸 ${clientState.legalTargets.length}곳이 표시됩니다. 방향키로 이동하고 Enter/Space로 놓으세요.`
+      : "";
 
   if (isBotThinking) {
     syncBotThinkingTimer(clientState.botThinkingSeatIndex);
@@ -4233,8 +4239,8 @@ function renderStatus() {
       ? "덱을 클릭해서 새 카드를 뽑으세요."
       : thinkingSeat
       ? "AI가 생각하는 동안 보드 변화를 지켜보세요."
-      : clientState.selectedCardId && clientState.legalTargets.length > 0
-        ? `가능한 칸 ${clientState.legalTargets.length}곳이 표시됩니다. 방향키로 이동하고 Enter/Space로 놓으세요.`
+      : selectedCardHint
+        ? selectedCardHint
         : "카드를 선택하면 가능한 칸이 보드에 초록색으로 표시됩니다. A/B 또는 화살표 키로 카드/위치를 선택하세요.";
 
   refs.cancelSelectionBtn.disabled = !clientState.selectedCardId || Boolean(clientState.pendingStep);
