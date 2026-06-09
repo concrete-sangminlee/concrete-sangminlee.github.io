@@ -2080,10 +2080,34 @@ body[data-selected="true"] #game-canvas {
   font-size: 1.06rem;
 }
 
+#turn-team {
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+#turn-team-name {
+  overflow-wrap: anywhere;
+}
+
 .turn-thinking {
   display: inline-flex;
   gap: 7px;
   align-items: center;
+}
+
+.turn-thinking-timer {
+  display: inline-flex;
+  justify-content: end;
+  font-size: 0.74rem;
+  color: var(--muted);
+  margin-left: 2px;
+  letter-spacing: 0;
+}
+
+.turn-thinking-timer[hidden] {
+  display: none;
 }
 
 .thinking-dots {
@@ -3162,6 +3186,17 @@ body[data-game="playing"] .card-note {
   font-weight: 900;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.history-policy {
+  margin-bottom: 8px;
+  padding: 6px 8px;
+  border: 1px dashed rgba(132, 96, 32, 0.3);
+  border-radius: 7px;
+  background: rgba(255, 253, 246, 0.45);
+  color: var(--muted);
+  font-size: 0.74rem;
+  line-height: 1.35;
 }
 
 .history-stat.ruby strong {
