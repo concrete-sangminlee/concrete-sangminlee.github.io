@@ -4022,6 +4022,11 @@ function renderStatus() {
     : "방을 만들거나 코드로 입장해 좌석을 확보하세요.";
   refs.spectatorCount.textContent = `${clientState.spectatorCount}명`;
 
+  const selectedCardHint =
+    clientState.selectedCardId && clientState.legalTargets.length > 0
+      ? `가능한 칸 ${clientState.legalTargets.length}곳이 표시됩니다. 방향키로 이동하고 Enter/Space로 놓으세요.`
+      : "";
+
   if (!clientState.game) {
     refs.victoryCard.hidden = true;
     refs.rematchBtn.disabled = true;
@@ -4032,8 +4037,20 @@ function renderStatus() {
         ? `로비 대기 중 · ${matchLabel}`
         : "방 미접속";
     refs.turnPlayer.textContent = clientState.localMode ? "솔로" : clientState.roomCode ? "플레이어 대기" : "대기 중";
-    refs.turnTeam.textContent = "-";
+    if (refs.turnTeamName) {
+      refs.turnTeamName.textContent = "-";
+    } else {
+      refs.turnTeam.textContent = "-";
+    }
     refs.turnTeam.className = "";
+    const lobbyThinkingDots = refs.turnTeam.querySelector(".thinking-dots");
+    if (lobbyThinkingDots) {
+      lobbyThinkingDots.remove();
+    }
+    if (refs.turnThinkingTimer) {
+      refs.turnThinkingTimer.hidden = true;
+      refs.turnThinkingTimer.textContent = "";
+    }
     const lobbyReadyText =
       remainingSeats > 0
         ? `친구 ${remainingSeats}명이 더 들어오면 자동 시작됩니다.`
@@ -4114,10 +4131,6 @@ function renderStatus() {
   const pendingStep = clientState.pendingStep;
   const thinkingSeat =
     clientState.game?.seats?.find((seat) => seat.seatIndex === clientState.botThinkingSeatIndex) || null;
-  const selectedCardHint =
-    clientState.selectedCardId && clientState.legalTargets.length > 0
-      ? `가능한 칸 ${clientState.legalTargets.length}곳이 표시됩니다. 방향키로 이동하고 Enter/Space로 놓으세요.`
-      : "";
 
   if (isBotThinking) {
     syncBotThinkingTimer(clientState.botThinkingSeatIndex);
