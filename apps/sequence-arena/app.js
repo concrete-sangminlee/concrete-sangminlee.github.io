@@ -1,5 +1,16 @@
 import { BOARD_SIZE, TEAM_META, getLegalTargets } from "./shared/game-core.js";
 import { LocalSoloRuntime } from "./shared/local-solo.js";
+import {
+  dailyDateKey,
+  dailyChallengeNumber,
+  dailySeed,
+  normalizeDailyResults,
+  recordDailyResult,
+  computeDailyStreak,
+  normalizeSoloStats,
+  recordSoloResult,
+  formatDailyShareText,
+} from "./shared/daily.js";
 import { sanitizeName, ROOM_CODE_PATTERN, MAX_ROOM_CODE_LENGTH } from "./shared/validation.js";
 
 const STORAGE_KEYS = {
@@ -16,7 +27,14 @@ const STORAGE_KEYS = {
   preferredBotDifficulty: "sequence-arena-preferred-bot-difficulty",
   theme: "sequence-arena-theme",
   welcomed: "sequence-arena-welcomed",
+  dailyResults: "sequence-arena-daily-results",
+  soloStats: "sequence-arena-solo-stats",
 };
+
+// Canonical public URL used in the daily-challenge share text. The Pages PWA is the one
+// no-cost URL that works for every recipient, so share text always points there even when
+// this client happens to run against a manually deployed WebSocket host.
+const PAGES_PUBLIC_URL = "https://concrete-sangminlee.github.io/sequence-arena/";
 
 const canvas = document.getElementById("game-canvas");
 const ctx = canvas.getContext("2d");
@@ -26,6 +44,8 @@ const refs = {
   joinForm: document.getElementById("join-form"),
   createRoomBtn: document.getElementById("create-room-btn"),
   offlineSoloBtn: document.getElementById("offline-solo-btn"),
+  dailyChallengeBtn: document.getElementById("daily-challenge-btn"),
+  soloStatsStrip: document.getElementById("solo-stats-strip"),
   joinRoomBtn: document.getElementById("join-room-btn"),
   gatewaySubtitle: document.getElementById("gateway-subtitle"),
   gatewayModeHint: document.getElementById("gateway-mode-hint"),
@@ -65,6 +85,7 @@ const refs = {
   welcomeCreateBtn: document.getElementById("welcome-create-btn"),
   welcomeRejoinBtn: document.getElementById("welcome-rejoin-btn"),
   welcomeHelpBtn: document.getElementById("welcome-help-btn"),
+  welcomeDailyBtn: document.getElementById("welcome-daily-btn"),
   welcomeModeBanner: document.getElementById("welcome-mode-banner"),
   welcomeModeSteps: document.getElementById("welcome-mode-steps"),
   themeToggleBtn: document.getElementById("theme-toggle-btn"),
@@ -111,6 +132,9 @@ const refs = {
   lobbyProgressFill: document.getElementById("lobby-progress-fill"),
   lobbyProgressHint: document.getElementById("lobby-progress-hint"),
   victoryCard: document.getElementById("victory-card"),
+  victoryDailyResult: document.getElementById("victory-daily-result"),
+  shareDailyBtn: document.getElementById("share-daily-btn"),
+  dailyBadge: document.getElementById("daily-badge"),
   victoryWinner: document.getElementById("victory-winner"),
   victoryScore: document.getElementById("victory-score"),
   rematchBtn: document.getElementById("rematch-btn"),
@@ -227,6 +251,28 @@ const safeLocalStorage = {
   },
 };
 
+function loadDailyResults() {
+  try {
+    return normalizeDailyResults(JSON.parse(safeLocalStorage.get(STORAGE_KEYS.dailyResults) || "{}"));
+  } catch {
+    return {};
+  }
+}
+
+function loadSoloStats() {
+  try {
+    return normalizeSoloStats(JSON.parse(safeLocalStorage.get(STORAGE_KEYS.soloStats) || "null"));
+  } catch {
+    return normalizeSoloStats(null);
+  }
+}
+
+// Parsed once at boot and kept in memory; every write goes through the recorder so the
+// render path never touches localStorage/JSON on its hot path.
+let dailyResultsCache = loadDailyResults();
+let soloStatsCache = loadSoloStats();
+let lastRecordedLocalMatchNumber = 0;
+
 function readPercentPreference(key, fallback, min = 0, max = 100) {
   const raw = safeLocalStorage.get(key);
   const numeric = Number(raw);
@@ -272,6 +318,7 @@ const clientState = {
   socket: null,
   socketReady: false,
   localMode: false,
+  dailyChallenge: null,
   sessionId: safeLocalStorage.get(STORAGE_KEYS.session) || "",
   roomCode: isOfflineOnlyRuntime() ? "" : sanitizeRoomCodeCandidate(normalizedUrlRoomCode || persistedRoomCode || ""),
   hostSessionId: null,
@@ -410,6 +457,37 @@ const SEQUENCE_CASCADE_MS = 1200;
 const VICTORY_WASH_MS = 2000;
 const TARGET_PULSE_ANIM_MS = 1100;
 const CARD_FLIGHT_MS = 760;
+// Fast-play tempo (quality roadmap P1.4): when the player chains actions quickly, the
+// transition animations (card flight, chip place/remove) compress so the game never
+// feels slower than the player. The tempo is decided by the gap BETWEEN successive
+// player actions — never by the action itself — and decays back to relaxed pacing
+// shortly after the chain stops. Major-state celebrations (sequence cascade, victory
+// wash) and the continuous target pulse stay full length because they explain state,
+// and prefers-reduced-motion keeps bypassing all of these animations entirely.
+const FAST_PLAY_WINDOW_MS = 1600;
+const FAST_PLAY_TEMPO = 0.55;
+let lastTempoActionAt = Number.NEGATIVE_INFINITY;
+let previousActionGapMs = Number.POSITIVE_INFINITY;
+let lastFlightDurationMs = 0;
+let lastChipPlaceDurationMs = 0;
+let lastChipRemoveDurationMs = 0;
+
+function markPlayerActionTempo() {
+  const now = performance.now();
+  previousActionGapMs = now - lastTempoActionAt;
+  lastTempoActionAt = now;
+}
+
+function animationTempo() {
+  // Animations launch in the same task as the action that caused them, but handler code
+  // order differs: some paths mark the action before launching the animation, others
+  // after. Make the judgement order-immune: if the mark already happened in this task
+  // (sub-50ms ago — far below any human double-action), judge by the recorded gap
+  // between the last two actions; otherwise judge by the time since the previous action.
+  const sinceLastAction = performance.now() - lastTempoActionAt;
+  const effectiveGapMs = sinceLastAction < 50 ? previousActionGapMs : sinceLastAction;
+  return effectiveGapMs < FAST_PLAY_WINDOW_MS ? FAST_PLAY_TEMPO : 1;
+}
 let chipAnimFrameId = null;
 let targetPulseFrameId = null;
 // Cached CanvasPattern for the woven-felt look on the board rail. Generated once on first
@@ -1739,6 +1817,12 @@ function clearSelection() {
 }
 
 function sendSocket(payload) {
+  const type = payload?.type;
+  if (type === "play_card" || type === "discard_dead" || type === "discard_to_pile" || type === "draw_from_deck") {
+    // Every gameplay action funnels through here (mouse, keyboard, auto-move), making
+    // this the one reliable place to measure the player's action-to-action tempo.
+    markPlayerActionTempo();
+  }
   if (clientState.localMode) {
     localSoloRuntime?.handle(payload);
     return;
@@ -1802,6 +1886,8 @@ function applyRoomSnapshot(payload) {
   clientState.rematchRequiredVotes = Math.max(0, Math.trunc(Number(source.rematchRequiredVotes) || 0));
   clientState.maxMatchHistory = normalizeMaxMatchHistory(source.maxMatchHistory);
   clientState.matchHistory = normalizeMatchHistory(source.matchHistory);
+  clientState.dailyChallenge = clientState.localMode ? normalizeDailyChallengeMeta(source.dailyChallenge) : null;
+  maybeRecordLocalSoloResult();
   clientState.chatMessages = normalizeChatMessages(source.chatMessages);
   clientState.hostSessionId = source.hostSessionId || null;
   clientState.game = normalizeGameSnapshot(source.game);
@@ -2164,7 +2250,8 @@ function connectSocket() {
   });
 }
 
-function startOfflineSolo() {
+function startOfflineSolo(options = {}) {
+  const daily = options.daily === true;
   const name = normalizePlayerName(refs.createName?.value || clientState.lastName || "플레이어");
   if (typeof dismissWelcome === "function") {
     dismissWelcome();
@@ -2195,12 +2282,19 @@ function startOfflineSolo() {
   localSoloRuntime = new LocalSoloRuntime({
     onSnapshot: applyRoomSnapshot,
   });
+  const dateKey = dailyDateKey();
   localSoloRuntime.start({
     name,
     sessionId: clientState.sessionId,
     difficulty: clientState.botDifficulty,
+    seed: daily ? dailySeed(dateKey) : "",
+    daily: daily ? { dateKey, number: dailyChallengeNumber(dateKey) } : null,
   });
-  setFlashMessage("오프라인 솔로를 시작했습니다.");
+  if (!daily) {
+    // The daily start keeps the runtime's own system message ("같은 보드와 손패…") so the
+    // mode explanation is not immediately overwritten by a generic flash.
+    setFlashMessage("오프라인 솔로를 시작했습니다.");
+  }
   playSound("tap");
 }
 
@@ -2890,9 +2984,14 @@ function animateCardToPoint(cardId, targetPoint, mode = "board") {
   clone.style.setProperty("--flight-mid-y", `${deltaY * 0.46 - 96}px`);
   clone.style.setProperty("--flight-touch-x", `${deltaX * 0.9}px`);
   clone.style.setProperty("--flight-touch-y", `${deltaY * 0.9 - 12}px`);
+  // Duration is captured once at launch so an expiring fast-play window cannot retime an
+  // animation mid-flight.
+  const durationMs = Math.round(CARD_FLIGHT_MS * animationTempo());
+  clone.style.setProperty("--flight-duration", `${durationMs}ms`);
+  lastFlightDurationMs = durationMs;
   document.body.appendChild(clone);
 
-  window.setTimeout(() => clone.remove(), CARD_FLIGHT_MS + 80);
+  window.setTimeout(() => clone.remove(), durationMs + 80);
 }
 
 function animateCardToElement(cardId, element, mode = "pile") {
@@ -2936,7 +3035,9 @@ function registerChipPlacementAnim(cellId) {
   // something — the player hears it land, not click. For reduced-motion users
   // the animation is skipped but the audio/haptic still play immediately.
   const reducedMotion = prefersReducedMotion();
-  const impactDelay = reducedMotion ? 0 : CHIP_PLACE_ANIM_MS * 0.7;
+  const durationMs = Math.round(CHIP_PLACE_ANIM_MS * animationTempo());
+  lastChipPlaceDurationMs = durationMs;
+  const impactDelay = reducedMotion ? 0 : durationMs * 0.7;
   window.setTimeout(() => {
     playSound("chipDrop");
     triggerHaptic(HAPTIC.HEAVY);
@@ -2947,6 +3048,7 @@ function registerChipPlacementAnim(cellId) {
   clientState.chipPlacementAnim = {
     cellId,
     startedAt: performance.now(),
+    durationMs,
   };
   scheduleChipAnimFrame();
 }
@@ -2955,10 +3057,13 @@ function registerChipRemovalAnim(cellId, team) {
   if (cellId == null || !team || prefersReducedMotion()) {
     return;
   }
+  const durationMs = Math.round(CHIP_REMOVE_ANIM_MS * animationTempo());
+  lastChipRemoveDurationMs = durationMs;
   clientState.chipRemovalAnim = {
     cellId,
     team,
     startedAt: performance.now(),
+    durationMs,
   };
   scheduleChipAnimFrame();
 }
@@ -2977,10 +3082,10 @@ function scheduleChipAnimFrame() {
       return;
     }
     const now = performance.now();
-    if (place && now - place.startedAt >= CHIP_PLACE_ANIM_MS) {
+    if (place && now - place.startedAt >= (place.durationMs || CHIP_PLACE_ANIM_MS)) {
       clientState.chipPlacementAnim = null;
     }
-    if (remove && now - remove.startedAt >= CHIP_REMOVE_ANIM_MS) {
+    if (remove && now - remove.startedAt >= (remove.durationMs || CHIP_REMOVE_ANIM_MS)) {
       clientState.chipRemovalAnim = null;
     }
     if (cascade && now - cascade.startedAt >= SEQUENCE_CASCADE_MS) {
@@ -3389,6 +3494,119 @@ function formatMatchDuration(ms) {
   return seconds > 0 ? `${minutes}분 ${seconds}초` : `${minutes}분`;
 }
 
+function normalizeDailyChallengeMeta(raw) {
+  if (!raw || typeof raw !== "object") return null;
+  const dateKey = typeof raw.dateKey === "string" && /^\d{4}-\d{2}-\d{2}$/.test(raw.dateKey) ? raw.dateKey : null;
+  const number = Number(raw.number);
+  if (!dateKey || !Number.isFinite(number) || number < 1) return null;
+  return { dateKey, number: Math.trunc(number) };
+}
+
+// Local-mode finish recorder: the runtime prepends one match-history entry per finished
+// game with a strictly increasing matchNumber, so "newest entry number grew" is the
+// finish edge. Solo stats count every local game; daily results additionally freeze the
+// first completion per date (recordDailyResult semantics).
+function maybeRecordLocalSoloResult() {
+  if (!clientState.localMode) return;
+  const latest = clientState.matchHistory[0];
+  if (!latest || !Number.isFinite(latest.matchNumber)) return;
+  if (latest.matchNumber <= lastRecordedLocalMatchNumber) return;
+  lastRecordedLocalMatchNumber = latest.matchNumber;
+  const won = latest.winner === "A";
+  soloStatsCache = recordSoloResult(soloStatsCache, {
+    difficulty: latest.botDifficulty || clientState.botDifficulty,
+    won,
+  });
+  safeLocalStorage.set(STORAGE_KEYS.soloStats, JSON.stringify(soloStatsCache));
+  if (latest.daily?.dateKey) {
+    dailyResultsCache = recordDailyResult(dailyResultsCache, latest.daily.dateKey, {
+      won,
+      durationMs: latest.durationMs,
+    });
+    safeLocalStorage.set(STORAGE_KEYS.dailyResults, JSON.stringify(dailyResultsCache));
+    const streak = computeDailyStreak(dailyResultsCache, dailyDateKey());
+    announcePolite(
+      won
+        ? `오늘의 챌린지 #${latest.daily.number} 승리가 기록되었습니다. 현재 ${streak.current}일 연속 달성입니다.`
+        : `오늘의 챌린지 #${latest.daily.number} 결과가 기록되었습니다. 같은 퍼즐로 다시 도전할 수 있습니다.`
+    );
+  }
+}
+
+async function shareDailyResult() {
+  const daily = clientState.dailyChallenge;
+  if (!daily) return;
+  const entry = dailyResultsCache[daily.dateKey];
+  if (!entry) {
+    setFlashMessage("오늘의 챌린지를 끝까지 플레이하면 결과를 공유할 수 있습니다.");
+    render();
+    return;
+  }
+  // Streak is computed against the challenge's own date so a result shared just after
+  // local midnight still describes the day it was earned.
+  const streak = computeDailyStreak(dailyResultsCache, daily.dateKey);
+  const text = formatDailyShareText({
+    number: daily.number,
+    won: entry.won,
+    durationMs: entry.durationMs,
+    streakCurrent: streak.current,
+    url: PAGES_PUBLIC_URL,
+  });
+  // Mirrored for ui-regression: the server's Permissions-Policy intentionally denies
+  // clipboard-read, so tests verify the composed text here instead of reading it back.
+  window.__sequenceLastDailyShareText = text;
+  const copied = await writeToClipboard(text);
+  setFlashMessage(
+    copied
+      ? "데일리 결과를 클립보드에 복사했습니다. 붙여넣기로 공유하세요."
+      : "클립보드 복사에 실패했습니다. 브라우저 권한을 확인해 주세요."
+  );
+  if (copied) {
+    playSound("tap");
+  }
+  render();
+}
+
+function renderDailySurfaces() {
+  const todayKey = dailyDateKey();
+  const number = dailyChallengeNumber(todayKey);
+  const todayEntry = dailyResultsCache[todayKey] || null;
+  const streak = computeDailyStreak(dailyResultsCache, todayKey);
+  const dailyLabel = todayEntry ? `오늘의 챌린지 #${number} ✅ 재도전` : `오늘의 챌린지 #${number}`;
+  const dailyTitle = todayEntry
+    ? `오늘 기록: ${todayEntry.won ? "승리" : "패배"} · 같은 퍼즐로 다시 도전할 수 있습니다 (기록은 첫 판 기준)`
+    : "매일 모두에게 같은 보드·같은 손패가 주어지는 시드 퍼즐. 봇은 SMART 고정.";
+  if (refs.dailyChallengeBtn) {
+    refs.dailyChallengeBtn.textContent = dailyLabel;
+    refs.dailyChallengeBtn.title = dailyTitle;
+    refs.dailyChallengeBtn.setAttribute("aria-label", `${dailyLabel} 시작`);
+  }
+  if (refs.welcomeDailyBtn) {
+    refs.welcomeDailyBtn.textContent = dailyLabel;
+    refs.welcomeDailyBtn.title = dailyTitle;
+  }
+  if (refs.soloStatsStrip) {
+    const parts = [];
+    if (streak.current > 0) {
+      parts.push(`🔥 데일리 ${streak.current}일 연속`);
+    } else if (streak.best > 0) {
+      parts.push(`데일리 최고 기록 ${streak.best}일 연속`);
+    }
+    if (soloStatsCache.games > 0) {
+      parts.push(`솔로 전적 ${soloStatsCache.wins}승 ${soloStatsCache.games - soloStatsCache.wins}패`);
+    }
+    refs.soloStatsStrip.hidden = parts.length === 0;
+    refs.soloStatsStrip.textContent = parts.join(" · ");
+  }
+  if (refs.dailyBadge) {
+    const active = clientState.localMode && clientState.dailyChallenge;
+    refs.dailyBadge.hidden = !active;
+    if (active) {
+      refs.dailyBadge.textContent = `데일리 챌린지 #${clientState.dailyChallenge.number}`;
+    }
+  }
+}
+
 function normalizeMatchHistory(rawHistory) {
   if (!Array.isArray(rawHistory)) {
     return [];
@@ -3420,6 +3638,12 @@ function normalizeMatchHistory(rawHistory) {
         mode: rawMode || "multiplayer",
         finishedAt,
         durationMs: Number.isFinite(durationMs) && durationMs > 0 ? Math.max(0, Math.round(durationMs)) : 0,
+        // testMode/botDifficulty power the history mode label, daily powers the per-entry
+        // challenge marker and the local finish recorder. All three previously fell out
+        // of this whitelist, which left the solo/멀티 label branch in renderHistory dead.
+        testMode: typeof entry.testMode === "string" ? entry.testMode : "",
+        botDifficulty: typeof entry.botDifficulty === "string" && entry.botDifficulty ? normalizeBotDifficulty(entry.botDifficulty) : "",
+        daily: normalizeDailyChallengeMeta(entry.daily),
       };
     })
     .filter(Boolean);
@@ -3605,12 +3829,19 @@ function renderHistory() {
     const meta = document.createElement("div");
     meta.className = "history-item-meta";
     const mode =
-      record.testMode === "solo" ? `혼자 테스트 · ${BOT_MODE_LABELS[record.botDifficulty] || "전략"}` : "멀티플레이";
+      record.testMode === "solo"
+        ? `혼자 테스트 · ${BOT_MODE_LABELS[record.botDifficulty] || "전략"}`
+        : record.testMode === "local-solo"
+          ? `오프라인 솔로 · ${BOT_MODE_LABELS[record.botDifficulty] || "전략"}`
+          : "멀티플레이";
     meta.append(
       buildHistoryMeta(index === 0 ? "최근 경기" : `#${record.matchNumber}`, index === 0 ? "latest" : ""),
       buildHistoryMeta(formatHistoryTime(record.finishedAt)),
       buildHistoryMeta(mode)
     );
+    if (record.daily) {
+      meta.appendChild(buildHistoryMeta(`데일리 #${record.daily.number}`, "daily"));
+    }
     const duration = formatMatchDuration(record.durationMs);
     if (duration) {
       meta.appendChild(buildHistoryMeta(duration, "duration"));
@@ -4171,6 +4402,26 @@ function renderStatus() {
   }
 
   refs.victoryCard.hidden = !winnerMeta;
+  const dailyMeta = winnerMeta && clientState.localMode ? clientState.dailyChallenge : null;
+  const dailyEntry = dailyMeta ? dailyResultsCache[dailyMeta.dateKey] : null;
+  if (refs.victoryDailyResult) {
+    refs.victoryDailyResult.hidden = !dailyEntry;
+    if (dailyEntry) {
+      const streak = computeDailyStreak(dailyResultsCache, dailyMeta.dateKey);
+      const durationLabel = formatMatchDuration(dailyEntry.durationMs);
+      refs.victoryDailyResult.textContent = [
+        `데일리 #${dailyMeta.number} ${dailyEntry.won ? "✅ 성공" : "❌ 실패"}`,
+        durationLabel || null,
+        dailyEntry.won && streak.current > 1 ? `🔥 ${streak.current}일 연속` : null,
+        dailyEntry.attempts > 1 ? `${dailyEntry.attempts}번째 도전` : null,
+      ]
+        .filter(Boolean)
+        .join(" · ");
+    }
+  }
+  if (refs.shareDailyBtn) {
+    refs.shareDailyBtn.hidden = !dailyEntry;
+  }
   if (winnerMeta) {
     const voteCount = clientState.rematchVoteSeatIndexes.length;
     const requiredVotes = clientState.rematchRequiredVotes || 0;
@@ -4178,10 +4429,24 @@ function renderStatus() {
     refs.victoryWinner.textContent = `${TEAM_LABELS[clientState.game.winner] || winnerMeta.name} 승리`;
     refs.victoryScore.textContent = `Ruby ${clientState.game.scores.A} : ${clientState.game.scores.B} Cobalt`;
   if (clientState.rematchMode === "host") {
-      refs.rematchVoteStatus.textContent = isHost() ? "방장 시작 가능" : "방장 시작 대기";
-      refs.rematchBtn.disabled = clientState.roomPhase !== "finished" || !isHost();
-      refs.rematchBtn.textContent = isHost() ? "리매치 시작" : "방장 대기";
-      refs.rematchBtn.setAttribute("aria-label", isHost() ? "방장만 리매치 시작 (R)" : "방장 대기 (R)");
+      // Local solo has no hostSessionId in its snapshots, so isHost() is always false
+      // there — the single human player is the host by construction. Without this branch
+      // the rematch button stayed permanently disabled after every offline solo game.
+      const localSolo = clientState.localMode;
+      const dailyRun = localSolo && Boolean(clientState.dailyChallenge);
+      refs.rematchVoteStatus.textContent = localSolo
+        ? dailyRun
+          ? "기록은 첫 판 기준"
+          : "바로 재시작 가능"
+        : isHost()
+          ? "방장 시작 가능"
+          : "방장 시작 대기";
+      refs.rematchBtn.disabled = clientState.roomPhase !== "finished" || (!localSolo && !isHost());
+      refs.rematchBtn.textContent = localSolo ? (dailyRun ? "같은 퍼즐 재도전" : "리매치 시작") : isHost() ? "리매치 시작" : "방장 대기";
+      refs.rematchBtn.setAttribute(
+        "aria-label",
+        localSolo ? `${refs.rematchBtn.textContent} (R)` : isHost() ? "방장만 리매치 시작 (R)" : "방장 대기 (R)"
+      );
     } else {
       refs.rematchVoteStatus.textContent = `${voteCount} / ${requiredVotes} 동의`;
       // Toggle UX: a player who already voted can click again to retract, so we keep the
@@ -4973,7 +5238,7 @@ function drawBoard() {
       let offsetY = 0;
       let alpha = 1;
       if (anim && anim.cellId === cell.id) {
-        const t = Math.min(1, Math.max(0, (performance.now() - anim.startedAt) / CHIP_PLACE_ANIM_MS));
+        const t = Math.min(1, Math.max(0, (performance.now() - anim.startedAt) / (anim.durationMs || CHIP_PLACE_ANIM_MS)));
         const fall = 1 - t;
         offsetY = -fall * cardHeight * 0.45;
         alpha = Math.min(1, 0.1 + t * 2.6);
@@ -5004,7 +5269,7 @@ function drawBoard() {
         const dcol = Math.abs((cell.id % BOARD_SIZE) - (anim.cellId % BOARD_SIZE));
         if (drow <= 1 && dcol <= 1) {
           const elapsed = performance.now() - anim.startedAt;
-          const nudgeStart = CHIP_PLACE_ANIM_MS * 0.72;
+          const nudgeStart = (anim.durationMs || CHIP_PLACE_ANIM_MS) * 0.72;
           const nudgeDur = 200;
           if (elapsed >= nudgeStart && elapsed <= nudgeStart + nudgeDur) {
             const u = (elapsed - nudgeStart) / nudgeDur;
@@ -5044,7 +5309,7 @@ function drawBoard() {
 
     const removal = clientState.chipRemovalAnim;
     if (!cell.chip && removal && removal.cellId === cell.id) {
-      const t = Math.min(1, Math.max(0, (performance.now() - removal.startedAt) / CHIP_REMOVE_ANIM_MS));
+      const t = Math.min(1, Math.max(0, (performance.now() - removal.startedAt) / (removal.durationMs || CHIP_REMOVE_ANIM_MS)));
       const chipCenterX = cardX + cardWidth / 2;
       const chipCenterY = cardY + cardHeight / 2 + cardHeight * 0.07;
       const chipRadius = inner * 0.32;
@@ -5358,6 +5623,7 @@ function render() {
     updateHapticsButton();
     updateFeedbackControls();
     updateWelcomeCreateLabel();
+    renderDailySurfaces();
     if (typeof maybeShowWelcome === "function") maybeShowWelcome();
     drawBoard();
     renderStatus();
@@ -5448,6 +5714,8 @@ function serializeState() {
   return JSON.stringify({
     roomCode: clientState.roomCode,
     phase: clientState.roomPhase,
+    localMode: clientState.localMode,
+    dailyChallenge: clientState.dailyChallenge,
     yourRole: clientState.yourRole,
     inviteUrl: clientState.roomCode ? buildInviteUrl() : "",
     spectatorInviteUrl: clientState.roomCode ? buildInviteUrl(clientState.roomCode, "spectator") : "",
@@ -5482,7 +5750,12 @@ refs.createForm.addEventListener("submit", handleCreateRoom);
 if (refs.createRoomBtn) {
   refs.createRoomBtn.setAttribute("aria-describedby", "welcome-mode-banner");
 }
-refs.offlineSoloBtn?.addEventListener("click", startOfflineSolo);
+refs.offlineSoloBtn?.addEventListener("click", () => startOfflineSolo());
+refs.dailyChallengeBtn?.addEventListener("click", () => startOfflineSolo({ daily: true }));
+refs.welcomeDailyBtn?.addEventListener("click", () => startOfflineSolo({ daily: true }));
+refs.shareDailyBtn?.addEventListener("click", () => {
+  shareDailyResult();
+});
 refs.joinForm.addEventListener("submit", handleJoinRoom);
 if (refs.joinRoomBtn) {
   refs.joinRoomBtn.setAttribute("aria-describedby", "welcome-mode-banner");
@@ -6115,7 +6388,7 @@ function updateWelcomeModePanel() {
     ? "정적판: 오프라인 솔로만 (멀티 서버 없이 즉시 시작)"
     : "실시간 멀티플레이: 서버에 연결해 방/초대로 함께 플레이";
   const stepA = isStatic ? "내 이름 입력" : "방 만들기";
-  const stepB = isStatic ? "바로 솔로 플레이 시작" : "코드/링크 공유 후 친구 초대";
+  const stepB = isStatic ? "바로 솔로 또는 오늘의 챌린지 시작" : "코드/링크 공유 후 친구 초대";
   refs.welcomeModeSteps.replaceChildren(
     ...[stepA, stepB, "도움말 확인"].map((text, index) => {
       const node = document.createElement("li");
@@ -6675,6 +6948,49 @@ window.sequenceTest = {
     const w = clientState.victoryWash;
     if (!w) return null;
     return { team: w.team, elapsedMs: performance.now() - w.startedAt };
+  },
+  // Fast-play tempo introspection for ui-regression: current tempo factor and the
+  // duration the most recent card flight launched with.
+  animation: {
+    get tempo() {
+      return animationTempo();
+    },
+    get lastFlightDurationMs() {
+      return lastFlightDurationMs;
+    },
+    get lastChipPlaceDurationMs() {
+      return lastChipPlaceDurationMs;
+    },
+    get lastChipRemoveDurationMs() {
+      return lastChipRemoveDurationMs;
+    },
+  },
+  // Daily-challenge introspection for ui-regression: current challenge metadata plus the
+  // persisted results/stats caches and the derived streak.
+  get daily() {
+    return {
+      todayKey: dailyDateKey(),
+      challenge: clientState.dailyChallenge ? { ...clientState.dailyChallenge } : null,
+      results: JSON.parse(JSON.stringify(dailyResultsCache)),
+      stats: JSON.parse(JSON.stringify(soloStatsCache)),
+      streak: computeDailyStreak(dailyResultsCache, dailyDateKey()),
+      lastShareText: window.__sequenceLastDailyShareText || null,
+    };
+  },
+  // Test-only: finishes the active LOCAL solo game immediately so ui-regression can
+  // exercise the victory/daily-result/share surface without simulating a full match.
+  // Local mode only — nothing server-side is touched, and a user "cheating" their own
+  // on-device stats with this is equivalent to editing their own localStorage.
+  debugFinishLocalSoloGame(winner = "A") {
+    if (!clientState.localMode || !localSoloRuntime?.room?.game) return false;
+    const game = localSoloRuntime.room.game;
+    if (game.phase === "finished") return false;
+    localSoloRuntime.clearBotTimer();
+    game.phase = "finished";
+    game.winner = winner === "B" ? "B" : "A";
+    localSoloRuntime.markFinishedIfNeeded();
+    localSoloRuntime.emit(`${game.winner === "A" ? "루비" : "코발트"} 팀 승리!`);
+    return true;
   },
 };
 

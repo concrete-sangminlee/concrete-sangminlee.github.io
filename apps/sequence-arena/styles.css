@@ -2898,7 +2898,9 @@ body[data-selected="true"] .selection-hint {
   z-index: 999;
   pointer-events: none;
   margin: 0;
-  animation: cardFlightToTarget 760ms cubic-bezier(0.16, 0.78, 0.18, 1) forwards;
+  /* Duration comes per-launch via --flight-duration so rapid successive plays compress
+     the flight (fast-play tempo) without retiming a clone already in motion. */
+  animation: cardFlightToTarget var(--flight-duration, 760ms) cubic-bezier(0.16, 0.78, 0.18, 1) forwards;
   will-change: transform, opacity, filter;
 }
 
@@ -4382,4 +4384,98 @@ body[data-turn-just-arrived="true"] .board-panel {
   .card-note {
     display: none;
   }
+}
+
+/* ---- 오늘의 챌린지(데일리) 표면 ---- */
+
+.solo-stats-strip {
+  margin-top: 6px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: #4a3413;
+  border: 1px dashed rgba(160, 110, 36, 0.38);
+  background: rgba(248, 226, 168, 0.22);
+}
+
+.daily-challenge-button {
+  border-color: rgba(160, 110, 36, 0.55);
+  background:
+    linear-gradient(180deg, rgba(255, 244, 214, 0.85), rgba(247, 226, 168, 0.5));
+  color: #5a3c10;
+  font-weight: 900;
+}
+
+.daily-challenge-button:hover {
+  border-color: rgba(160, 110, 36, 0.8);
+  background:
+    linear-gradient(180deg, rgba(255, 247, 224, 0.95), rgba(247, 226, 168, 0.66));
+}
+
+.daily-badge {
+  display: inline-flex;
+  align-items: center;
+  margin-top: 4px;
+  padding: 2px 9px;
+  border-radius: 999px;
+  font-size: 0.74rem;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+  color: #5a3c10;
+  border: 1px solid rgba(160, 110, 36, 0.4);
+  background: rgba(247, 226, 168, 0.5);
+}
+
+.victory-daily-result {
+  display: block;
+  margin-top: 6px;
+  font-size: 0.85rem;
+  font-weight: 900;
+  color: #f5e3ae;
+}
+
+.victory-card .share-daily-button {
+  margin-top: 6px;
+  min-height: 40px;
+  border-color: rgba(240, 219, 164, 0.5);
+  color: #f0dba4;
+  background: rgba(240, 219, 164, 0.1);
+}
+
+.victory-card .share-daily-button:hover {
+  background: rgba(240, 219, 164, 0.2);
+}
+
+.history-meta-chip.daily {
+  color: #6a4710;
+  background: rgba(226, 176, 79, 0.32);
+}
+
+[data-theme="dark"] .solo-stats-strip {
+  color: #f0d9a0;
+  border-color: rgba(240, 217, 160, 0.34);
+  background: rgba(240, 217, 160, 0.1);
+}
+
+[data-theme="dark"] .daily-challenge-button {
+  color: #f5e3ae;
+  border-color: rgba(240, 217, 160, 0.45);
+  background: linear-gradient(180deg, rgba(96, 76, 32, 0.55), rgba(64, 50, 22, 0.45));
+}
+
+[data-theme="dark"] .daily-challenge-button:hover {
+  border-color: rgba(240, 217, 160, 0.7);
+  background: linear-gradient(180deg, rgba(110, 88, 38, 0.65), rgba(74, 58, 26, 0.55));
+}
+
+[data-theme="dark"] .daily-badge {
+  color: #f0d9a0;
+  border-color: rgba(240, 217, 160, 0.4);
+  background: rgba(240, 217, 160, 0.12);
+}
+
+[data-theme="dark"] .history-meta-chip.daily {
+  color: #f0d9a0;
+  background: rgba(226, 176, 79, 0.2);
 }

@@ -9,6 +9,7 @@ import {
   serializeViewerGame,
 } from "./game-core.js";
 import { BOT_DIFFICULTIES, chooseBotAction, normalizeBotDifficulty } from "./bot-ai.js";
+import { createSeededRng } from "./rng.js";
 
 const LOCAL_ROOM_CODE = "SOLO";
 const LOCAL_BOT_SESSION_ID = "local-cobalt-bot";
@@ -63,6 +64,9 @@ export class LocalSoloRuntime {
     this.matchNumber = 0;
     this.lastRecordedMatchNumber = 0;
     this.matchHistory = [];
+    this.seed = "";
+    this.daily = null;
+    this.rng = Math.random;
   }
 
   clearBotTimer() {
@@ -75,28 +79,45 @@ export class LocalSoloRuntime {
     }
   }
 
-  start({ name = "플레이어", sessionId = "", difficulty = BOT_DIFFICULTIES.smart } = {}) {
+  start({ name = "플레이어", sessionId = "", difficulty = BOT_DIFFICULTIES.smart, seed = "", daily = null } = {}) {
     this.clearBotTimer();
     const cleanName = String(name || "플레이어").trim().slice(0, 40) || "플레이어";
     const cleanSessionId = sessionId || randomSessionId();
     const seats = makeSeats(cleanSessionId, cleanName);
     this.matchNumber += 1;
+    // A seed makes the whole match deterministic: board layout, deck order, both hands,
+    // and every reshuffle/draw flow through one PRNG stream (bot decisions are already
+    // deterministic). The daily challenge relies on this to hand every player the same
+    // puzzle; the seedless path stays Math.random, byte-identical to the old behavior.
+    this.seed = typeof seed === "string" ? seed : "";
+    this.rng = this.seed ? createSeededRng(this.seed) : Math.random;
+    this.daily =
+      daily && typeof daily === "object" && typeof daily.dateKey === "string" && Number.isFinite(Number(daily.number))
+        ? { dateKey: daily.dateKey, number: Math.max(1, Math.trunc(Number(daily.number))) }
+        : null;
     this.room = {
       code: LOCAL_ROOM_CODE,
       phase: "playing",
       teamSize: 1,
       seats,
-      game: createGame(seats, Math.random),
-      botDifficulty: normalizeBotDifficulty(difficulty),
+      game: createGame(seats, this.rng),
+      // One shared daily puzzle must mean one shared opponent, so daily locks the bot
+      // to the standard difficulty regardless of the caller's solo preference.
+      botDifficulty: this.daily ? BOT_DIFFICULTIES.smart : normalizeBotDifficulty(difficulty),
       botThinkingSeatIndex: null,
       rematchMode: "host",
       rematchVotes: [],
       chatMessages: [],
       matchStartedAt: Date.now(),
       matchNumber: this.matchNumber,
+      dailyChallenge: this.daily,
     };
     this.room.game.matchNumber = this.matchNumber;
-    return this.emit("오프라인 솔로 모드가 시작되었습니다. 서버 없이 이 브라우저에서 봇과 1대1로 진행합니다.");
+    return this.emit(
+      this.daily
+        ? `오늘의 챌린지 #${this.daily.number}이 시작되었습니다. 모두에게 같은 보드와 손패가 주어집니다.`
+        : "오프라인 솔로 모드가 시작되었습니다. 서버 없이 이 브라우저에서 봇과 1대1로 진행합니다."
+    );
   }
 
   snapshot(systemMessage = "") {
@@ -120,6 +141,7 @@ export class LocalSoloRuntime {
       allowSpectators: false,
       botThinkingSeatIndex: room.botThinkingSeatIndex,
       botDifficulty: room.botDifficulty,
+      dailyChallenge: room.dailyChallenge ?? null,
       rematchMode: room.rematchMode,
       rematchVoteSeatIndexes: [],
       rematchRequiredVotes: 1,
@@ -163,13 +185,13 @@ export class LocalSoloRuntime {
   }
 
   playCard(payload) {
-    const result = playCard(this.room.game, 0, payload.cardId, payload.targetCellId);
+    const result = playCard(this.room.game, 0, payload.cardId, payload.targetCellId, this.rng);
     if (!result.ok) return this.emit(result.error);
     return this.emit();
   }
 
   discardDead(payload) {
-    const result = discardDeadCard(this.room.game, 0, payload.cardId);
+    const result = discardDeadCard(this.room.game, 0, payload.cardId, this.rng);
     if (!result.ok) return this.emit(result.error);
     return this.emit();
   }
@@ -181,7 +203,7 @@ export class LocalSoloRuntime {
   }
 
   drawFromDeck() {
-    const result = drawReplacementCard(this.room.game, 0, Math.random);
+    const result = drawReplacementCard(this.room.game, 0, this.rng);
     if (!result.ok) return this.emit(result.error);
     this.markFinishedIfNeeded();
     const snapshot = this.emit();
@@ -196,10 +218,16 @@ export class LocalSoloRuntime {
     const name = this.room.seats[0].name;
     const sessionId = this.room.seats[0].sessionId;
     const difficulty = this.room.botDifficulty;
-    return this.start({ name, sessionId, difficulty });
+    // A daily rematch is a retry of the same dated puzzle (same seed → same board and
+    // hands), not a fresh random game; the result freeze in shared/daily.js keeps the
+    // first completion as the record.
+    return this.start({ name, sessionId, difficulty, seed: this.seed, daily: this.daily });
   }
 
   setBotDifficulty(difficulty) {
+    if (this.room.dailyChallenge) {
+      return this.emit("데일리 챌린지에서는 모두가 같은 조건으로 플레이하도록 AI 난이도가 SMART로 고정됩니다.");
+    }
     this.room.botDifficulty = normalizeBotDifficulty(difficulty);
     return this.emit(`AI 모드를 ${this.room.botDifficulty.toUpperCase()}로 변경했습니다.`);
   }
@@ -263,7 +291,7 @@ export class LocalSoloRuntime {
     const pending = this.room.game?.pendingStep;
     if (!pending || pending.seatIndex !== seatIndex) return true;
     if (pending.type === "discard" && !discardPendingCard(this.room.game, seatIndex).ok) return false;
-    if (this.room.game.pendingStep?.type === "draw" && !drawReplacementCard(this.room.game, seatIndex, Math.random).ok) return false;
+    if (this.room.game.pendingStep?.type === "draw" && !drawReplacementCard(this.room.game, seatIndex, this.rng).ok) return false;
     return true;
   }
 
@@ -284,6 +312,7 @@ export class LocalSoloRuntime {
             durationMs: Date.now() - this.room.matchStartedAt,
             testMode: "local-solo",
             botDifficulty: this.room.botDifficulty,
+            daily: this.room.dailyChallenge ?? null,
           },
           ...this.matchHistory,
         ].slice(0, 12);

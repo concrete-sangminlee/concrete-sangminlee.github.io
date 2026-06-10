@@ -121,6 +121,7 @@
             <h2>방</h2>
             <p id="gateway-subtitle">방을 만들거나 받은 코드로 입장하세요. 같은 브라우저에서는 좌석이 복구됩니다.</p>
             <p id="gateway-mode-hint" class="gateway-mode-hint" aria-live="polite" aria-atomic="true">게임 모드: 확인 중입니다.</p>
+            <p id="solo-stats-strip" class="solo-stats-strip" hidden></p>
           </div>
 
           <div id="welcome-card" class="welcome-card">
@@ -132,6 +133,7 @@
             <div class="welcome-actions">
               <button id="welcome-rejoin-btn" class="ghost-button" type="button" hidden>직전 방으로 이어하기</button>
               <button id="welcome-create-btn" class="primary-button" type="button">바로 솔로 플레이</button>
+              <button id="welcome-daily-btn" class="ghost-button daily-challenge-button" type="button">오늘의 챌린지</button>
               <button id="welcome-help-btn" class="ghost-button" type="button">자세한 규칙 보기</button>
             </div>
           </div>
@@ -170,6 +172,7 @@
               </div>
               <button id="create-room-btn" class="primary-button" type="submit">방 만들기</button>
               <button id="offline-solo-btn" class="ghost-button" type="button">오프라인 솔로</button>
+              <button id="daily-challenge-btn" class="ghost-button daily-challenge-button" type="button">오늘의 챌린지</button>
             </form>
 
             <form id="join-form" class="stack-card">
@@ -379,6 +382,7 @@
               <div class="panel-head compact">
                 <h2>현재 상태</h2>
                 <p id="turn-subtitle">게임 시작 전입니다.</p>
+                <span id="daily-badge" class="daily-badge" hidden></span>
               </div>
               <div id="turn-banner" class="turn-banner">
                 <strong id="turn-player">대기 중</strong>
@@ -403,6 +407,8 @@
                 <span id="victory-score">0 : 0</span>
                 <button id="rematch-btn" class="primary-button" type="button" aria-keyshortcuts="R" title="리매치 투표 (R)">리매치 투표</button>
                 <span id="rematch-vote-status" class="rematch-vote-status">0 / 0 동의</span>
+                <span id="victory-daily-result" class="victory-daily-result" hidden></span>
+                <button id="share-daily-btn" class="ghost-button share-daily-button" type="button" hidden>데일리 결과 공유</button>
               </div>
               <p id="status-message" class="status-message">방에 필요한 인원이 모두 들어오면 자동으로 게임이 시작됩니다.</p>
               <div class="score-row ruby">
@@ -535,6 +541,10 @@
               <li><span class="help-tag wild">J♣ · J♦ · 와일드</span>빈 칸 어디든 내 팀 칩을 놓을 수 있습니다(코너 제외).</li>
               <li><span class="help-tag cut">J♥ · J♠ · 컷</span>상대 팀의 <em>잠기지 않은</em> 칩을 제거합니다. 시퀀스 칩은 보호됩니다.</li>
             </ul>
+          </section>
+          <section class="help-section">
+            <h3>오늘의 챌린지</h3>
+            <p>매일 모두에게 <strong>같은 보드·같은 손패</strong>가 주어지는 시드 퍼즐입니다(현지 자정 기준 갱신, 봇은 SMART 고정). 그날의 기록은 첫 판 기준으로 저장되고, 재도전은 시도 횟수만 누적됩니다. 끝나면 연속 달성 일수와 함께 결과를 복사해 공유할 수 있습니다.</p>
           </section>
           <section class="help-section">
             <h3>죽은 카드</h3>
