@@ -6376,6 +6376,44 @@ document.addEventListener(
   { passive: true }
 );
 
+// The board is canvas-rendered, so a screen reader cannot perceive the highlighted
+// keyboard cursor moving between legal target cells. Announce the cell label (e.g.
+// "K♣") plus its position in the legal-target list so SR users can navigate by ear,
+// mirroring the placement announcements in applyGameUpdate.
+function announceBoardCursorCell() {
+  const targets = clientState.legalTargets;
+  if (targets.length === 0) {
+    return;
+  }
+  const cellId = targets[clientState.keyboardBoardIndex] ?? targets[0];
+  const label = clientState.game?.board?.[cellId]?.label || "빈 칸";
+  announcePolite(
+    `${label} 칸 선택, 가능한 ${targets.length}칸 중 ${clientState.keyboardBoardIndex + 1}번째. Enter나 Space로 놓습니다.`
+  );
+}
+
+// Hand cards get a visual `.focused` highlight on arrow navigation, but the buttons are
+// rebuilt every render so native focus can't persist on them. Announce the focused card
+// label, its hand position, and whether it is currently playable so SR/keyboard-only users
+// get the same read sighted players get from the highlight.
+function announceHandCard() {
+  const hand = yourHand();
+  if (hand.length === 0) {
+    return;
+  }
+  const card = hand[clientState.keyboardHandIndex];
+  if (!card) {
+    return;
+  }
+  const team = yourPlayer()?.team;
+  const playable = Boolean(team) && getLegalTargets(clientState.game, card, team).length > 0;
+  announcePolite(
+    `${card.label}, 손패 ${hand.length}장 중 ${clientState.keyboardHandIndex + 1}번째. ${
+      playable ? "놓을 수 있는 카드입니다. Enter로 선택하세요." : "지금은 놓을 칸이 없습니다."
+    }`
+  );
+}
+
 function navigateBoardCursor(direction) {
   const targets = clientState.legalTargets;
   if (targets.length === 0) {
@@ -6389,6 +6427,7 @@ function navigateBoardCursor(direction) {
     const step = direction === "right" ? 1 : -1;
     clientState.keyboardBoardIndex =
       (clientState.keyboardBoardIndex + step + targets.length) % targets.length;
+    announceBoardCursorCell();
     return;
   }
 
@@ -6426,6 +6465,7 @@ function navigateBoardCursor(direction) {
   if (bestIndex >= 0) {
     clientState.keyboardBoardIndex = bestIndex;
   }
+  announceBoardCursorCell();
 }
 
 function confirmBoardCursorPlay() {
@@ -6552,6 +6592,7 @@ document.addEventListener("keydown", (event) => {
     event.preventDefault();
     clientState.keyboardHandIndex = (clientState.keyboardHandIndex + 1) % hand.length;
     render();
+    announceHandCard();
     return;
   }
 
@@ -6559,6 +6600,7 @@ document.addEventListener("keydown", (event) => {
     event.preventDefault();
     clientState.keyboardHandIndex = (clientState.keyboardHandIndex - 1 + hand.length) % hand.length;
     render();
+    announceHandCard();
     return;
   }
 
