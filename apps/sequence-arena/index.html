@@ -128,8 +128,17 @@
             <button id="welcome-dismiss-btn" class="welcome-dismiss" type="button" aria-label="환영 카드 닫기" title="닫기">✕</button>
             <strong class="welcome-title">Sequence Arena에 오신 걸 환영합니다</strong>
             <p class="welcome-body">보드의 같은 카드 칸에 칩을 놓고, <strong>5칸 일렬</strong>을 먼저 두 개 만들면 승리합니다.</p>
-            <p id="welcome-mode-banner" class="welcome-mode-banner"></p>
-            <ul id="welcome-mode-steps" class="welcome-steps" aria-label="빠른 시작 안내"></ul>
+            <!-- Pre-filled with the multiplayer-mode copy (same line counts as the offline
+                 variant) so updateWelcomeModePanel() swaps TEXT only. Leaving these empty
+                 made the welcome card grow ~77px after JS boot, shifting everything below
+                 it — the single largest CLS source on mobile (caught by the
+                 performance-budget-mobile regression). -->
+            <p id="welcome-mode-banner" class="welcome-mode-banner">실시간 멀티플레이: 서버에 연결해 방/초대로 함께 플레이</p>
+            <ul id="welcome-mode-steps" class="welcome-steps" aria-label="빠른 시작 안내">
+              <li>1단계: 방 만들기</li>
+              <li>2단계: 코드/링크 공유 후 친구 초대</li>
+              <li>3단계: 도움말 확인</li>
+            </ul>
             <div class="welcome-actions">
               <button id="welcome-rejoin-btn" class="ghost-button" type="button" hidden>직전 방으로 이어하기</button>
               <button id="welcome-create-btn" class="primary-button" type="button">바로 솔로 플레이</button>
