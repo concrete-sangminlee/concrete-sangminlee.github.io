@@ -48,8 +48,14 @@
     {
       "name": "게임 열기",
       "short_name": "게임",
-      "description": "오프라인 솔로 게임을 엽니다.",
+      "description": "Sequence Arena를 엽니다.",
       "url": "./"
+    },
+    {
+      "name": "오늘의 챌린지",
+      "short_name": "데일리",
+      "description": "오늘의 시드 퍼즐을 바로 시작합니다.",
+      "url": "./?mode=daily"
     }
   ]
 }

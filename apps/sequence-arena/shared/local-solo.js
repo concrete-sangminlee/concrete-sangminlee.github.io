@@ -79,7 +79,7 @@ export class LocalSoloRuntime {
     }
   }
 
-  start({ name = "플레이어", sessionId = "", difficulty = BOT_DIFFICULTIES.smart, seed = "", daily = null } = {}) {
+  start({ name = "플레이어", sessionId = "", difficulty = BOT_DIFFICULTIES.smart, seed = "", daily = null, tutorial = false } = {}) {
     this.clearBotTimer();
     const cleanName = String(name || "플레이어").trim().slice(0, 40) || "플레이어";
     const cleanSessionId = sessionId || randomSessionId();
@@ -95,6 +95,7 @@ export class LocalSoloRuntime {
       daily && typeof daily === "object" && typeof daily.dateKey === "string" && Number.isFinite(Number(daily.number))
         ? { dateKey: daily.dateKey, number: Math.max(1, Math.trunc(Number(daily.number))) }
         : null;
+    this.tutorial = tutorial === true;
     this.room = {
       code: LOCAL_ROOM_CODE,
       phase: "playing",
@@ -102,8 +103,14 @@ export class LocalSoloRuntime {
       seats,
       game: createGame(seats, this.rng),
       // One shared daily puzzle must mean one shared opponent, so daily locks the bot
-      // to the standard difficulty regardless of the caller's solo preference.
-      botDifficulty: this.daily ? BOT_DIFFICULTIES.smart : normalizeBotDifficulty(difficulty),
+      // to the standard difficulty regardless of the caller's solo preference. The guided
+      // tutorial game locks to easy instead — a first-timer should not lose their very
+      // first game to the strategic bot mid-lesson.
+      botDifficulty: this.tutorial
+        ? BOT_DIFFICULTIES.easy
+        : this.daily
+          ? BOT_DIFFICULTIES.smart
+          : normalizeBotDifficulty(difficulty),
       botThinkingSeatIndex: null,
       rematchMode: "host",
       rematchVotes: [],
@@ -111,12 +118,15 @@ export class LocalSoloRuntime {
       matchStartedAt: Date.now(),
       matchNumber: this.matchNumber,
       dailyChallenge: this.daily,
+      tutorialMode: this.tutorial,
     };
     this.room.game.matchNumber = this.matchNumber;
     return this.emit(
-      this.daily
-        ? `오늘의 챌린지 #${this.daily.number}이 시작되었습니다. 모두에게 같은 보드와 손패가 주어집니다.`
-        : "오프라인 솔로 모드가 시작되었습니다. 서버 없이 이 브라우저에서 봇과 1대1로 진행합니다."
+      this.tutorial
+        ? "가이드 플레이가 시작되었습니다. 안내를 따라 첫 턴을 진행해 보세요."
+        : this.daily
+          ? `오늘의 챌린지 #${this.daily.number}이 시작되었습니다. 모두에게 같은 보드와 손패가 주어집니다.`
+          : "오프라인 솔로 모드가 시작되었습니다. 서버 없이 이 브라우저에서 봇과 1대1로 진행합니다."
     );
   }
 
@@ -220,8 +230,9 @@ export class LocalSoloRuntime {
     const difficulty = this.room.botDifficulty;
     // A daily rematch is a retry of the same dated puzzle (same seed → same board and
     // hands), not a fresh random game; the result freeze in shared/daily.js keeps the
-    // first completion as the record.
-    return this.start({ name, sessionId, difficulty, seed: this.seed, daily: this.daily });
+    // first completion as the record. A tutorial rematch stays a stats-excluded practice
+    // run on the same scripted board.
+    return this.start({ name, sessionId, difficulty, seed: this.seed, daily: this.daily, tutorial: this.tutorial });
   }
 
   setBotDifficulty(difficulty) {
@@ -313,6 +324,7 @@ export class LocalSoloRuntime {
             testMode: "local-solo",
             botDifficulty: this.room.botDifficulty,
             daily: this.room.dailyChallenge ?? null,
+            tutorial: this.room.tutorialMode === true,
           },
           ...this.matchHistory,
         ].slice(0, 12);

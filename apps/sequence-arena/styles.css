@@ -4479,3 +4479,120 @@ body[data-turn-just-arrived="true"] .board-panel {
   color: #f0d9a0;
   background: rgba(226, 176, 79, 0.2);
 }
+
+/* ---- 가이드 플레이(튜토리얼) 표면 ---- */
+
+.tutorial-start-button {
+  border-color: rgba(54, 122, 94, 0.5);
+  background: linear-gradient(180deg, rgba(222, 244, 232, 0.85), rgba(189, 228, 207, 0.5));
+  color: #1f4d39;
+  font-weight: 900;
+}
+
+.tutorial-start-button:hover {
+  border-color: rgba(54, 122, 94, 0.78);
+  background: linear-gradient(180deg, rgba(231, 248, 239, 0.95), rgba(189, 228, 207, 0.66));
+}
+
+.tutorial-bubble {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  z-index: 940;
+  width: min(360px, calc(100vw - 28px));
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px solid rgba(54, 122, 94, 0.55);
+  background:
+    linear-gradient(180deg, rgba(255, 253, 246, 0.97), rgba(241, 248, 243, 0.96));
+  box-shadow: 0 14px 38px rgba(10, 30, 22, 0.32);
+  color: #21372c;
+}
+
+.tutorial-bubble-head {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 6px;
+}
+
+.tutorial-step-kicker {
+  flex-shrink: 0;
+  padding: 2px 9px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  color: #1f4d39;
+  background: rgba(77, 189, 133, 0.22);
+  border: 1px solid rgba(54, 122, 94, 0.4);
+}
+
+.tutorial-bubble-head strong {
+  font-size: 0.98rem;
+  font-weight: 900;
+}
+
+.tutorial-bubble p {
+  margin: 0 0 10px;
+  font-size: 0.86rem;
+  line-height: 1.5;
+  font-weight: 600;
+}
+
+.tutorial-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.tutorial-actions .primary-button,
+.tutorial-actions .ghost-button {
+  min-height: 38px;
+  padding: 6px 14px;
+}
+
+/* Spotlight: outline + glow only — no motion, no pointer blocking, so the guided action
+   happens on the real UI and prefers-reduced-motion needs no special-casing. */
+.tutorial-spotlight {
+  outline: 3px solid rgba(77, 189, 133, 0.95);
+  outline-offset: 3px;
+  border-radius: 12px;
+  box-shadow: 0 0 0 6px rgba(77, 189, 133, 0.22);
+}
+
+@media (max-width: 680px) {
+  /* Mobile playing layout pins the hand tray to the bottom — anchor the coach at the top
+     so it never covers the cards the player is being asked to touch. */
+  .tutorial-bubble {
+    right: 10px;
+    left: 10px;
+    top: 10px;
+    bottom: auto;
+    width: auto;
+  }
+}
+
+[data-theme="dark"] .tutorial-start-button {
+  color: #cdebd9;
+  border-color: rgba(120, 200, 160, 0.45);
+  background: linear-gradient(180deg, rgba(34, 66, 50, 0.6), rgba(24, 46, 36, 0.5));
+}
+
+[data-theme="dark"] .tutorial-bubble {
+  border-color: rgba(120, 200, 160, 0.5);
+  background: linear-gradient(180deg, rgba(22, 40, 31, 0.97), rgba(16, 30, 24, 0.96));
+  color: #d8ecdf;
+}
+
+[data-theme="dark"] .tutorial-step-kicker {
+  color: #cdebd9;
+  border-color: rgba(120, 200, 160, 0.4);
+  background: rgba(77, 189, 133, 0.16);
+}
+
+/* display: inline-flex on .primary-button would override the hidden attribute's UA
+   display: none (same pattern as .offline-banner[hidden]) — the 다음 button must truly
+   vanish on state-gated steps. */
+.tutorial-actions button[hidden] {
+  display: none;
+}

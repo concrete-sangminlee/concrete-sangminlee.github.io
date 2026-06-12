@@ -21,6 +21,7 @@ import {
   drawCardFaceDetails,
 } from "./client/board-paint.js";
 import { HAPTIC, playSoundPattern } from "./client/sound-bank.js";
+import { TUTORIAL_SEED, TUTORIAL_STEPS, createTutorialMachine } from "./client/tutorial.js";
 import { sanitizeName, ROOM_CODE_PATTERN, MAX_ROOM_CODE_LENGTH } from "./shared/validation.js";
 
 const STORAGE_KEYS = {
@@ -39,6 +40,7 @@ const STORAGE_KEYS = {
   welcomed: "sequence-arena-welcomed",
   dailyResults: "sequence-arena-daily-results",
   soloStats: "sequence-arena-solo-stats",
+  tutorialDone: "sequence-arena-tutorial-done",
 };
 
 // Canonical public URL used in the daily-challenge share text. The Pages PWA is the one
@@ -97,6 +99,14 @@ const refs = {
   welcomeRejoinBtn: document.getElementById("welcome-rejoin-btn"),
   welcomeHelpBtn: document.getElementById("welcome-help-btn"),
   welcomeDailyBtn: document.getElementById("welcome-daily-btn"),
+  welcomeTutorialBtn: document.getElementById("welcome-tutorial-btn"),
+  helpTutorialBtn: document.getElementById("help-tutorial-btn"),
+  tutorialBubble: document.getElementById("tutorial-bubble"),
+  tutorialStepKicker: document.getElementById("tutorial-step-kicker"),
+  tutorialTitle: document.getElementById("tutorial-title"),
+  tutorialBody: document.getElementById("tutorial-body"),
+  tutorialNextBtn: document.getElementById("tutorial-next-btn"),
+  tutorialSkipBtn: document.getElementById("tutorial-skip-btn"),
   welcomeModeBanner: document.getElementById("welcome-mode-banner"),
   welcomeModeSteps: document.getElementById("welcome-mode-steps"),
   themeToggleBtn: document.getElementById("theme-toggle-btn"),
@@ -2177,6 +2187,12 @@ function connectSocket() {
 
 function startOfflineSolo(options = {}) {
   const daily = options.daily === true;
+  const tutorial = options.tutorial === true;
+  // Starting any non-tutorial game while the coach is up ends the lesson — otherwise the
+  // step machine would keep narrating a game it no longer describes.
+  if (tutorialMachine.active && !tutorial) {
+    tutorialMachine.finish("skipped");
+  }
   const name = normalizePlayerName(refs.createName?.value || clientState.lastName || "플레이어");
   if (typeof dismissWelcome === "function") {
     dismissWelcome();
@@ -2212,10 +2228,11 @@ function startOfflineSolo(options = {}) {
     name,
     sessionId: clientState.sessionId,
     difficulty: clientState.botDifficulty,
-    seed: daily ? dailySeed(dateKey) : "",
+    seed: daily ? dailySeed(dateKey) : tutorial ? TUTORIAL_SEED : "",
     daily: daily ? { dateKey, number: dailyChallengeNumber(dateKey) } : null,
+    tutorial,
   });
-  if (!daily) {
+  if (!daily && !tutorial) {
     // The daily start keeps the runtime's own system message ("같은 보드와 손패…") so the
     // mode explanation is not immediately overwritten by a generic flash.
     setFlashMessage("오프라인 솔로를 시작했습니다.");
@@ -3338,6 +3355,89 @@ function formatMatchDuration(ms) {
   return seconds > 0 ? `${minutes}분 ${seconds}초` : `${minutes}분`;
 }
 
+// ---- 가이드 플레이(튜토리얼) 컨트롤러 ----
+// The step script/machine live in client/tutorial.js; this block owns the DOM glue:
+// coach bubble, spotlight classes, entry points, and the storage flag.
+const TUTORIAL_SPOTLIGHT_TARGETS = {
+  hand: () => refs.handContainer,
+  board: () => canvas,
+  discard: () => refs.discardPileBtn,
+  deck: () => refs.deckPileBtn,
+};
+let tutorialSpotlitElement = null;
+
+function clearTutorialSpotlight() {
+  if (tutorialSpotlitElement) {
+    tutorialSpotlitElement.classList.remove("tutorial-spotlight");
+    tutorialSpotlitElement = null;
+  }
+}
+
+function applyTutorialSpotlight(targetKey) {
+  clearTutorialSpotlight();
+  const element = targetKey ? TUTORIAL_SPOTLIGHT_TARGETS[targetKey]?.() : null;
+  if (element) {
+    element.classList.add("tutorial-spotlight");
+    tutorialSpotlitElement = element;
+  }
+}
+
+const tutorialMachine = createTutorialMachine({
+  onStepChange(step, index) {
+    if (!refs.tutorialBubble) return;
+    refs.tutorialBubble.hidden = false;
+    if (refs.tutorialStepKicker) {
+      refs.tutorialStepKicker.textContent = `${index + 1} / ${TUTORIAL_STEPS.length}`;
+    }
+    if (refs.tutorialTitle) {
+      refs.tutorialTitle.textContent = step.title;
+    }
+    if (refs.tutorialBody) {
+      refs.tutorialBody.textContent = step.body;
+    }
+    if (refs.tutorialNextBtn) {
+      // State-gated steps advance from real play; showing 다음 there would let players
+      // click past the action they are being taught.
+      refs.tutorialNextBtn.hidden = step.advance !== "manual";
+      refs.tutorialNextBtn.textContent = index === TUTORIAL_STEPS.length - 1 ? "튜토리얼 마치기" : "다음";
+    }
+    applyTutorialSpotlight(step.spotlight);
+  },
+  onComplete(reason) {
+    if (refs.tutorialBubble) {
+      refs.tutorialBubble.hidden = true;
+    }
+    clearTutorialSpotlight();
+    safeLocalStorage.set(STORAGE_KEYS.tutorialDone, "true");
+    updateTutorialEntryPoints();
+    setFlashMessage(
+      reason === "skipped"
+        ? "안내를 건너뛰었습니다. 이 연습 게임은 자유롭게 이어가도 되고, 새 게임을 시작해도 됩니다."
+        : "가이드 플레이 완료! 이어서 시퀀스 2개를 완성해 보세요. 이 연습 게임은 전적에 기록되지 않습니다."
+    );
+    render();
+  },
+});
+
+function isTutorialDone() {
+  return safeLocalStorage.get(STORAGE_KEYS.tutorialDone) === "true";
+}
+
+function updateTutorialEntryPoints() {
+  if (refs.welcomeTutorialBtn) {
+    refs.welcomeTutorialBtn.title = isTutorialDone()
+      ? "안내를 따라 진행하는 연습 게임을 다시 봅니다."
+      : "처음이라면 추천! 안내를 따라 첫 턴을 배우는 연습 게임입니다.";
+  }
+}
+
+function startTutorial() {
+  closeHelpModal();
+  startOfflineSolo({ tutorial: true });
+  tutorialMachine.start();
+  render();
+}
+
 function normalizeDailyChallengeMeta(raw) {
   if (!raw || typeof raw !== "object") return null;
   const dateKey = typeof raw.dateKey === "string" && /^\d{4}-\d{2}-\d{2}$/.test(raw.dateKey) ? raw.dateKey : null;
@@ -3356,6 +3456,10 @@ function maybeRecordLocalSoloResult() {
   if (!latest || !Number.isFinite(latest.matchNumber)) return;
   if (latest.matchNumber <= lastRecordedLocalMatchNumber) return;
   lastRecordedLocalMatchNumber = latest.matchNumber;
+  if (latest.tutorial === true) {
+    // Guided practice games are deliberately excluded from solo stats and daily records.
+    return;
+  }
   const won = latest.winner === "A";
   soloStatsCache = recordSoloResult(soloStatsCache, {
     difficulty: latest.botDifficulty || clientState.botDifficulty,
@@ -3394,7 +3498,8 @@ async function shareDailyResult() {
     won: entry.won,
     durationMs: entry.durationMs,
     streakCurrent: streak.current,
-    url: PAGES_PUBLIC_URL,
+    // ?mode=daily lands recipients straight in the same dated puzzle.
+    url: `${PAGES_PUBLIC_URL}?mode=daily`,
   });
   // Mirrored for ui-regression: the server's Permissions-Policy intentionally denies
   // clipboard-read, so tests verify the composed text here instead of reading it back.
@@ -3488,6 +3593,7 @@ function normalizeMatchHistory(rawHistory) {
         testMode: typeof entry.testMode === "string" ? entry.testMode : "",
         botDifficulty: typeof entry.botDifficulty === "string" && entry.botDifficulty ? normalizeBotDifficulty(entry.botDifficulty) : "",
         daily: normalizeDailyChallengeMeta(entry.daily),
+        tutorial: entry.tutorial === true,
       };
     })
     .filter(Boolean);
@@ -3685,6 +3791,9 @@ function renderHistory() {
     );
     if (record.daily) {
       meta.appendChild(buildHistoryMeta(`데일리 #${record.daily.number}`, "daily"));
+    }
+    if (record.tutorial) {
+      meta.appendChild(buildHistoryMeta("가이드 플레이 · 전적 제외"));
     }
     const duration = formatMatchDuration(record.durationMs);
     if (duration) {
@@ -5132,6 +5241,14 @@ function render() {
     updateFeedbackControls();
     updateWelcomeCreateLabel();
     renderDailySurfaces();
+    if (tutorialMachine.active) {
+      tutorialMachine.observe({
+        selectedCard: Boolean(selectedCard()),
+        pendingStep: clientState.pendingStep,
+        currentTurnSeat: clientState.game?.currentSeatIndex ?? null,
+        botThinkingSeatIndex: clientState.botThinkingSeatIndex,
+      });
+    }
     if (typeof maybeShowWelcome === "function") maybeShowWelcome();
     drawBoard();
     renderStatus();
@@ -5264,6 +5381,11 @@ refs.welcomeDailyBtn?.addEventListener("click", () => startOfflineSolo({ daily: 
 refs.shareDailyBtn?.addEventListener("click", () => {
   shareDailyResult();
 });
+refs.welcomeTutorialBtn?.addEventListener("click", startTutorial);
+refs.helpTutorialBtn?.addEventListener("click", startTutorial);
+refs.tutorialNextBtn?.addEventListener("click", () => tutorialMachine.next());
+refs.tutorialSkipBtn?.addEventListener("click", () => tutorialMachine.finish("skipped"));
+updateTutorialEntryPoints();
 refs.joinForm.addEventListener("submit", handleJoinRoom);
 if (refs.joinRoomBtn) {
   refs.joinRoomBtn.setAttribute("aria-describedby", "welcome-mode-banner");
@@ -5982,6 +6104,23 @@ handleJoinNameInput();
 handleJoinCodeInput();
 
 maybeShowWelcome();
+
+// Daily deep link: ?mode=daily auto-starts today's challenge — the share text and the
+// PWA shortcut land here so a recipient reaches the same dated puzzle in one tap. The
+// parameter is consumed and stripped immediately (refresh must not force-restart a run),
+// and an explicit ?room= invite is the stronger intent, so it wins when both are present.
+(() => {
+  const bootUrl = new URL(window.location.href);
+  if (bootUrl.searchParams.get("mode") !== "daily") {
+    return;
+  }
+  bootUrl.searchParams.delete("mode");
+  window.history.replaceState({}, "", bootUrl);
+  if (normalizedUrlRoomCode) {
+    return;
+  }
+  startOfflineSolo({ daily: true });
+})();
 refs.helpModal?.addEventListener("click", (event) => {
   if (event.target instanceof HTMLElement && event.target.dataset.helpDismiss != null) {
     closeHelpModal();
@@ -6283,6 +6422,13 @@ document.addEventListener("keydown", (event) => {
     closeHelpModal();
     return;
   }
+  if (key === "escape" && tutorialMachine.active && !selectedCard()) {
+    // First Esc cancels a selection (handled below); a second Esc with nothing selected
+    // dismisses the coach so the shortcut can't end the lesson by accident.
+    event.preventDefault();
+    tutorialMachine.finish("skipped");
+    return;
+  }
   if (key === "?" || (event.shiftKey && key === "/")) {
     event.preventDefault();
     if (refs.helpModal?.hidden) {
@@ -6483,6 +6629,15 @@ window.sequenceTest = {
       stats: JSON.parse(JSON.stringify(soloStatsCache)),
       streak: computeDailyStreak(dailyResultsCache, dailyDateKey()),
       lastShareText: window.__sequenceLastDailyShareText || null,
+    };
+  },
+  // Tutorial introspection for ui-regression: machine position + persistence flag.
+  get tutorial() {
+    return {
+      active: tutorialMachine.active,
+      stepIndex: tutorialMachine.stepIndex,
+      stepId: tutorialMachine.step?.id || null,
+      done: isTutorialDone(),
     };
   },
   // Test-only: finishes the active LOCAL solo game immediately so ui-regression can
