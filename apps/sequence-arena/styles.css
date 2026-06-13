@@ -4778,3 +4778,27 @@ body[data-turn-just-arrived="true"] .board-panel {
   border-color: rgba(255, 248, 233, 0.18);
   background: rgba(255, 248, 233, 0.04);
 }
+
+/* ---- 힌트 버튼 ---- */
+
+.hint-button {
+  border-color: rgba(202, 138, 4, 0.5);
+  background: linear-gradient(180deg, rgba(254, 243, 199, 0.85), rgba(250, 224, 140, 0.5));
+  color: #6a4710;
+  font-weight: 900;
+}
+
+.hint-button:hover:not(:disabled) {
+  border-color: rgba(202, 138, 4, 0.78);
+  background: linear-gradient(180deg, rgba(255, 248, 219, 0.95), rgba(250, 224, 140, 0.66));
+}
+
+.hint-button[hidden] {
+  display: none;
+}
+
+[data-theme="dark"] .hint-button {
+  color: #f3d98c;
+  border-color: rgba(243, 217, 140, 0.45);
+  background: linear-gradient(180deg, rgba(74, 58, 26, 0.6), rgba(54, 42, 20, 0.5));
+}

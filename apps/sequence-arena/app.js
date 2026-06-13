@@ -183,6 +183,7 @@ const refs = {
   handCaption: document.getElementById("hand-caption"),
   cancelSelectionBtn: document.getElementById("cancel-selection-btn"),
   discardDeadBtn: document.getElementById("discard-dead-btn"),
+  hintBtn: document.getElementById("hint-btn"),
   selectionHint: document.getElementById("selection-hint"),
   logList: document.getElementById("log-list"),
   spectatorSummary: document.getElementById("spectator-summary"),
@@ -2805,6 +2806,58 @@ function setSelectedCard(cardId) {
   render();
 }
 
+// Strategic hint: ask the local runtime's SMART bot for the recommended move and surface it
+// by selecting the card and pointing the board cursor at the suggested cell — a learning aid
+// that reuses the proven evaluator. Local-mode only (solo / daily / tutorial), where the
+// client holds the full game state the bot needs.
+function canShowHint() {
+  return Boolean(
+    clientState.localMode &&
+      localSoloRuntime &&
+      clientState.roomPhase === "playing" &&
+      isYourTurn() &&
+      !clientState.pendingStep
+  );
+}
+
+function showHint() {
+  if (!canShowHint()) {
+    return;
+  }
+  const suggestion = localSoloRuntime.suggestMove();
+  if (!suggestion) {
+    setFlashMessage("지금은 추천할 수 있는 수가 없습니다.");
+    render();
+    return;
+  }
+  clientState.selectedCardId = suggestion.cardId;
+  computeSelectionState();
+  const card = yourHand().find((entry) => entry.id === suggestion.cardId);
+  const cardLabel = card ? card.label : "추천 카드";
+
+  if (suggestion.type === "discard_dead") {
+    setFlashMessage(`추천: ${cardLabel}는 지금 놓을 곳이 없어 버리는 게 좋아요.`);
+    announcePolite(`추천 수: ${cardLabel} 카드를 버리세요.`);
+  } else {
+    const targetIndex = clientState.legalTargets.indexOf(suggestion.targetCellId);
+    if (targetIndex >= 0) {
+      clientState.keyboardBoardIndex = targetIndex;
+    }
+    const cell = clientState.game?.board?.find((entry) => entry.id === suggestion.targetCellId);
+    const cellLabel = cell?.label || "추천 칸";
+    setFlashMessage(`추천 수: ${cardLabel} → ${cellLabel} 칸`);
+    announcePolite(`추천 수: ${cardLabel} 카드를 ${cellLabel} 칸에 놓으세요.`);
+  }
+  playSound("select");
+  triggerHaptic([8]);
+  render();
+}
+
+function updateHintButton() {
+  if (!refs.hintBtn) return;
+  refs.hintBtn.hidden = !canShowHint();
+}
+
 function selectFirstUsefulCard() {
   if (!canChooseCard()) {
     return;
@@ -5251,6 +5304,7 @@ function render() {
     updateFeedbackControls();
     updateWelcomeCreateLabel();
     renderDailySurfaces();
+    updateHintButton();
     if (tutorialMachine.active) {
       tutorialMachine.observe({
         selectedCard: Boolean(selectedCard()),
@@ -6388,6 +6442,7 @@ refs.startTestBtn.addEventListener("click", () => {
 });
 refs.discardPileBtn.addEventListener("click", discardToPile);
 refs.deckPileBtn.addEventListener("click", drawFromDeck);
+refs.hintBtn?.addEventListener("click", showHint);
 refs.cancelSelectionBtn.addEventListener("click", () => {
   clearSelection();
   playSound("tap");
@@ -6592,6 +6647,12 @@ document.addEventListener("keydown", (event) => {
 
   if (key === "f") {
     toggleFullscreen();
+    return;
+  }
+
+  if (key === "h" && canShowHint()) {
+    event.preventDefault();
+    showHint();
     return;
   }
 

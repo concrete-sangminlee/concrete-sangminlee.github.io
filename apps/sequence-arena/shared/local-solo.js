@@ -130,6 +130,25 @@ export class LocalSoloRuntime {
     );
   }
 
+  // Strategic hint for the human seat: the SMART bot's recommended action from the real
+  // local game state (full board + the player's actual hand). Read-only — it never mutates
+  // the game. Returns null off the player's turn or when no move exists. The client only
+  // surfaces this in local solo/daily/tutorial, where it holds the full state the bot needs.
+  suggestMove() {
+    if (!this.room || this.room.phase !== "playing" || this.room.game?.phase !== "playing") {
+      return null;
+    }
+    const current = getCurrentPlayer(this.room.game);
+    if (!current || current.seatIndex !== 0) {
+      return null;
+    }
+    const action = chooseBotAction(this.room.game, current, BOT_DIFFICULTIES.smart);
+    if (!action) {
+      return null;
+    }
+    return { type: action.type, cardId: action.cardId, targetCellId: action.targetCellId };
+  }
+
   snapshot(systemMessage = "") {
     const room = this.room;
     if (!room) return null;
