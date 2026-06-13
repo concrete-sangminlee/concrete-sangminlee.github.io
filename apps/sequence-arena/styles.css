@@ -4389,14 +4389,23 @@ body[data-turn-just-arrived="true"] .board-panel {
 /* ---- 오늘의 챌린지(데일리) 표면 ---- */
 
 .solo-stats-strip {
+  display: block;
+  width: 100%;
   margin-top: 6px;
   padding: 6px 10px;
   border-radius: 8px;
   font-size: 0.78rem;
   font-weight: 800;
+  text-align: left;
+  cursor: pointer;
   color: #4a3413;
   border: 1px dashed rgba(160, 110, 36, 0.38);
   background: rgba(248, 226, 168, 0.22);
+}
+
+.solo-stats-strip:hover {
+  border-style: solid;
+  background: rgba(248, 226, 168, 0.34);
 }
 
 .daily-challenge-button {
@@ -4595,4 +4604,177 @@ body[data-turn-just-arrived="true"] .board-panel {
    vanish on state-gated steps. */
 .tutorial-actions button[hidden] {
   display: none;
+}
+
+/* ---- "내 기록" 통계 모달 ---- */
+
+.stats-toggle {
+  font-size: 1rem;
+}
+
+.stats-dialog {
+  width: min(560px, 100%);
+}
+
+.stats-body {
+  display: grid;
+  gap: 18px;
+}
+
+.stats-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 10px;
+  margin: 0;
+}
+
+.stats-summary-item {
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(50, 34, 14, 0.16);
+  background: rgba(255, 253, 246, 0.6);
+}
+
+.stats-summary-item dt {
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: var(--muted);
+  margin-bottom: 3px;
+}
+
+.stats-summary-item dd {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 900;
+  color: var(--ink);
+}
+
+.stats-calendar-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+.stats-calendar-head h3 {
+  margin: 0;
+  font-size: 0.92rem;
+}
+
+.stats-legend {
+  display: flex;
+  gap: 12px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.stats-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.stats-calendar-months {
+  display: grid;
+  grid-template-columns: repeat(var(--stats-weeks, 12), 1fr);
+  gap: 3px;
+  margin-bottom: 3px;
+  font-size: 0.66rem;
+  font-weight: 800;
+  color: var(--muted);
+  min-height: 0.9rem;
+}
+
+.stats-month-label {
+  grid-row: 1;
+}
+
+.stats-calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(var(--stats-weeks, 12), 1fr);
+  grid-template-rows: repeat(7, 1fr);
+  grid-auto-flow: column;
+  gap: 3px;
+}
+
+.stats-cell {
+  aspect-ratio: 1 / 1;
+  border-radius: 3px;
+  background: rgba(50, 34, 14, 0.1);
+  border: 1px solid rgba(50, 34, 14, 0.08);
+}
+
+.stats-legend .stats-cell {
+  width: 13px;
+  height: 13px;
+  aspect-ratio: auto;
+}
+
+.stats-cell.won {
+  background: #4dbd85;
+  border-color: rgba(31, 77, 57, 0.4);
+}
+
+.stats-cell.lost {
+  background: #d98a5a;
+  border-color: rgba(120, 60, 24, 0.4);
+}
+
+.stats-cell.none {
+  background: rgba(50, 34, 14, 0.1);
+}
+
+.stats-cell.future {
+  background: transparent;
+  border-color: transparent;
+}
+
+.stats-cell.today {
+  outline: 2px solid rgba(36, 122, 81, 0.95);
+  outline-offset: 1px;
+}
+
+.stats-empty {
+  display: grid;
+  gap: 10px;
+  justify-items: start;
+  padding: 14px 16px;
+  border-radius: 10px;
+  border: 1px dashed rgba(50, 34, 14, 0.2);
+  background: rgba(255, 253, 246, 0.5);
+  font-size: 0.88rem;
+}
+
+.stats-empty[hidden] {
+  display: none;
+}
+
+.stats-calendar-section[hidden] {
+  display: none;
+}
+
+[data-theme="dark"] .stats-summary-item {
+  border-color: rgba(255, 248, 233, 0.12);
+  background: rgba(255, 248, 233, 0.05);
+}
+
+[data-theme="dark"] .stats-cell {
+  background: rgba(255, 248, 233, 0.1);
+  border-color: rgba(255, 248, 233, 0.06);
+}
+
+[data-theme="dark"] .stats-cell.won {
+  background: #3c9d6c;
+}
+
+[data-theme="dark"] .stats-cell.lost {
+  background: #c1773f;
+}
+
+[data-theme="dark"] .stats-empty {
+  border-color: rgba(255, 248, 233, 0.18);
+  background: rgba(255, 248, 233, 0.04);
 }

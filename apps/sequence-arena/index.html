@@ -25,6 +25,7 @@
     <link rel="modulepreload" href="./client/board-paint.js" />
     <link rel="modulepreload" href="./client/sound-bank.js" />
     <link rel="modulepreload" href="./client/tutorial.js" />
+    <link rel="modulepreload" href="./client/stats-view.js" />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Sequence Arena" />
     <meta property="og:title" content="Sequence Arena · 오프라인 솔로 시퀀스" />
@@ -110,6 +111,7 @@
             <span id="cobalt-seat-legend" class="legend-chip cobalt">코발트 2 · 4 · 6</span>
           </div>
           <button id="theme-toggle-btn" class="icon-button theme-toggle" type="button" aria-label="다크 모드 켜기" title="다크 모드 켜기">☾</button>
+          <button id="stats-btn" class="icon-button stats-toggle" type="button" aria-label="내 기록 보기" aria-haspopup="dialog" aria-controls="stats-modal" aria-expanded="false" title="내 기록 (데일리 캘린더 · 전적)">📊</button>
           <button id="help-btn" class="icon-button help-toggle" type="button" aria-label="게임 규칙과 단축키 보기" aria-keyshortcuts="?" aria-haspopup="dialog" aria-controls="help-modal" aria-expanded="false" title="게임 규칙 · 단축키 (?)">?</button>
           <button id="install-app-btn" class="icon-button install-toggle" type="button" aria-label="앱 설치" title="앱 설치" hidden>↓</button>
           <button id="notification-toggle-btn" class="icon-button notification-toggle" type="button" aria-label="내 차례 브라우저 알림 켜기" title="내 차례 알림 켜기">!</button>
@@ -124,7 +126,7 @@
             <h2>방</h2>
             <p id="gateway-subtitle">방을 만들거나 받은 코드로 입장하세요. 같은 브라우저에서는 좌석이 복구됩니다.</p>
             <p id="gateway-mode-hint" class="gateway-mode-hint" aria-live="polite" aria-atomic="true">게임 모드: 확인 중입니다.</p>
-            <p id="solo-stats-strip" class="solo-stats-strip" hidden></p>
+            <button id="solo-stats-strip" class="solo-stats-strip" type="button" aria-haspopup="dialog" aria-controls="stats-modal" title="내 기록 자세히 보기" hidden></button>
           </div>
 
           <div id="welcome-card" class="welcome-card">
@@ -538,6 +540,36 @@
         <button id="tutorial-skip-btn" class="ghost-button" type="button" title="안내를 끝내고 자유롭게 플레이합니다 (Esc)">건너뛰기</button>
       </div>
     </aside>
+
+    <div id="stats-modal" class="help-modal stats-modal" role="dialog" aria-modal="true" aria-labelledby="stats-modal-title" hidden>
+      <div class="help-backdrop" data-stats-dismiss></div>
+      <div class="help-dialog stats-dialog">
+        <header class="help-header">
+          <h2 id="stats-modal-title">내 기록</h2>
+          <button id="stats-close-btn" class="icon-button help-close" type="button" aria-label="내 기록 닫기" title="닫기">✕</button>
+        </header>
+        <div class="stats-body">
+          <p id="stats-sr-summary" class="sr-only" aria-live="polite"></p>
+          <dl id="stats-summary-grid" class="stats-summary-grid"></dl>
+          <section class="stats-calendar-section" aria-label="데일리 챌린지 캘린더">
+            <div class="stats-calendar-head">
+              <h3>데일리 캘린더 · 최근 12주</h3>
+              <div class="stats-legend" aria-hidden="true">
+                <span class="stats-legend-item"><i class="stats-cell won"></i>승리</span>
+                <span class="stats-legend-item"><i class="stats-cell lost"></i>패배</span>
+                <span class="stats-legend-item"><i class="stats-cell none"></i>미플레이</span>
+              </div>
+            </div>
+            <div id="stats-calendar-months" class="stats-calendar-months" aria-hidden="true"></div>
+            <div id="stats-calendar-grid" class="stats-calendar-grid" role="img"></div>
+          </section>
+          <div id="stats-empty" class="stats-empty" hidden>
+            <p>아직 데일리 기록이 없어요. 오늘의 챌린지를 끝내면 여기에 캘린더와 연속 기록이 쌓입니다.</p>
+            <button id="stats-empty-daily-btn" class="primary-button" type="button">오늘의 챌린지 시작</button>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <div id="help-modal" class="help-modal" role="dialog" aria-modal="true" aria-labelledby="help-modal-title" hidden>
       <div class="help-backdrop" data-help-dismiss></div>

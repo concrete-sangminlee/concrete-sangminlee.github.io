@@ -22,6 +22,7 @@ import {
 } from "./client/board-paint.js";
 import { HAPTIC, playSoundPattern } from "./client/sound-bank.js";
 import { TUTORIAL_SEED, TUTORIAL_STEPS, createTutorialMachine } from "./client/tutorial.js";
+import { buildDailyCalendar, buildStatsSummary } from "./client/stats-view.js";
 import { sanitizeName, ROOM_CODE_PATTERN, MAX_ROOM_CODE_LENGTH } from "./shared/validation.js";
 
 const STORAGE_KEYS = {
@@ -91,6 +92,15 @@ const refs = {
   hapticSupportNote: document.getElementById("haptic-support-note"),
   helpBtn: document.getElementById("help-btn"),
   helpModal: document.getElementById("help-modal"),
+  statsBtn: document.getElementById("stats-btn"),
+  statsModal: document.getElementById("stats-modal"),
+  statsCloseBtn: document.getElementById("stats-close-btn"),
+  statsSummaryGrid: document.getElementById("stats-summary-grid"),
+  statsCalendarGrid: document.getElementById("stats-calendar-grid"),
+  statsCalendarMonths: document.getElementById("stats-calendar-months"),
+  statsSrSummary: document.getElementById("stats-sr-summary"),
+  statsEmpty: document.getElementById("stats-empty"),
+  statsEmptyDailyBtn: document.getElementById("stats-empty-daily-btn"),
   helpCloseBtn: document.getElementById("help-close-btn"),
   helpShortcutCopy: document.getElementById("help-shortcut-copy"),
   welcomeCard: document.getElementById("welcome-card"),
@@ -5791,17 +5801,22 @@ window.matchMedia?.("(prefers-color-scheme: dark)").addEventListener?.("change",
 
 let helpPreviousFocus = null;
 
-function focusableWithinHelp() {
-  if (!refs.helpModal) return [];
-  return [...refs.helpModal.querySelectorAll("button, [href], input, select, textarea, [tabindex]:not([tabindex='-1'])")].filter(
+function focusableWithin(modalEl) {
+  if (!modalEl) return [];
+  return [...modalEl.querySelectorAll("button, [href], input, select, textarea, [tabindex]:not([tabindex='-1'])")].filter(
     (node) => !node.hasAttribute("disabled") && node.offsetParent !== null
   );
 }
 
-function setBackgroundInert(inert) {
-  // Mark non-modal siblings of <body> as inert so screen readers and Tab skip them.
+function focusableWithinHelp() {
+  return focusableWithin(refs.helpModal);
+}
+
+function setBackgroundInert(inert, modalEl = refs.helpModal) {
+  // Mark non-modal siblings of <body> as inert so screen readers and Tab skip them. Only
+  // one modal is ever open at a time, so skipping the open modal + live regions is enough.
   for (const child of document.body.children) {
-    if (child === refs.helpModal) continue;
+    if (child === modalEl) continue;
     if (child.id === "live-polite" || child.id === "live-assertive") continue;
     if (inert) {
       child.setAttribute("inert", "");
@@ -5855,11 +5870,18 @@ function closeHelpModal() {
   }
 }
 
+function openModalElement() {
+  // At most one of these is ever visible at a time.
+  if (refs.helpModal && !refs.helpModal.hidden) return refs.helpModal;
+  if (refs.statsModal && !refs.statsModal.hidden) return refs.statsModal;
+  return null;
+}
+
 function trapHelpFocus(event) {
-  if (!refs.helpModal || refs.helpModal.hidden || event.key !== "Tab") {
-    return;
-  }
-  const focusables = focusableWithinHelp();
+  if (event.key !== "Tab") return;
+  const modalEl = openModalElement();
+  if (!modalEl) return;
+  const focusables = focusableWithin(modalEl);
   if (focusables.length === 0) {
     event.preventDefault();
     return;
@@ -5868,20 +5890,144 @@ function trapHelpFocus(event) {
   const last = focusables[focusables.length - 1];
   const active = document.activeElement;
   if (event.shiftKey) {
-    if (active === first || !refs.helpModal.contains(active)) {
+    if (active === first || !modalEl.contains(active)) {
       event.preventDefault();
       last.focus();
     }
     return;
   }
-  if (active === last || !refs.helpModal.contains(active)) {
+  if (active === last || !modalEl.contains(active)) {
     event.preventDefault();
     first.focus();
   }
 }
 
+let statsPreviousFocus = null;
+
+function openStatsModal() {
+  if (!refs.statsModal) return;
+  statsPreviousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+  renderStatsModal();
+  refs.statsModal.hidden = false;
+  document.body.classList.add("help-open");
+  refs.statsBtn?.setAttribute("aria-expanded", "true");
+  setBackgroundInert(true, refs.statsModal);
+  refs.statsCloseBtn?.focus();
+}
+
+function closeStatsModal() {
+  if (!refs.statsModal) return;
+  refs.statsModal.hidden = true;
+  document.body.classList.remove("help-open");
+  refs.statsBtn?.setAttribute("aria-expanded", "false");
+  setBackgroundInert(false, refs.statsModal);
+  if (statsPreviousFocus && statsPreviousFocus.isConnected) {
+    statsPreviousFocus.focus();
+  } else {
+    refs.statsBtn?.focus();
+  }
+}
+
+const STATS_DIFFICULTY_LABELS = { easy: "쉬움", smart: "전략", aggressive: "공격" };
+
+function buildStatsSummaryItem(term, value) {
+  const wrap = document.createElement("div");
+  wrap.className = "stats-summary-item";
+  const dt = document.createElement("dt");
+  dt.textContent = term;
+  const dd = document.createElement("dd");
+  dd.textContent = value;
+  wrap.append(dt, dd);
+  return wrap;
+}
+
+function renderStatsModal() {
+  const todayKey = dailyDateKey();
+  const summary = buildStatsSummary(dailyResultsCache, soloStatsCache, todayKey);
+  const hasAnyHistory = summary.daily.played > 0 || summary.solo.games > 0;
+
+  if (refs.statsSummaryGrid) {
+    const items = [
+      buildStatsSummaryItem("현재 연속", `${summary.daily.streak.current}일`),
+      buildStatsSummaryItem("최고 연속", `${summary.daily.streak.best}일`),
+      buildStatsSummaryItem("데일리 플레이", `${summary.daily.played}일`),
+      buildStatsSummaryItem("데일리 승률", summary.daily.played ? `${summary.daily.winRate}%` : "—"),
+      buildStatsSummaryItem("솔로 전적", summary.solo.games ? `${summary.solo.wins}승 ${summary.solo.games - summary.solo.wins}패` : "—"),
+    ];
+    const difficultyParts = Object.entries(summary.solo.byDifficulty)
+      .filter(([, record]) => record.games > 0)
+      .map(([key, record]) => `${STATS_DIFFICULTY_LABELS[key] || key} ${record.wins}/${record.games}`);
+    if (difficultyParts.length > 0) {
+      items.push(buildStatsSummaryItem("난이도별", difficultyParts.join(" · ")));
+    }
+    refs.statsSummaryGrid.replaceChildren(...items);
+  }
+
+  const calendar = buildDailyCalendar(dailyResultsCache, todayKey, 12);
+  if (refs.statsCalendarGrid) {
+    refs.statsCalendarGrid.style.setProperty("--stats-weeks", String(calendar.columns.length));
+    const cells = [];
+    for (const column of calendar.columns) {
+      for (const day of column.days) {
+        const cell = document.createElement("span");
+        cell.className = `stats-cell ${day.status}${day.isToday ? " today" : ""}`;
+        const [, month, dayOfMonth] = day.dateKey.split("-");
+        const statusLabel =
+          day.status === "won" ? "데일리 승리" : day.status === "lost" ? "데일리 패배" : day.status === "future" ? "" : "미플레이";
+        cell.setAttribute(
+          "aria-label",
+          `${Number(month)}월 ${Number(dayOfMonth)}일${day.isToday ? " (오늘)" : ""}${statusLabel ? `: ${statusLabel}` : ""}`
+        );
+        cell.title = cell.getAttribute("aria-label");
+        cells.push(cell);
+      }
+    }
+    refs.statsCalendarGrid.replaceChildren(...cells);
+    refs.statsCalendarGrid.setAttribute(
+      "aria-label",
+      `최근 12주 데일리 캘린더. 현재 ${summary.daily.streak.current}일 연속, 최고 ${summary.daily.streak.best}일.`
+    );
+  }
+  if (refs.statsCalendarMonths) {
+    const labels = calendar.monthLabels.map(({ columnIndex, month }) => {
+      const span = document.createElement("span");
+      span.className = "stats-month-label";
+      span.style.gridColumnStart = String(columnIndex + 1);
+      span.textContent = `${month}월`;
+      return span;
+    });
+    refs.statsCalendarMonths.style.setProperty("--stats-weeks", String(calendar.columns.length));
+    refs.statsCalendarMonths.replaceChildren(...labels);
+  }
+
+  if (refs.statsEmpty) {
+    refs.statsEmpty.hidden = hasAnyHistory;
+  }
+  const calendarSection = refs.statsModal?.querySelector(".stats-calendar-section");
+  if (calendarSection) {
+    calendarSection.hidden = summary.daily.played === 0;
+  }
+  if (refs.statsSrSummary) {
+    refs.statsSrSummary.textContent = hasAnyHistory
+      ? `데일리 ${summary.daily.played}일 플레이, ${summary.daily.wins}승, 현재 ${summary.daily.streak.current}일 연속, 최고 ${summary.daily.streak.best}일. 솔로 ${summary.solo.wins}승 ${summary.solo.games - summary.solo.wins}패.`
+      : "아직 기록이 없습니다.";
+  }
+}
+
 refs.helpBtn?.addEventListener("click", openHelpModal);
 refs.helpCloseBtn?.addEventListener("click", closeHelpModal);
+refs.statsBtn?.addEventListener("click", openStatsModal);
+refs.statsCloseBtn?.addEventListener("click", closeStatsModal);
+refs.soloStatsStrip?.addEventListener("click", openStatsModal);
+refs.statsModal?.addEventListener("click", (event) => {
+  if (event.target instanceof HTMLElement && event.target.dataset.statsDismiss != null) {
+    closeStatsModal();
+  }
+});
+refs.statsEmptyDailyBtn?.addEventListener("click", () => {
+  closeStatsModal();
+  startOfflineSolo({ daily: true });
+});
 
 function shouldShowWelcome() {
   if (!refs.welcomeCard) return false;
@@ -6420,6 +6566,11 @@ document.addEventListener("keydown", (event) => {
   if (refs.helpModal && !refs.helpModal.hidden && key === "escape") {
     event.preventDefault();
     closeHelpModal();
+    return;
+  }
+  if (refs.statsModal && !refs.statsModal.hidden && key === "escape") {
+    event.preventDefault();
+    closeStatsModal();
     return;
   }
   if (key === "escape" && tutorialMachine.active && !selectedCard()) {

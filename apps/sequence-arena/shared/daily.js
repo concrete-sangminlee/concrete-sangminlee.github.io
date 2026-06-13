@@ -42,6 +42,17 @@ export function dailySeed(dateKey) {
   return `daily-${dateKey}`;
 }
 
+// Date-key arithmetic used by the stats calendar. Kept here (not duplicated in the client)
+// so every piece of date logic shares the same DST-immune UTC base.
+export function shiftDateKey(dateKey, deltaDays) {
+  return utcMsToDateKey(dateKeyToUtcMs(dateKey) + Math.trunc(deltaDays) * DAY_MS);
+}
+
+// 0 = Sunday … 6 = Saturday, matching JS getUTCDay so the calendar grid rows line up.
+export function weekdayIndex(dateKey) {
+  return new Date(dateKeyToUtcMs(dateKey)).getUTCDay();
+}
+
 export function normalizeDailyResults(raw) {
   if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
     return {};
