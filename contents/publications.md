@@ -20,39 +20,43 @@
 
 ### Conference Proceedings
 
-1. **Lee, S. M.**, & Kang, T. H.-K. (2026). 축소된 풍압공 계측자료를 활용한 딥러닝 기반 풍하중 시간이력 재구성. *한국풍공학회 제29회 학술대회, 29*(1).
+1. Park, H. G., **Lee, S. M.**, & Kang, T. H.-K. (2026). Modified Impact-Echo Testing of Liner-Plate-Backed Concrete in Nuclear Containment Buildings. *ACEM 26 / Structures 26*.
 
-2. **Lee, S. M.**, & Kang, T. H.-K. (2026). 콘크리트 내부결함 탐사를 위한 엣지AI 임팩트에코 시스템 개발 연구. *한국콘크리트학회 학술대회 논문집, 38*(1), 267-268.
+2. **Lee, S. M.**, & Kang, T. H.-K. (2026). AI-Embedded Impact-Echo System for Concrete Structures with Liner Plates. *ACEM 26 / Structures 26*.
 
-3. Park, H. G., **Lee, S. M.**, & Kang, T. H.-K. (2026). 원전 격납건물 라이너플레이트 배면 콘크리트 내부 결함 모사를 통한 임팩트 에코 검사 적용 연구. *한국콘크리트학회 학술대회 논문집, 38*(1), 273-274.
+3. **Lee, S. M.**, & Kang, T. H.-K. (2026). 축소된 풍압공 계측자료를 활용한 딥러닝 기반 풍하중 시간이력 재구성. *한국풍공학회 제29회 학술대회, 29*(1), 73-74.
 
-4. **Lee, S. M.**, & Kang, T. H.-K. (2025). Retrieval augmented generation for assistance of using wind load design codes. *The 10th Asia-Pacific Conference on Wind Engineering (APCWE10)*.
+4. **Lee, S. M.**, & Kang, T. H.-K. (2026). 콘크리트 내부결함 탐사를 위한 엣지AI 임팩트에코 시스템 개발 연구. *한국콘크리트학회 학술대회 논문집, 38*(1), 267-268.
 
-5. **Lee, S. M.**, & Kang, T. H.-K. (2025). 딥러닝을 활용한 콘크리트 건물의 벽면 풍압계수 클러스터링 연구. *한국콘크리트학회 학술대회 논문집, 37*(1), 13-14.
+5. Park, H. G., **Lee, S. M.**, & Kang, T. H.-K. (2026). 원전 격납건물 라이너플레이트 배면 콘크리트 내부 결함 모사를 통한 임팩트 에코 검사 적용 연구. *한국콘크리트학회 학술대회 논문집, 38*(1), 273-274.
 
-6. Lee, Y. I., **Lee, S. M.**, & Kang, T. H.-K. (2024). 멀티클래스 심층 SVDD를 활용한 콘크리트 건축물 모니터링 연구. *한국콘크리트학회 학술대회 논문집, 36*(2), 345-346.
+6. **Lee, S. M.**, & Kang, T. H.-K. (2025). Retrieval augmented generation for assistance of using wind load design codes. *The 10th Asia-Pacific Conference on Wind Engineering (APCWE10)*.
 
-7. **Lee, S. M.**, & Kang, T. H.-K. (2024). 전문가 혼합 아키텍처를 활용한 건축구조기준 특화 대규모 언어모델 프레임워크. *한국콘크리트학회 학술대회 논문집, 36*(2), 343-344.
+7. **Lee, S. M.**, & Kang, T. H.-K. (2025). 딥러닝을 활용한 콘크리트 건물의 벽면 풍압계수 클러스터링 연구. *한국콘크리트학회 학술대회 논문집, 37*(1), 13-14.
 
-8. **Lee, S. M.**, Lee, Y. I., & Kang, T. H.-K. (2024). Multi-sphere deep SVDD for system identification of building structure. *The 2024 World Congress on Advances in Civil, Environmental, and Materials Research (ACEM24)*.
+8. Lee, Y. I., **Lee, S. M.**, & Kang, T. H.-K. (2024). 멀티클래스 심층 SVDD를 활용한 콘크리트 건축물 모니터링 연구. *한국콘크리트학회 학술대회 논문집, 36*(2), 345-346.
 
-9. **Lee, S. M.**, Choi, H. S., Kim, C., & Kang, T. H.-K. (2024). Representation learning for classification of concrete crack images. *The 2024 Structures Congress*. Seoul, Korea.
+9. **Lee, S. M.**, & Kang, T. H.-K. (2024). 전문가 혼합 아키텍처를 활용한 건축구조기준 특화 대규모 언어모델 프레임워크. *한국콘크리트학회 학술대회 논문집, 36*(2), 343-344.
 
-10. **Lee, S. M.**, Choi, H. S., Kim, C., & Kang, T. H.-K. (2024). Lightweighting concrete crack image classification machine learning models for on-device AI. *한국콘크리트학회 학술대회 논문집, 36*(1), 57-58.
+10. **Lee, S. M.**, Lee, Y. I., & Kang, T. H.-K. (2024). Multi-sphere deep SVDD for system identification of building structure. *The 2024 World Congress on Advances in Civil, Environmental, and Materials Research (ACEM24)*.
 
-11. **Lee, S. M.**, Choi, H., & Kang, T. H.-K. (2023). 머신러닝 응용 임팩트 에코 검사 자동화 연구. *한국콘크리트학회 학술대회 논문집, 35*(1), 187-188.
+11. **Lee, S. M.**, Choi, H. S., Kim, C., & Kang, T. H.-K. (2024). Representation learning for classification of concrete crack images. *The 2024 Structures Congress*. Seoul, Korea.
 
-12. **Lee, S. M.**, & Kang, T. H.-K. (2022). Clustering wind pressure tap using dynamic time warping. *8th European-African Conference on Wind Engineering (EACWE2022)*. Bucharest, Romania.
+12. **Lee, S. M.**, Choi, H. S., Kim, C., & Kang, T. H.-K. (2024). Lightweighting concrete crack image classification machine learning models for on-device AI. *한국콘크리트학회 학술대회 논문집, 36*(1), 57-58.
 
-13. **Lee, S. M.**, & Kang, T. H.-K. (2022). Shear strength prediction of prestressed concrete based on machine learning. *The 2022 Structures Congress*. Seoul, Korea.
+13. **Lee, S. M.**, Choi, H., & Kang, T. H.-K. (2023). 머신러닝 응용 임팩트 에코 검사 자동화 연구. *한국콘크리트학회 학술대회 논문집, 35*(1), 187-188.
 
-14. **Lee, S. M.**, Sung, H. S., & Kang, T. H.-K. (2022). 머신러닝 기반 콘크리트 압축강도 예측 연구. *한국콘크리트학회 학술대회 논문집, 34*(1), 179-180.
+14. **Lee, S. M.**, & Kang, T. H.-K. (2022). Clustering wind pressure tap using dynamic time warping. *8th European-African Conference on Wind Engineering (EACWE2022)*. Bucharest, Romania.
 
-15. **Lee, S. M.**, & Kang, T. H.-K. (2021). Prediction of wind pressure coefficients on high-rise building façade using LSTM RNN model for sensor reduction. *The 2021 World Congress on Advances in Structural Engineering and Mechanics (ASEM21)*.
+15. **Lee, S. M.**, & Kang, T. H.-K. (2022). Shear strength prediction of prestressed concrete based on machine learning. *The 2022 Structures Congress*. Seoul, Korea.
 
-16. **Lee, S. M.**, & Kang, T. H.-K. (2021). 장단기기억 순환신경망 기반 콘크리트 건물 벽면 풍압계수 예측 연구. *한국콘크리트학회 학술대회 논문집, 33*(2), 155-156.
+16. **Lee, S. M.**, Sung, H. S., & Kang, T. H.-K. (2022). 머신러닝 기반 콘크리트 압축강도 예측 연구. *한국콘크리트학회 학술대회 논문집, 34*(1), 179-180.
 
-17. **Lee, S. M.**, & Kang, T. H.-K. (2021). LSTM 네트워크를 활용한 콘크리트 건물의 벽면 풍압계수 예측 연구. *한국콘크리트학회 학술대회 논문집, 33*(1), 189-190.
+17. **Lee, S. M.**, & Kang, T. H.-K. (2021). Prediction of wind pressure coefficients on high-rise building façade using LSTM RNN model for sensor reduction. *The 2021 World Congress on Advances in Structural Engineering and Mechanics (ASEM21)*.
+
+18. **Lee, S. M.**, & Kang, T. H.-K. (2021). 장단기기억 순환신경망 기반 콘크리트 건물 벽면 풍압계수 예측 연구. *한국콘크리트학회 학술대회 논문집, 33*(2), 155-156.
+
+19. **Lee, S. M.**, & Kang, T. H.-K. (2021). LSTM 네트워크를 활용한 콘크리트 건물의 벽면 풍압계수 예측 연구. *한국콘크리트학회 학술대회 논문집, 33*(1), 189-190.
 
 ---
 
@@ -77,4 +81,3 @@
 4. **Lee, S. M.**, Lee, C. H., Jung, S. H., Jung, J. S., Kim, Y. G., Jeon, Y. C., & Cheon, J. A. (2014). 곱셈에 대한 교환법칙이 성립하지 않는 대수적 구조에 대한 연구 *[R&E Report]*. Korea Science Academy of KAIST.
 
 5. Jeon, Y. C., Kim, Y. G., **Lee, S. M.**, Lee, C. H., Jung, S. H., & Jung, J. S. (2014). 정역의 일반화에 대한 연구. *한국수학교육학회 뉴스레터, 30*(5), 17.
-
