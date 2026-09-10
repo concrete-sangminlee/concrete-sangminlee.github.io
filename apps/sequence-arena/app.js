@@ -20,6 +20,18 @@ import {
   drawBoardTargetMarker,
   drawCardFaceDetails,
 } from "./client/board-paint.js";
+import { bindBoardRenderContext, drawBoard } from "./client/board-render.js";
+import {
+  bindNetClientContext,
+  connectSocket,
+  sendSocket,
+  showOfflineBanner,
+  hideOfflineBanner,
+  forceReconnectNow,
+  canFallbackToOfflineSolo,
+  clearReconnectCountdownTimer,
+  formatRetryDelay,
+} from "./client/net-client.js";
 import { HAPTIC, playSoundPattern } from "./client/sound-bank.js";
 import { TUTORIAL_SEED, TUTORIAL_STEPS, createTutorialMachine } from "./client/tutorial.js";
 import { buildDailyCalendar, buildStatsSummary } from "./client/stats-view.js";
@@ -468,10 +480,6 @@ function pruneOfflineRuntimeRecoveredState() {
   setFlashMessage("정적판은 오프라인 모드라 기존 멀티 세션 정보를 초기화했습니다.");
 }
 
-const RECONNECT_BACKOFF_BASE_MS = 1500;
-const RECONNECT_BACKOFF_MAX_MS = 30_000;
-const RECONNECT_BACKOFF_JITTER_MS = 400;
-const RECONNECT_MAX_ATTEMPTS = 8;
 const CHAT_MAX_LENGTH = 140;
 const CHAT_COOLDOWN_MS = 600;
 const CHAT_REPEAT_COOLDOWN_MS = CHAT_COOLDOWN_MS * 2;
@@ -522,14 +530,28 @@ function animationTempo() {
 }
 let chipAnimFrameId = null;
 let targetPulseFrameId = null;
-// Cached CanvasPattern for the woven-felt look on the board rail. Generated once on first
-// use (per theme variant) — regenerating a 32px noise pattern every frame would burn ~ms.
-let railFeltPattern = null;
-let railFeltPatternTheme = null;
-// Cached pattern for the inner playing surface — finer grain, lower contrast than the rail
-// so the rank/suit text and chips read cleanly on top of it.
-let boardSurfacePattern = null;
-let boardSurfacePatternTheme = null;
+
+// Bind the render-orchestration slice (client/board-render.js) to its shared references
+// once, now that clientState, the singleton canvas/ctx, the animation timing constants,
+// and the hoisted peer helpers (selectedCard/isYourTurn/scheduleTargetPulseFrame) are all
+// in scope. Object references (canvas/ctx/clientState) are passed live so mutations stay
+// visible; the timing constants are primitives that never change after this point. Mirrors
+// the single bindBoardPaintContext() binding point — see board-render.js header.
+bindBoardRenderContext({
+  canvas,
+  ctx,
+  clientState,
+  selectedCard,
+  isYourTurn,
+  scheduleTargetPulseFrame,
+  constants: {
+    CHIP_PLACE_ANIM_MS,
+    CHIP_REMOVE_ANIM_MS,
+    SEQUENCE_CASCADE_MS,
+    VICTORY_WASH_MS,
+    TARGET_PULSE_ANIM_MS,
+  },
+});
 
 let audioContext = null;
 let mediaFeedbackUnlocked = false;
@@ -1624,57 +1646,6 @@ function isSoloContext() {
   return isOfflineOnlyRuntime() || clientState.localMode;
 }
 
-function formatRetryDelay(ms) {
-  if (!ms || ms <= 0) {
-    return "곧";
-  }
-  const seconds = Math.max(1, Math.ceil(ms / 1000));
-  return `${seconds}초 뒤`;
-}
-
-function clearReconnectCountdownTimer() {
-  if (clientState.reconnectCountdownTimer) {
-    window.clearInterval(clientState.reconnectCountdownTimer);
-  }
-  clientState.reconnectCountdownTimer = null;
-  clientState.reconnectCountdownDeadline = 0;
-}
-
-function updateReconnectCountdownUi() {
-  if (!refs.offlineText || !refs.offlineBanner || refs.offlineBanner.hidden) {
-    clearReconnectCountdownTimer();
-    clientState.reconnectDelayMs = 0;
-    return;
-  }
-  if (clientState.socketReady || clientState.reconnectPaused) {
-    clearReconnectCountdownTimer();
-    return;
-  }
-  const remaining = Math.max(0, clientState.reconnectCountdownDeadline - Date.now());
-  clientState.reconnectDelayMs = remaining;
-  const delayLabel = formatRetryDelay(remaining);
-  const attempts = clientState.reconnectAttempts || 1;
-  const maxAttempts = RECONNECT_MAX_ATTEMPTS;
-  refs.connectionIndicator.textContent = `연결 복구 중${
-    clientState.reconnectAttempts ? ` (${clientState.reconnectAttempts}회)` : ""
-  } · ${delayLabel} 재시도`;
-  refs.offlineText.textContent = `연결이 끊겨 재접속을 시도 중입니다 (${attempts}/${maxAttempts}번째). ${delayLabel} 자동 재시도됩니다.`;
-  if (remaining <= 0) {
-    clearReconnectCountdownTimer();
-  }
-}
-
-function scheduleReconnectCountdown(delayMs) {
-  clearReconnectCountdownTimer();
-  clientState.reconnectDelayMs = Number(delayMs) > 0 ? Math.max(0, Number(delayMs)) : 0;
-  if (clientState.reconnectDelayMs <= 0) {
-    return;
-  }
-  clientState.reconnectCountdownDeadline = Date.now() + clientState.reconnectDelayMs;
-  clientState.reconnectCountdownTimer = window.setInterval(updateReconnectCountdownUi, 1000);
-  updateReconnectCountdownUi();
-}
-
 function shouldReconnectSavedRoom() {
   const savedRoomCode = normalizeRoomCode(safeLocalStorage.get(STORAGE_KEYS.room) || "");
   return Boolean(savedRoomCode && savedRoomCode === clientState.roomCode && clientState.sessionId);
@@ -1760,32 +1731,6 @@ function clearSelection() {
   clientState.legalTargets = [];
   clientState.keyboardBoardIndex = 0;
   stopTargetPulseFrame();
-}
-
-function sendSocket(payload) {
-  const type = payload?.type;
-  if (type === "play_card" || type === "discard_dead" || type === "discard_to_pile" || type === "draw_from_deck") {
-    // Every gameplay action funnels through here (mouse, keyboard, auto-move), making
-    // this the one reliable place to measure the player's action-to-action tempo.
-    markPlayerActionTempo();
-  }
-  if (clientState.localMode) {
-    localSoloRuntime?.handle(payload);
-    return;
-  }
-  if (!clientState.socketReady || !clientState.socket) {
-    setFlashMessage("서버 연결을 기다리는 중입니다.");
-    return;
-  }
-  // socketReady can briefly be true while the socket is already in the CLOSING state (the
-  // close event fires on the next tick), and ws.send() in that window throws or silently
-  // drops the frame depending on the browser. Wrap so a stray click during disconnect does
-  // not bubble into the click handler with an unhandled exception.
-  try {
-    clientState.socket.send(JSON.stringify(payload));
-  } catch {
-    setFlashMessage("연결이 종료 중입니다. 잠시 후 자동으로 재연결됩니다.");
-  }
 }
 
 function applyRoomSnapshot(payload) {
@@ -1938,264 +1883,6 @@ function maybeAutoJoinSharedRoom() {
   render();
 }
 
-function getWebSocketCloseLabel(event = {}) {
-  const code = typeof event.code === "number" ? event.code : null;
-  const reason = typeof event.reason === "string" ? event.reason.trim() : "";
-  if (!code) {
-    return reason ? `연결이 끊겼습니다. ${reason}` : "연결이 끊겼습니다.";
-  }
-  if (code === 1000) {
-    return "연결이 정상 종료되었습니다. 새로고침으로 다시 시작하세요.";
-  }
-  if (code === 1001) {
-    return "서버가 연결을 종료했습니다. 네트워크를 확인한 뒤 다시 시도하세요.";
-  }
-  if (code === 1006) {
-    return "네트워크 연결이 예기치 않게 끊어졌습니다. 재연결을 시도합니다.";
-  }
-  if (code === 1011) {
-    return "서버 내부 오류로 연결이 종료되었습니다. 잠시 후 다시 시도하세요.";
-  }
-  return `연결이 예기치 않게 종료되었습니다 (코드 ${code}).${reason ? ` 사유: ${reason}` : ""}`;
-}
-
-function connectSocket() {
-  if (clientState.localMode) {
-    return;
-  }
-  clientState.reconnectPaused = false;
-  clientState.reconnectDelayMs = 0;
-  clearReconnectCountdownTimer();
-  if (isOfflineOnlyRuntime()) {
-    refs.connectionIndicator.textContent = "서버 없음 · 오프라인 솔로 가능";
-    setFlashMessage("서버가 없는 정적 실행 환경입니다. 오프라인 솔로로 바로 플레이할 수 있습니다.");
-    render();
-    return;
-  }
-  const protocol = window.location.protocol === "https:" ? "wss" : "ws";
-  try {
-    clientState.socket = new WebSocket(`${protocol}://${window.location.host}/ws`);
-  } catch {
-    clientState.reconnectDelayMs = 0;
-    clearReconnectCountdownTimer();
-    refs.connectionIndicator.textContent = "서버 없음 · 오프라인 솔로 가능";
-    setFlashMessage("실시간 서버에 연결할 수 없습니다. 오프라인 솔로를 사용할 수 있습니다.");
-    showOfflineBanner("실시간 서버에 연결할 수 없습니다. 오프라인 솔로로 계속 진행할 수 있습니다.", {
-      offline: true,
-      buttonLabel: "지금 다시 시도",
-      showOfflineFallback: canFallbackToOfflineSolo(),
-    });
-    render();
-    return;
-  }
-
-  clientState.socket.addEventListener("open", () => {
-    clientState.socketReady = true;
-    clientState.reconnectAttempts = 0;
-    clientState.reconnectDelayMs = 0;
-    clearReconnectCountdownTimer();
-    refs.connectionIndicator.textContent = "실시간 연결됨";
-    clientState.reconnectPaused = false;
-    hideOfflineBanner();
-    render();
-  });
-
-  clientState.socket.addEventListener("message", (event) => {
-    let payload;
-    try {
-      payload = JSON.parse(event.data);
-    } catch (error) {
-      // Corrupted frames can happen with buggy middleboxes or proxies; drop them and keep playing.
-      reportClientError("ws-parse-error", error?.message || "invalid server frame", {
-        stack: typeof event.data === "string" ? event.data.slice(0, 200) : undefined,
-      });
-      return;
-    }
-    if (!payload || typeof payload !== "object" || typeof payload.type !== "string") {
-      reportClientError("ws-shape-error", "non-object server frame");
-      return;
-    }
-
-    if (payload.type === "hello") {
-      if (!clientState.sessionId) {
-        clientState.sessionId = payload.sessionId;
-        saveSessionMeta();
-      }
-      if (payload.protocolVersion != null && payload.protocolVersion !== CLIENT_PROTOCOL_VERSION) {
-        warnProtocolMismatch(payload.protocolVersion);
-      }
-      if (shouldReconnectSavedRoom()) {
-        reconnectToSavedRoom();
-      } else {
-        maybeAutoJoinSharedRoom();
-      }
-      return;
-    }
-
-    if (payload.type === "session_taken_over") {
-      // Another tab of this browser claimed the same seat. Show the message but do NOT
-      // attempt to reconnect — that would just claim the seat back from the active tab and
-      // start a ping-pong. The close handler honours sessionTakenOver to skip backoff.
-      setFlashMessage(payload.message || "다른 탭이 좌석을 이어받았습니다.");
-      announceAssertive("이 탭의 세션이 다른 탭에 이전되었습니다.");
-      clientState.sessionTakenOver = true;
-      return;
-    }
-    if (payload.type === "error") {
-      const message = payload.message || "요청을 처리하지 못했습니다.";
-      if (message.includes("관전 입장이 닫혀 있습니다") && !message.includes("방이 가득 찼고")) {
-        setJoinRolePreference("player");
-        applyJoinServerErrorHint(message);
-        const recoveredRoomCode = normalizeRoomCode(
-          refs.joinCode?.value || clientState.roomCode || urlRoomCode || ""
-        );
-        const recoveredName = normalizePlayerName(
-          refs.joinName?.value || safeLocalStorage.get(STORAGE_KEYS.name) || clientState.lastName || ""
-        );
-        if (
-          !spectatorClosedRecoveryAttempted &&
-          recoveredRoomCode &&
-          recoveredName &&
-          clientState.socketReady &&
-          clientState.roomCode === "" &&
-          clientState.game == null &&
-          refs.joinRoomBtn
-        ) {
-          spectatorClosedRecoveryAttempted = true;
-          refs.joinRoomBtn.disabled = true;
-          window.setTimeout(() => {
-            if (clientState.roomCode === "" && clientState.yourSeatIndex == null) {
-              refs.joinRoomBtn.disabled = false;
-            }
-          }, 1500);
-          if (refs.joinName) {
-            refs.joinName.value = recoveredName;
-          }
-          if (refs.joinCode) {
-            refs.joinCode.value = recoveredRoomCode;
-          }
-          setFlashMessage(`${recoveredRoomCode} 방으로 플레이어 재입장 시도 중입니다.`);
-          clientState.lastName = recoveredName;
-          clientState.roomCode = recoveredRoomCode;
-          sendSocket({
-            type: "join_room",
-            name: recoveredName,
-            roomCode: recoveredRoomCode,
-            sessionId: clientState.sessionId,
-            role: "player",
-          });
-          render();
-          return;
-        }
-        setFlashMessage("관전 입장이 닫혀 있습니다. 플레이어로 전환해 다시 입장해 주세요.");
-        return;
-      }
-      if (message.includes("방이 가득 찼고 관전 입장이 닫혀 있습니다")) {
-        applyJoinServerErrorHint(message);
-        setFlashMessage("방이 가득 찼고 관전 입장이 닫혀 있습니다.");
-        return;
-      }
-      setFlashMessage(message);
-      applyJoinServerErrorHint(message);
-      if (message.includes("채팅")) {
-        setChatFeedback(message, "error");
-      }
-      playSound("error");
-      // A non-existent room code in the URL would otherwise auto-rejoin and fail again on
-      // every reload — drop the ?room= param so the user lands on the lobby clean.
-      if (message.includes("존재하지 않는 방")) {
-        clientState.roomCode = "";
-        updateUrlRoom();
-        render();
-        return;
-      }
-      if (message.includes("재접속")) {
-        clientState.roomCode = "";
-        clientState.roomPhase = "idle";
-        clientState.yourRole = "none";
-        clientState.yourSeatIndex = null;
-        clientState.teamSize = 3;
-        clientState.requiredPlayers = 6;
-        clientState.occupiedSeats = 0;
-        clientState.spectatorCount = 0;
-        clientState.spectators = [];
-        clientState.allowSpectators = true;
-        clearBotThinkingTimer();
-        clientState.rematchMode = "all";
-        clientState.rematchVoteSeatIndexes = [];
-        clientState.rematchRequiredVotes = 0;
-        clientState.matchHistory = [];
-        clientState.maxMatchHistory = DEFAULT_MAX_MATCH_HISTORY;
-        clientState.game = null;
-        clientState.pendingStep = null;
-        saveSessionMeta();
-        updateUrlRoom();
-      }
-      render();
-      return;
-    }
-
-    if (payload.type === "room_snapshot") {
-      applyRoomSnapshot(payload);
-    }
-  });
-
-  clientState.socket.addEventListener("close", (event) => {
-    if (clientState.localMode) {
-      return;
-    }
-    clientState.socketReady = false;
-    if (clientState.sessionTakenOver) {
-      // Another tab took over this seat — do not reconnect, that would just take it back
-      // and start a ping-pong. Show a quiet "this tab is dormant" banner state.
-      clearReconnectCountdownTimer();
-      refs.connectionIndicator.textContent = "다른 탭에서 이어받음";
-      showOfflineBanner("이 탭은 현재 비활성 상태입니다. 새로 연결하려면 화면을 새로고침하세요.", {
-        reconnectsPaused: true,
-        buttonLabel: "재연결",
-      });
-      render();
-      return;
-    }
-    clientState.reconnectAttempts = Math.min(clientState.reconnectAttempts + 1, 10);
-    if (clientState.reconnectAttempts >= RECONNECT_MAX_ATTEMPTS) {
-      clientState.reconnectPaused = true;
-      clientState.reconnectDelayMs = 0;
-      clearReconnectCountdownTimer();
-      refs.connectionIndicator.textContent = "연결 실패 · 수동 재연결 필요";
-      setFlashMessage("연결이 자주 끊겨서 자동 재연결이 중단되었습니다. 지금 다시 시도 버튼을 눌러 수동으로 재연결하세요.");
-      const closeMessage = getWebSocketCloseLabel(event);
-      showOfflineBanner(`${closeMessage} 지금 다시 시도 버튼으로 한 번 직접 시도해 주세요.`, {
-        reconnectsPaused: true,
-        buttonLabel: "수동 재연결",
-        showOfflineFallback: canFallbackToOfflineSolo(),
-      });
-      render();
-      return;
-    }
-    // Surface the attempt count so the user has a progress signal — without it, a permanently
-    // broken network looks identical to a healthy retry loop and the user can't tell whether
-    // to wait or click "지금 다시 시도". `aria-live="polite"` on the indicator means the
-    // screen reader announces each attempt change.
-    const exponential = RECONNECT_BACKOFF_BASE_MS * Math.pow(2, clientState.reconnectAttempts - 1);
-    const capped = Math.min(exponential, RECONNECT_BACKOFF_MAX_MS);
-    const jitter = Math.floor(Math.random() * RECONNECT_BACKOFF_JITTER_MS);
-    const nextDelay = capped + jitter;
-    clientState.reconnectDelayMs = nextDelay;
-    refs.connectionIndicator.textContent = `연결 끊김 · 재시도 중 (${clientState.reconnectAttempts}번째)`;
-    const closeMessage = getWebSocketCloseLabel(event);
-    showOfflineBanner(
-      `${closeMessage} 재접속을 시도 중입니다 (${clientState.reconnectAttempts}/${RECONNECT_MAX_ATTEMPTS}번째). ${
-        formatRetryDelay(nextDelay)
-      } 자동 재시도됩니다.`,
-      { reconnectsPaused: false, buttonLabel: "지금 다시 시도" }
-    );
-    scheduleReconnectCountdown(nextDelay);
-    render();
-    clientState.reconnectTimer = window.setTimeout(connectSocket, nextDelay);
-  });
-}
-
 function startOfflineSolo(options = {}) {
   const daily = options.daily === true;
   const tutorial = options.tutorial === true;
@@ -2249,81 +1936,6 @@ function startOfflineSolo(options = {}) {
     setFlashMessage("오프라인 솔로를 시작했습니다.");
   }
   playSound("tap");
-}
-
-function canFallbackToOfflineSolo() {
-  if (clientState.localMode) {
-    return false;
-  }
-  if (!clientState.roomCode) {
-    return true;
-  }
-  return clientState.roomPhase !== "playing";
-}
-
-function showOfflineBanner(message, options = {}) {
-  if (!refs.offlineBanner) return;
-  refs.offlineBanner.hidden = false;
-  const buttonLabel = typeof options.buttonLabel === "string" ? options.buttonLabel : null;
-  const fallbackLabel =
-    typeof options.fallbackLabel === "string" ? options.fallbackLabel : "오프라인 솔로로 계속";
-  if (buttonLabel && refs.offlineRetryBtn) {
-    refs.offlineRetryBtn.textContent = buttonLabel;
-  } else if (refs.offlineRetryBtn) {
-    refs.offlineRetryBtn.textContent = "지금 다시 시도";
-  }
-  if (refs.offlineText && typeof message === "string") {
-    refs.offlineText.textContent = message;
-  } else if (!message && options.message) {
-    refs.offlineText.textContent = options.message;
-  }
-  const isOffline = Boolean(options.offline);
-  const isPaused = Boolean(options.reconnectsPaused);
-  const state = isOffline ? "offline" : isPaused ? "stalled" : "retrying";
-  refs.offlineBanner.setAttribute("data-reconnect-state", state);
-  if (refs.offlineFallbackSoloBtn) {
-    if (Boolean(options.showOfflineFallback)) {
-      refs.offlineFallbackSoloBtn.hidden = false;
-      refs.offlineFallbackSoloBtn.textContent = fallbackLabel;
-    } else {
-      refs.offlineFallbackSoloBtn.hidden = true;
-    }
-  }
-  if (typeof announcePolite === "function") {
-    announcePolite(message || "연결이 끊겨 재접속을 시도하고 있습니다.");
-  }
-}
-
-function hideOfflineBanner() {
-  if (!refs.offlineBanner) return;
-  refs.offlineBanner.hidden = true;
-  refs.offlineBanner.removeAttribute("data-reconnect-state");
-  if (refs.offlineFallbackSoloBtn) {
-    refs.offlineFallbackSoloBtn.hidden = true;
-  }
-}
-
-function forceReconnectNow() {
-  if (clientState.localMode) {
-    return;
-  }
-  clientState.reconnectPaused = false;
-  if (clientState.reconnectTimer) {
-    window.clearTimeout(clientState.reconnectTimer);
-    clientState.reconnectTimer = null;
-  }
-  clearReconnectCountdownTimer();
-  // User-initiated retry resets the backoff so the next attempt is fast.
-  clientState.reconnectDelayMs = 0;
-  clientState.reconnectAttempts = 0;
-  if (clientState.socket && clientState.socket.readyState !== WebSocket.CLOSED) {
-    try {
-      clientState.socket.close();
-    } catch {
-      // ignore
-    }
-  }
-  connectSocket();
 }
 
 function handleCreateRoom(event) {
@@ -4586,633 +4198,6 @@ function renderStatus() {
   renderHistory();
 }
 
-function drawPlaceholderBoard() {
-  const size = canvas.width;
-  ctx.clearRect(0, 0, size, size);
-  const isDark = document.documentElement.getAttribute("data-theme") === "dark";
-  const rail = ctx.createLinearGradient(0, 0, size, size);
-  if (isDark) {
-    rail.addColorStop(0, "#081d17");
-    rail.addColorStop(1, "#030a08");
-  } else {
-    rail.addColorStop(0, "#19372d");
-    rail.addColorStop(1, "#071612");
-  }
-  drawRoundedRect(0, 0, size, size, 34, rail, isDark ? "rgba(255, 255, 255, 0.08)" : "rgba(255, 255, 255, 0.12)", 4);
-
-  const board = ctx.createLinearGradient(44, 44, size - 44, size - 44);
-  if (isDark) {
-    board.addColorStop(0, "#6b5424");
-    board.addColorStop(0.55, "#4c3b18");
-    board.addColorStop(1, "#2d2410");
-  } else {
-    board.addColorStop(0, "#f1dfae");
-    board.addColorStop(0.55, "#d7bd78");
-    board.addColorStop(1, "#a9803a");
-  }
-  ctx.save();
-  ctx.shadowColor = "rgba(0, 0, 0, 0.4)";
-  ctx.shadowBlur = 28;
-  ctx.shadowOffsetY = 14;
-  drawRoundedRect(
-    54,
-    54,
-    size - 108,
-    size - 108,
-    26,
-    board,
-    isDark ? "rgba(12, 8, 2, 0.56)" : "rgba(62, 43, 18, 0.34)",
-    3
-  );
-  ctx.restore();
-
-  ctx.strokeStyle = isDark ? "rgba(220, 196, 140, 0.18)" : "rgba(84, 57, 22, 0.18)";
-  ctx.lineWidth = 1.5;
-  for (let index = 1; index < BOARD_SIZE; index += 1) {
-    const position = 54 + ((size - 108) / BOARD_SIZE) * index;
-    ctx.beginPath();
-    ctx.moveTo(position, 70);
-    ctx.lineTo(position, size - 70);
-    ctx.moveTo(70, position);
-    ctx.lineTo(size - 70, position);
-    ctx.stroke();
-  }
-
-  ctx.fillStyle = isDark ? "rgba(244, 232, 196, 0.88)" : "rgba(44, 31, 17, 0.82)";
-  ctx.font = '800 42px Georgia, "Times New Roman", serif';
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.fillText("Sequence Arena", size / 2, size / 2 - 22);
-  ctx.font = '700 18px "Trebuchet MS", sans-serif';
-  ctx.fillStyle = isDark ? "rgba(244, 232, 196, 0.62)" : "rgba(44, 31, 17, 0.62)";
-  ctx.fillText("방 준비 완료", size / 2, size / 2 + 22);
-}
-
-// Tiny offscreen canvas filled with a woven-felt look: a base tint plus a few diagonal
-// hatch passes at very low alpha. Wrapped into a CanvasPattern so we can fill the full
-// rail rectangle in one pass and the GPU tiles it. Result reads as the fuzz/weave of a
-// game-table felt instead of a flat gradient.
-function buildFeltPattern(baseRgba, darkLineRgba, lightLineRgba, tile = 28) {
-  const off = document.createElement("canvas");
-  off.width = tile;
-  off.height = tile;
-  const pctx = off.getContext("2d");
-  pctx.fillStyle = baseRgba;
-  pctx.fillRect(0, 0, tile, tile);
-  pctx.lineWidth = 1;
-  // Two diagonal hatches at offset stride = woven-cloth look.
-  pctx.strokeStyle = darkLineRgba;
-  for (let i = -tile; i <= tile * 2; i += 4) {
-    pctx.beginPath();
-    pctx.moveTo(i, 0);
-    pctx.lineTo(i + tile, tile);
-    pctx.stroke();
-  }
-  pctx.strokeStyle = lightLineRgba;
-  for (let i = -tile; i <= tile * 2; i += 4) {
-    pctx.beginPath();
-    pctx.moveTo(i + 2, 0);
-    pctx.lineTo(i + 2 + tile, tile);
-    pctx.stroke();
-  }
-  return ctx.createPattern(off, "repeat");
-}
-
-function getRailFeltPattern(theme) {
-  if (railFeltPattern && railFeltPatternTheme === theme) return railFeltPattern;
-  railFeltPatternTheme = theme;
-  railFeltPattern =
-    theme === "dark"
-      ? buildFeltPattern("rgba(0,0,0,0)", "rgba(0,0,0,0.18)", "rgba(255,255,255,0.04)")
-      : buildFeltPattern("rgba(0,0,0,0)", "rgba(0,0,0,0.14)", "rgba(255,255,255,0.06)");
-  return railFeltPattern;
-}
-
-function getBoardSurfacePattern(theme) {
-  if (boardSurfacePattern && boardSurfacePatternTheme === theme) return boardSurfacePattern;
-  boardSurfacePatternTheme = theme;
-  boardSurfacePattern =
-    theme === "dark"
-      ? buildFeltPattern("rgba(0,0,0,0)", "rgba(0,0,0,0.10)", "rgba(255,255,255,0.025)", 22)
-      : buildFeltPattern("rgba(0,0,0,0)", "rgba(120,84,32,0.06)", "rgba(255,250,232,0.06)", 22);
-  return boardSurfacePattern;
-}
-
-function boardPalette() {
-  return document.documentElement.getAttribute("data-theme") === "dark"
-    ? {
-        rail: ["#091e18", "#040f0c", "#020906"],
-        railStroke: "rgba(255, 255, 255, 0.08)",
-        board: ["#6a5423", "#4c3b17", "#2c2410"],
-        boardStroke: "rgba(12, 8, 2, 0.52)",
-      }
-    : {
-        rail: ["#183a30", "#0d261f", "#061411"],
-        railStroke: "rgba(255, 255, 255, 0.14)",
-        board: ["#f3e2b5", "#d6bd79", "#a77d35"],
-        boardStroke: "rgba(39, 28, 16, 0.28)",
-      };
-}
-
-function drawBoard() {
-  if (!clientState.game) {
-    drawPlaceholderBoard();
-    return;
-  }
-
-  const size = canvas.width;
-  const cellSize = size / BOARD_SIZE;
-  const targetPulse = (performance.now() % TARGET_PULSE_ANIM_MS) / TARGET_PULSE_ANIM_MS;
-  // Selection cannot change mid-draw, so the target-marker mode is resolved once per
-  // frame here instead of per highlighted cell inside the extracted painter.
-  const markerCard = selectedCard();
-  ctx.clearRect(0, 0, size, size);
-
-  const palette = boardPalette();
-  const themeName = document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light";
-
-  // === RAIL (outer felt frame) ===
-  const railGradient = ctx.createLinearGradient(0, 0, size, size);
-  railGradient.addColorStop(0, palette.rail[0]);
-  railGradient.addColorStop(0.48, palette.rail[1]);
-  railGradient.addColorStop(1, palette.rail[2]);
-  drawRoundedRect(0, 0, size, size, 34, railGradient, palette.railStroke, 4);
-  // Woven-felt texture overlay on the rail.
-  ctx.save();
-  ctx.beginPath();
-  ctx.moveTo(34, 0);
-  ctx.arcTo(size, 0, size, size, 34);
-  ctx.arcTo(size, size, 0, size, 34);
-  ctx.arcTo(0, size, 0, 0, 34);
-  ctx.arcTo(0, 0, size, 0, 34);
-  ctx.closePath();
-  ctx.fillStyle = getRailFeltPattern(themeName);
-  ctx.fill();
-  ctx.restore();
-
-  // === INNER PLAYING SURFACE ===
-  const boardGradient = ctx.createLinearGradient(16, 16, size - 16, size - 16);
-  boardGradient.addColorStop(0, palette.board[0]);
-  boardGradient.addColorStop(0.52, palette.board[1]);
-  boardGradient.addColorStop(1, palette.board[2]);
-  ctx.save();
-  ctx.shadowColor = "rgba(0, 0, 0, 0.38)";
-  ctx.shadowBlur = 24;
-  ctx.shadowOffsetY = 12;
-  drawRoundedRect(16, 16, size - 32, size - 32, 24, boardGradient, palette.boardStroke, 3);
-  ctx.restore();
-  // Fine paper-grain texture on the inner surface, fills the same rounded rect.
-  ctx.save();
-  ctx.beginPath();
-  ctx.moveTo(16 + 24, 16);
-  ctx.arcTo(size - 16, 16, size - 16, size - 16, 24);
-  ctx.arcTo(size - 16, size - 16, 16, size - 16, 24);
-  ctx.arcTo(16, size - 16, 16, 16, 24);
-  ctx.arcTo(16, 16, size - 16, 16, 24);
-  ctx.closePath();
-  ctx.fillStyle = getBoardSurfacePattern(themeName);
-  ctx.fill();
-  ctx.restore();
-
-  // === RAIL / SURFACE SEAM ===
-  // Thin gold seam where the rail meets the playing surface — the metallic trim that
-  // separates the felt rail from the card area on premium board games. Drawn as a slim
-  // bright stroke just inside the surface edge.
-  ctx.save();
-  ctx.strokeStyle = themeName === "dark" ? "rgba(232, 196, 124, 0.62)" : "rgba(212, 162, 61, 0.74)";
-  ctx.lineWidth = 1.5;
-  drawRoundedRect(18, 18, size - 36, size - 36, 22, "rgba(0,0,0,0)", ctx.strokeStyle, ctx.lineWidth);
-  ctx.restore();
-
-  // Inset shadow at the seam (surface feels recessed into the rail).
-  ctx.save();
-  ctx.beginPath();
-  ctx.moveTo(16 + 24, 16);
-  ctx.arcTo(size - 16, 16, size - 16, size - 16, 24);
-  ctx.arcTo(size - 16, size - 16, 16, size - 16, 24);
-  ctx.arcTo(16, size - 16, 16, 16, 24);
-  ctx.arcTo(16, 16, size - 16, 16, 24);
-  ctx.closePath();
-  ctx.clip();
-  ctx.strokeStyle = "rgba(0, 0, 0, 0.36)";
-  ctx.lineWidth = 8;
-  ctx.shadowColor = "rgba(0, 0, 0, 0.5)";
-  ctx.shadowBlur = 8;
-  drawRoundedRect(14, 14, size - 28, size - 28, 26, "rgba(0,0,0,0)", ctx.strokeStyle, ctx.lineWidth);
-  ctx.restore();
-
-  const board = clientState.game?.board || [];
-  for (const cell of board) {
-    // 2026-05-25 — real playing-card aspect (~0.72 width:height like Bicycle poker
-    // cards). Cards are full inner height but narrower; felt shows through on the
-    // left/right of each card. Corner (wild) cells use the same card-rectangle box
-    // and motif sizing so they don't look ~30% larger than the cards next to them.
-    const x = cell.col * cellSize + 2;
-    const y = cell.row * cellSize + 2;
-    const inner = cellSize - 4;
-    const cardHeight = inner;
-    const cardWidth = inner * 0.72;
-    const cardX = x + (inner - cardWidth) / 2;
-    const cardY = y + (inner - cardHeight) / 2;
-    const highlighted = clientState.legalTargets.includes(cell.id) && isYourTurn();
-    const isLastMove = clientState.game.lastPlacedCellId === cell.id;
-    const isKeyboardCursor =
-      highlighted &&
-      clientState.legalTargets[clientState.keyboardBoardIndex] === cell.id;
-
-    let fill = highlighted ? "rgba(240, 255, 239, 0.98)" : "rgba(255, 252, 244, 0.95)";
-    if (cell.corner) {
-      fill = "rgba(248, 226, 169, 0.94)";
-    } else if (cell.chip === "A") {
-      fill = "rgba(250, 224, 229, 0.88)";
-    } else if (cell.chip === "B") {
-      fill = "rgba(224, 233, 255, 0.88)";
-    }
-
-    const stroke = isKeyboardCursor
-      ? "rgba(199, 152, 61, 1)"
-      : highlighted
-        ? "rgba(36, 122, 81, 0.98)"
-        : isLastMove
-          ? "rgba(212, 162, 61, 0.88)"
-          : "rgba(51, 35, 14, 0.2)";
-    const lineWidth = isKeyboardCursor ? 6 : highlighted ? 5 : isLastMove ? 4 : 1.5;
-
-    ctx.save();
-    ctx.shadowColor = highlighted ? "rgba(34, 145, 83, 0.38)" : "rgba(36, 23, 9, 0.16)";
-    ctx.shadowBlur = highlighted ? 14 : 5;
-    ctx.shadowOffsetY = highlighted ? 0 : 2;
-    // 2026-05-25 — corners now use the same card-rectangle box as regular cells so
-    // their gold motif sits in a same-size frame as the playing cards around them
-    // (was: corners filled the full inner square, which made them look ~30% larger
-    // than the cards next to them).
-    drawRoundedRect(cardX, cardY, cardWidth, cardHeight, 10, fill, stroke, lineWidth);
-    ctx.restore();
-
-    if (cell.corner) {
-      // Wild corner cell — heraldic gold motif: concentric rings, sunburst rays, ornate star.
-      // Centered on the card rectangle (not the cell square) so the motif aligns visually
-      // with adjacent regular cards.
-      const cx = cardX + cardWidth / 2;
-      const cy = cardY + cardHeight / 2;
-      // Radius keyed to the narrower dimension (cardWidth) so the motif fits inside the
-      // rectangular card without overflowing into the felt gaps on left/right.
-      const radius = cardWidth * 0.42;
-      // All sizing now scales off cardWidth (the narrower dimension of the card box)
-      // so the motif stays proportional to the same card frame that regular cells use.
-      // Outer ring
-      ctx.save();
-      ctx.lineWidth = Math.max(1.4, cardWidth * 0.03);
-      ctx.strokeStyle = "rgba(132, 96, 32, 0.78)";
-      ctx.beginPath();
-      ctx.arc(cx, cy, radius, 0, Math.PI * 2);
-      ctx.stroke();
-      // Inner ring
-      ctx.strokeStyle = "rgba(132, 96, 32, 0.5)";
-      ctx.beginPath();
-      ctx.arc(cx, cy, radius * 0.72, 0, Math.PI * 2);
-      ctx.stroke();
-      // 8-point sunburst rays between the rings
-      ctx.strokeStyle = "rgba(165, 122, 38, 0.7)";
-      ctx.lineWidth = Math.max(1.2, cardWidth * 0.026);
-      ctx.lineCap = "round";
-      for (let i = 0; i < 8; i += 1) {
-        const angle = (Math.PI / 4) * i;
-        const x1 = cx + Math.cos(angle) * radius * 0.74;
-        const y1 = cy + Math.sin(angle) * radius * 0.74;
-        const x2 = cx + Math.cos(angle) * radius * 0.98;
-        const y2 = cy + Math.sin(angle) * radius * 0.98;
-        ctx.beginPath();
-        ctx.moveTo(x1, y1);
-        ctx.lineTo(x2, y2);
-        ctx.stroke();
-      }
-      // Star — ornate, with a soft glow. Font scales off cardWidth so a 100px cell
-      // with cardWidth ~69 yields ~48px star; previously inner*0.5 gave ~48 also but
-      // the motif overflowed because rings/rays scaled off the (larger) inner.
-      ctx.shadowColor = "rgba(212, 162, 61, 0.5)";
-      ctx.shadowBlur = cardWidth * 0.08;
-      ctx.fillStyle = "#7a5a1d";
-      ctx.font = `800 ${Math.max(20, cardWidth * 0.66)}px Georgia, "Times New Roman", serif`;
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      ctx.fillText("★", cx, cy - cardWidth * 0.02);
-      ctx.restore();
-      continue;
-    }
-
-    drawCardFaceDetails(cell.label, cardX, cardY, cardWidth, cardHeight);
-
-    if (cell.chip) {
-      const chipCenterX = cardX + cardWidth / 2;
-      const chipCenterY = cardY + cardHeight / 2 + cardHeight * 0.07;
-      // Chip radius is keyed to the cell `inner` dimension, not cardWidth — so the
-      // 0.72-aspect card change doesn't shrink chips. Real Sequence chips overlap the
-      // card edges; 0.32 of inner reproduces that "chip slightly wider than the card"
-      // footprint.
-      const chipRadius = inner * 0.32;
-      const anim = clientState.chipPlacementAnim;
-      let scale = 1;
-      let scaleY = 1;
-      let offsetY = 0;
-      let alpha = 1;
-      if (anim && anim.cellId === cell.id) {
-        const t = Math.min(1, Math.max(0, (performance.now() - anim.startedAt) / (anim.durationMs || CHIP_PLACE_ANIM_MS)));
-        const fall = 1 - t;
-        offsetY = -fall * cardHeight * 0.45;
-        alpha = Math.min(1, 0.1 + t * 2.6);
-        if (t < 0.7) {
-          // Free-fall: chip drops from off-screen-above, alpha ramps in, radius grows
-          // from 0.3 to 1.08 (a touch larger than final to telegraph impact).
-          scale = 0.3 + 1.08 * (t / 0.7);
-        } else {
-          // After impact (t=0.7): squash → bounce → settle. Uniform `scale` stays at
-          // final size; scaleY varies on its own so the chip flattens like felt
-          // absorbing weight, then rebounds slightly, then settles flat.
-          scale = 1;
-          if (t < 0.78) {
-            scaleY = 1 - 0.3 * ((t - 0.7) / 0.08);          // squash 1.0 → 0.7
-          } else if (t < 0.86) {
-            scaleY = 0.7 + 0.35 * ((t - 0.78) / 0.08);      // bounce 0.7 → 1.05
-          } else {
-            scaleY = 1.05 - 0.05 * ((t - 0.86) / 0.14);     // settle 1.05 → 1.0
-          }
-        }
-      } else if (anim && cell.chip) {
-        // Adjacent-chip nudge: an occupied chip in one of the 8 cells around the
-        // placement target gets a brief Y-only wobble when the new chip lands.
-        // Sin half-cycle peaks mid-window and returns to rest. Scoped to 8-cell
-        // neighborhood (Chebyshev distance 1) so the effect localises around
-        // the impact instead of rippling across the whole board.
-        const drow = Math.abs(Math.floor(cell.id / BOARD_SIZE) - Math.floor(anim.cellId / BOARD_SIZE));
-        const dcol = Math.abs((cell.id % BOARD_SIZE) - (anim.cellId % BOARD_SIZE));
-        if (drow <= 1 && dcol <= 1) {
-          const elapsed = performance.now() - anim.startedAt;
-          const nudgeStart = (anim.durationMs || CHIP_PLACE_ANIM_MS) * 0.72;
-          const nudgeDur = 200;
-          if (elapsed >= nudgeStart && elapsed <= nudgeStart + nudgeDur) {
-            const u = (elapsed - nudgeStart) / nudgeDur;
-            scaleY = 1 + 0.04 * Math.sin(u * Math.PI);
-          }
-        }
-      }
-      ctx.save();
-      ctx.globalAlpha = alpha;
-      if (scaleY !== 1) {
-        // Y-only transform anchored at the chip's landing center so squash/bounce
-        // and neighbor nudge stay glued to their cells instead of drifting.
-        const anchorY = chipCenterY + offsetY;
-        ctx.translate(chipCenterX, anchorY);
-        ctx.scale(1, scaleY);
-        ctx.translate(-chipCenterX, -anchorY);
-      }
-      drawChip(
-        chipCenterX,
-        chipCenterY + offsetY,
-        chipRadius * scale,
-        cell.chip,
-        cell.seqCount > 0
-      );
-      ctx.restore();
-    }
-
-    if (highlighted && markerCard) {
-      drawBoardTargetMarker(
-        cardX + cardWidth / 2,
-        cardY + cardHeight / 2 + cardHeight * 0.07,
-        cardWidth * 0.3,
-        targetPulse,
-        isKeyboardCursor,
-        markerCard.action === "remove"
-      );
-    }
-
-    const removal = clientState.chipRemovalAnim;
-    if (!cell.chip && removal && removal.cellId === cell.id) {
-      const t = Math.min(1, Math.max(0, (performance.now() - removal.startedAt) / (removal.durationMs || CHIP_REMOVE_ANIM_MS)));
-      const chipCenterX = cardX + cardWidth / 2;
-      const chipCenterY = cardY + cardHeight / 2 + cardHeight * 0.07;
-      const chipRadius = inner * 0.32;
-      const alpha = 1 - t;
-      const scale = 1 + t * 0.9;
-      ctx.save();
-      ctx.globalAlpha = alpha * alpha;
-      drawChip(chipCenterX, chipCenterY - t * cardHeight * 0.08, chipRadius * scale, removal.team, false);
-      ctx.restore();
-
-      const ringAlpha = Math.max(0, 0.42 * (1 - t));
-      const ringRadius = chipRadius * (1 + t * 1.6);
-      ctx.save();
-      ctx.globalAlpha = ringAlpha;
-      ctx.strokeStyle = "rgba(173, 38, 62, 0.9)";
-      ctx.lineWidth = Math.max(2, chipRadius * 0.22 * (1 - t));
-      ctx.beginPath();
-      ctx.arc(chipCenterX, chipCenterY, ringRadius, 0, Math.PI * 2);
-      ctx.stroke();
-      ctx.restore();
-    }
-  }
-  drawSequenceCascade();
-  drawVictoryWash();
-  scheduleTargetPulseFrame();
-}
-
-// Render the sequence-completion cascade ON TOP of placed chips. Three layers:
-// 1. Per-cell golden halo — each of the 5 cells lights up sequentially (cell i starts
-//    at t = i * 0.09), fading in over ~15% of the animation and out over the rest.
-// 2. Line stroke from c1 to c5 — appears at t≈0.2, fades by t≈0.7. Heavy blur shadow
-//    gives the "line of light passing through the sequence" effect.
-// 3. Board border pulse — last 240ms of the animation, sin half-cycle alpha, gold.
-function drawSequenceCascade() {
-  const cascade = clientState.sequenceCascade;
-  if (!cascade) return;
-  const elapsed = performance.now() - cascade.startedAt;
-  const t = Math.min(1, Math.max(0, elapsed / SEQUENCE_CASCADE_MS));
-  const size = canvas.width;
-  const cellSize = size / BOARD_SIZE;
-  const haloColor = "255, 220, 96"; // warm gold; reads on both light and dark board
-
-  // Layer 1: per-cell halos with staggered starts.
-  for (let i = 0; i < cascade.cells.length; i += 1) {
-    const cellId = cascade.cells[i];
-    const stagger = i * 0.09;          // 0.0 / 0.09 / 0.18 / 0.27 / 0.36
-    const fadeIn = 0.15;               // 15% of animation = 180ms
-    if (t < stagger) continue;
-    const localT = Math.min(1, (t - stagger) / (1 - stagger));
-    const alpha = localT < fadeIn ? localT / fadeIn : Math.max(0, 1 - (localT - fadeIn) / (1 - fadeIn));
-    if (alpha <= 0.01) continue;
-    const col = cellId % BOARD_SIZE;
-    const row = Math.floor(cellId / BOARD_SIZE);
-    const cx = col * cellSize + 2 + (cellSize - 4) / 2;
-    const cy = row * cellSize + 2 + (cellSize - 4) / 2 + (cellSize - 4) * 0.07;
-    // Above two lines simplify to the same chipCenterX/Y formula used by the main draw loop.
-    const radius = (cellSize - 4) * 0.32 * (1.2 + localT * 0.4);
-    const grd = ctx.createRadialGradient(cx, cy, radius * 0.2, cx, cy, radius * 2.2);
-    grd.addColorStop(0, `rgba(${haloColor}, ${alpha * 0.85})`);
-    grd.addColorStop(0.55, `rgba(${haloColor}, ${alpha * 0.32})`);
-    grd.addColorStop(1, `rgba(${haloColor}, 0)`);
-    ctx.save();
-    ctx.fillStyle = grd;
-    ctx.beginPath();
-    ctx.arc(cx, cy, radius * 2.2, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
-  }
-
-  // Layer 2: line stroke connecting c1 to c5, fades in/out.
-  if (cascade.cells.length >= 2 && t > 0.2 && t < 0.72) {
-    const lineT = (t - 0.2) / 0.52;
-    const lineAlpha = lineT < 0.25 ? lineT / 0.25 : Math.max(0, 1 - (lineT - 0.25) / 0.75);
-    if (lineAlpha > 0.01) {
-      const first = cascade.cells[0];
-      const last = cascade.cells[cascade.cells.length - 1];
-      const cellCenter = (id) => {
-        const col = id % BOARD_SIZE;
-        const row = Math.floor(id / BOARD_SIZE);
-        return {
-          x: col * cellSize + 2 + (cellSize - 4) / 2,
-          y: row * cellSize + 2 + (cellSize - 4) / 2 + (cellSize - 4) * 0.07,
-        };
-      };
-      const p1 = cellCenter(first);
-      const p2 = cellCenter(last);
-      ctx.save();
-      ctx.globalAlpha = lineAlpha * 0.9;
-      ctx.strokeStyle = `rgba(${haloColor}, 1)`;
-      ctx.lineWidth = cellSize * 0.11;
-      ctx.lineCap = "round";
-      ctx.shadowColor = `rgba(${haloColor}, 0.78)`;
-      ctx.shadowBlur = cellSize * 0.45;
-      ctx.beginPath();
-      ctx.moveTo(p1.x, p1.y);
-      ctx.lineTo(p2.x, p2.y);
-      ctx.stroke();
-      ctx.restore();
-    }
-  }
-
-  // Layer 3: board outer border pulse during the tail of the animation.
-  if (t > 0.78) {
-    const borderT = (t - 0.78) / 0.22;
-    const borderAlpha = Math.sin(borderT * Math.PI) * 0.55;
-    if (borderAlpha > 0.02) {
-      ctx.save();
-      ctx.globalAlpha = borderAlpha;
-      ctx.strokeStyle = `rgba(${haloColor}, 1)`;
-      ctx.lineWidth = 6;
-      ctx.shadowColor = `rgba(${haloColor}, 0.8)`;
-      ctx.shadowBlur = 16;
-      // Mirror the rounded-rect geometry used by drawRoundedRect at the top of drawBoard.
-      const inset = 8;
-      const r = 26;
-      ctx.beginPath();
-      ctx.moveTo(inset + r, inset);
-      ctx.lineTo(size - inset - r, inset);
-      ctx.quadraticCurveTo(size - inset, inset, size - inset, inset + r);
-      ctx.lineTo(size - inset, size - inset - r);
-      ctx.quadraticCurveTo(size - inset, size - inset, size - inset - r, size - inset);
-      ctx.lineTo(inset + r, size - inset);
-      ctx.quadraticCurveTo(inset, size - inset, inset, size - inset - r);
-      ctx.lineTo(inset, inset + r);
-      ctx.quadraticCurveTo(inset, inset, inset + r, inset);
-      ctx.stroke();
-      ctx.restore();
-    }
-  }
-}
-
-// Match-end celebration washed over the whole canvas for the winning side. Three phases:
-// 1. Wash-in (0..30%): full-canvas radial gradient in the winning team's color builds up
-//    to peak alpha at t=0.3.
-// 2. Sweep (15..70%): diagonal light bar travels corner-to-corner over the wash.
-// 3. Sparkle + fade (45..100%): five sparkle dots pulse around the board center, the
-//    wash + sparkles fade to zero.
-// Rendered AFTER the chips and cascade so it sits visually on top. Only fires for the
-// winning client (registerVictoryWash is gated by the player's team match upstream).
-function drawVictoryWash() {
-  const wash = clientState.victoryWash;
-  if (!wash) return;
-  const elapsed = performance.now() - wash.startedAt;
-  const t = Math.min(1, Math.max(0, elapsed / VICTORY_WASH_MS));
-  const size = canvas.width;
-  // Ruby = warm rose-gold; Cobalt = cool indigo-cyan. Both bias toward the warm/cool end
-  // of their team color but with extra brightness so the wash reads as "celebratory glow"
-  // rather than "your team's chip color filling the screen".
-  const tint = wash.team === "A" ? "255, 196, 132" : "180, 215, 255";
-
-  // Phase 1 + 3: radial gradient wash. Alpha ramps up to peak ~0.32 at t=0.3, holds, fades.
-  let washAlpha;
-  if (t < 0.3) washAlpha = (t / 0.3) * 0.32;
-  else if (t < 0.55) washAlpha = 0.32;
-  else washAlpha = 0.32 * (1 - (t - 0.55) / 0.45);
-  if (washAlpha > 0.01) {
-    const grd = ctx.createRadialGradient(size / 2, size / 2, size * 0.1, size / 2, size / 2, size * 0.7);
-    grd.addColorStop(0, `rgba(${tint}, ${washAlpha})`);
-    grd.addColorStop(0.6, `rgba(${tint}, ${washAlpha * 0.5})`);
-    grd.addColorStop(1, `rgba(${tint}, 0)`);
-    ctx.save();
-    ctx.fillStyle = grd;
-    ctx.fillRect(0, 0, size, size);
-    ctx.restore();
-  }
-
-  // Phase 2: diagonal light sweep. A wide stripe with feathered edges travels from
-  // upper-left to lower-right between t=0.15 and t=0.7. Linear gradient orthogonal to
-  // the travel direction gives the bar soft feathered edges.
-  if (t > 0.15 && t < 0.7) {
-    const sweepT = (t - 0.15) / 0.55;
-    const progress = sweepT * 2 - 0.5; // -0.5 → 1.5 — overshoots so the bar enters/exits cleanly
-    const cx = size * progress;
-    const cy = size * progress;
-    const barLen = size * 1.6;
-    const barWid = size * 0.18;
-    ctx.save();
-    ctx.translate(cx, cy);
-    ctx.rotate(-Math.PI / 4);
-    const grd = ctx.createLinearGradient(0, -barWid / 2, 0, barWid / 2);
-    grd.addColorStop(0, `rgba(${tint}, 0)`);
-    grd.addColorStop(0.5, `rgba(${tint}, 0.42)`);
-    grd.addColorStop(1, `rgba(${tint}, 0)`);
-    ctx.fillStyle = grd;
-    ctx.fillRect(-barLen / 2, -barWid / 2, barLen, barWid);
-    ctx.restore();
-  }
-
-  // Phase 3: five sparkle dots around board center, pulsing. Positions are fixed offsets
-  // around center scaled by size — visual "burst" anchored to the board even though the
-  // wash is full-canvas. Each dot pulses on its own offset so they don't all blink in unison.
-  if (t > 0.45) {
-    const sparkleT = (t - 0.45) / 0.55;
-    const sparkleAlpha = sparkleT < 0.3 ? sparkleT / 0.3 : 1 - (sparkleT - 0.3) / 0.7;
-    if (sparkleAlpha > 0.02) {
-      const positions = [
-        { ox: -0.22, oy: -0.18, phase: 0.0 },
-        { ox: 0.24, oy: -0.2, phase: 0.15 },
-        { ox: -0.18, oy: 0.22, phase: 0.3 },
-        { ox: 0.2, oy: 0.18, phase: 0.45 },
-        { ox: 0.0, oy: 0.0, phase: 0.6 },
-      ];
-      for (const p of positions) {
-        const pulseT = (sparkleT - p.phase + 1) % 1;
-        const localAlpha = sparkleAlpha * Math.max(0, Math.sin(pulseT * Math.PI));
-        if (localAlpha < 0.02) continue;
-        const x = size / 2 + p.ox * size;
-        const y = size / 2 + p.oy * size;
-        const r = size * 0.04 * (0.8 + 0.4 * Math.sin(pulseT * Math.PI));
-        const grd = ctx.createRadialGradient(x, y, 0, x, y, r);
-        grd.addColorStop(0, `rgba(${tint}, ${localAlpha})`);
-        grd.addColorStop(1, `rgba(${tint}, 0)`);
-        ctx.save();
-        ctx.fillStyle = grd;
-        ctx.beginPath();
-        ctx.arc(x, y, r, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.restore();
-      }
-    }
-  }
-}
-
 const BASE_TITLE = "Sequence Arena · 실시간 시퀀스 팀전";
 
 function updatePageTitle() {
@@ -7181,6 +6166,49 @@ async function fetchBuildVersion() {
 fetchBuildVersion();
 watchNotificationPermission();
 pruneOfflineRuntimeRecoveredState();
+
+// Wire the network/reconnect slice (client/net-client.js) to the app's shared state and peer
+// functions through its single bindNetClientContext() binding point — mirrors the board-paint /
+// board-render precedent. Placed here (right before the boot connectSocket()) so every injected
+// identifier, including the late-declared const CLIENT_PROTOCOL_VERSION and warnProtocolMismatch /
+// reportClientError, is already defined. urlRoomCode is a module const passed by value; the shared
+// let spectatorClosedRecoveryAttempted and the live localSoloRuntime instance are threaded via
+// getter/setter callbacks so both app.js and the module observe the same value.
+bindNetClientContext({
+  clientState,
+  refs,
+  safeLocalStorage,
+  STORAGE_KEYS,
+  urlRoomCode,
+  CLIENT_PROTOCOL_VERSION,
+  DEFAULT_MAX_MATCH_HISTORY,
+  getLocalSoloRuntime: () => localSoloRuntime,
+  getSpectatorClosedRecoveryAttempted: () => spectatorClosedRecoveryAttempted,
+  setSpectatorClosedRecoveryAttempted: (value) => {
+    spectatorClosedRecoveryAttempted = value;
+  },
+  render,
+  setFlashMessage,
+  reportClientError,
+  warnProtocolMismatch,
+  shouldReconnectSavedRoom,
+  reconnectToSavedRoom,
+  maybeAutoJoinSharedRoom,
+  announceAssertive,
+  announcePolite,
+  setJoinRolePreference,
+  applyJoinServerErrorHint,
+  normalizeRoomCode,
+  normalizePlayerName,
+  setChatFeedback,
+  playSound,
+  updateUrlRoom,
+  clearBotThinkingTimer,
+  saveSessionMeta,
+  applyRoomSnapshot,
+  isOfflineOnlyRuntime,
+  markPlayerActionTempo,
+});
 
 connectSocket();
 render();
