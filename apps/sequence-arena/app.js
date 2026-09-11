@@ -207,6 +207,7 @@ const refs = {
   chatCharCount: document.getElementById("chat-char-count"),
   chatFeedback: document.getElementById("chat-feedback"),
   emojiButtons: [...document.querySelectorAll("[data-chat-emoji]")],
+  chatPhraseButtons: [...document.querySelectorAll("[data-chat-phrase]")],
   historySummary: document.getElementById("history-summary"),
   historyPolicy: document.getElementById("history-policy"),
   historyList: document.getElementById("history-list"),
@@ -4484,6 +4485,13 @@ refs.chatForm?.addEventListener("submit", (event) => {
 for (const button of refs.emojiButtons || []) {
   button.addEventListener("click", () => {
     const text = button.dataset.chatEmoji;
+    if (!text) return;
+    sendChatMessage(text);
+  });
+}
+for (const button of refs.chatPhraseButtons || []) {
+  button.addEventListener("click", () => {
+    const text = button.dataset.chatPhrase;
     if (!text) return;
     sendChatMessage(text);
   });

@@ -3391,6 +3391,28 @@ body[data-game="playing"] .card-note {
   font-size: 1rem;
 }
 
+.chat-phrase-row {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+
+.chat-phrase-btn {
+  min-height: 36px;
+  padding: 6px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.chat-phrase-btn:hover {
+  border-color: var(--line-strong);
+}
+
 .chat-form {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;

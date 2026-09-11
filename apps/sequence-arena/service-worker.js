@@ -1,4 +1,4 @@
-const CACHE_NAME = "sequence-arena-github-pages-v103";
+const CACHE_NAME = "sequence-arena-github-pages-v104";
 const APP_SHELL = [
   "./",
   "./index.html",
