@@ -10,6 +10,7 @@ import {
   normalizeSoloStats,
   recordSoloResult,
   formatDailyShareText,
+  formatWeeklyShareText,
 } from "./shared/daily.js";
 import {
   COURT_RANKS,
@@ -34,8 +35,23 @@ import {
 } from "./client/net-client.js";
 import { HAPTIC, playSoundPattern } from "./client/sound-bank.js";
 import { TUTORIAL_SEED, TUTORIAL_STEPS, createTutorialMachine } from "./client/tutorial.js";
-import { buildDailyCalendar, buildStatsSummary } from "./client/stats-view.js";
+import { buildDailyCalendar, buildStatsSummary, buildWeeklyLeaderboardView } from "./client/stats-view.js";
+import {
+  buildReplayRecord,
+  validateReplayRecord,
+  encodeReplayString,
+  decodeReplayString,
+  replayGame,
+} from "./shared/replay.js";
 import { sanitizeName, ROOM_CODE_PATTERN, MAX_ROOM_CODE_LENGTH } from "./shared/validation.js";
+import {
+  t,
+  getLocale,
+  setLocale,
+  activeLocale,
+  applyStaticTranslations,
+  LOCALE_STORAGE_KEY,
+} from "./client/i18n.js";
 
 const STORAGE_KEYS = {
   session: "sequence-arena-session",
@@ -50,11 +66,17 @@ const STORAGE_KEYS = {
   preferredTeamSize: "sequence-arena-preferred-team-size",
   preferredBotDifficulty: "sequence-arena-preferred-bot-difficulty",
   theme: "sequence-arena-theme",
+  locale: LOCALE_STORAGE_KEY,
   welcomed: "sequence-arena-welcomed",
   dailyResults: "sequence-arena-daily-results",
   soloStats: "sequence-arena-solo-stats",
   tutorialDone: "sequence-arena-tutorial-done",
+  replays: "sequence-arena-replays",
 };
+
+// Cap the stored replay list so localStorage stays bounded (mirrors matchHistory .slice and
+// daily MAX_RESULT_DAYS bounding). Newest replays are kept.
+const MAX_STORED_REPLAYS = 20;
 
 // Canonical public URL used in the daily-challenge share text. The Pages PWA is the one
 // no-cost URL that works for every recipient, so share text always points there even when
@@ -111,6 +133,9 @@ const refs = {
   statsCalendarGrid: document.getElementById("stats-calendar-grid"),
   statsCalendarMonths: document.getElementById("stats-calendar-months"),
   statsSrSummary: document.getElementById("stats-sr-summary"),
+  statsWeeklyList: document.getElementById("stats-weekly-list"),
+  statsWeeklySrSummary: document.getElementById("stats-weekly-sr-summary"),
+  statsWeeklyShareBtn: document.getElementById("stats-weekly-share-btn"),
   statsEmpty: document.getElementById("stats-empty"),
   statsEmptyDailyBtn: document.getElementById("stats-empty-daily-btn"),
   helpCloseBtn: document.getElementById("help-close-btn"),
@@ -132,6 +157,7 @@ const refs = {
   welcomeModeBanner: document.getElementById("welcome-mode-banner"),
   welcomeModeSteps: document.getElementById("welcome-mode-steps"),
   themeToggleBtn: document.getElementById("theme-toggle-btn"),
+  localeToggleBtn: document.getElementById("locale-toggle-btn"),
   offlineBanner: document.getElementById("offline-banner"),
   offlineText: document.getElementById("offline-text"),
   offlineRetryBtn: document.getElementById("offline-retry-btn"),
@@ -177,6 +203,22 @@ const refs = {
   victoryCard: document.getElementById("victory-card"),
   victoryDailyResult: document.getElementById("victory-daily-result"),
   shareDailyBtn: document.getElementById("share-daily-btn"),
+  saveReplayBtn: document.getElementById("save-replay-btn"),
+  replayBtn: document.getElementById("replay-btn"),
+  replayModal: document.getElementById("replay-modal"),
+  replayCloseBtn: document.getElementById("replay-close-btn"),
+  replaySrSummary: document.getElementById("replay-sr-summary"),
+  replayPlayerStatus: document.getElementById("replay-player-status"),
+  replayPlayerBoard: document.getElementById("replay-player-board"),
+  replayPlayerControls: document.getElementById("replay-player-controls"),
+  replayPrevBtn: document.getElementById("replay-prev-btn"),
+  replayNextBtn: document.getElementById("replay-next-btn"),
+  replayStepLabel: document.getElementById("replay-step-label"),
+  replayImportInput: document.getElementById("replay-import-input"),
+  replayImportBtn: document.getElementById("replay-import-btn"),
+  replayImportFeedback: document.getElementById("replay-import-feedback"),
+  replayList: document.getElementById("replay-list"),
+  replayEmpty: document.getElementById("replay-empty"),
   dailyBadge: document.getElementById("daily-badge"),
   victoryWinner: document.getElementById("victory-winner"),
   victoryScore: document.getElementById("victory-score"),
@@ -312,10 +354,39 @@ function loadSoloStats() {
   }
 }
 
+// Stored replays are a saved-list of validated replay records (offline, client-only). The
+// stored payload is defensively re-validated on load so a corrupted/foreign entry can never
+// reach the replay engine.
+function loadStoredReplays() {
+  try {
+    const raw = JSON.parse(safeLocalStorage.get(STORAGE_KEYS.replays) || "[]");
+    if (!Array.isArray(raw)) return [];
+    const entries = [];
+    for (const entry of raw) {
+      if (!entry || typeof entry !== "object") continue;
+      const record = validateReplayRecord(entry.record);
+      if (!record) continue;
+      entries.push({
+        id: typeof entry.id === "string" ? entry.id.slice(0, 64) : `${record.seed}-${entry.savedAt || ""}`,
+        savedAt: typeof entry.savedAt === "string" ? entry.savedAt.slice(0, 40) : "",
+        label: typeof entry.label === "string" ? entry.label.slice(0, 80) : "",
+        record,
+      });
+      if (entries.length >= MAX_STORED_REPLAYS) break;
+    }
+    return entries;
+  } catch {
+    return [];
+  }
+}
+
 // Parsed once at boot and kept in memory; every write goes through the recorder so the
 // render path never touches localStorage/JSON on its hot path.
 let dailyResultsCache = loadDailyResults();
 let soloStatsCache = loadSoloStats();
+let storedReplaysCache = loadStoredReplays();
+// The replay record of the most recently finished local game, offered on the victory card.
+let pendingReplayToSave = null;
 let lastRecordedLocalMatchNumber = 0;
 
 function readPercentPreference(key, fallback, min = 0, max = 100) {
@@ -559,11 +630,12 @@ let mediaFeedbackUnlocked = false;
 let lastJackFeedback = { key: "", at: 0 };
 let localSoloRuntime = null;
 
-const BOT_MODE_LABELS = {
-  easy: "쉬움",
-  smart: "전략",
-  aggressive: "공격",
-};
+// Localised via i18n t() at call time so a locale toggle re-renders these labels. Kept as a
+// function (not a frozen object) because t() resolves against the active locale each call.
+function botModeLabel(mode) {
+  const key = { easy: "bot.easy", smart: "bot.smart", aggressive: "bot.aggressive", master: "bot.master" }[mode];
+  return key ? t(key) : t("bot.smart");
+}
 
 const REMATCH_MODE_LABELS = {
   all: "전원 동의",
@@ -704,7 +776,7 @@ function normalizeTeamSize(value) {
 }
 
 function normalizeBotDifficulty(value) {
-  return value === "easy" || value === "aggressive" ? value : "smart";
+  return value === "easy" || value === "aggressive" || value === "master" ? value : "smart";
 }
 
 function asSafeArray(value) {
@@ -1155,7 +1227,7 @@ function updateTeamSizeButtons() {
 
 function updateAiModeButtons() {
   const activeMode = clientState.botDifficulty || "smart";
-  refs.aiModeLabel.textContent = BOT_MODE_LABELS[activeMode] || BOT_MODE_LABELS.smart;
+  refs.aiModeLabel.textContent = botModeLabel(activeMode);
   for (const button of refs.aiModeButtons) {
     const isActive = button.dataset.aiMode === activeMode;
     button.setAttribute("aria-pressed", String(isActive));
@@ -3132,6 +3204,9 @@ function maybeRecordLocalSoloResult() {
   if (!latest || !Number.isFinite(latest.matchNumber)) return;
   if (latest.matchNumber <= lastRecordedLocalMatchNumber) return;
   lastRecordedLocalMatchNumber = latest.matchNumber;
+  // Offer the just-finished game as a saveable replay. Validated defensively so only a
+  // sound, reproducible record ever reaches the save/playback path.
+  pendingReplayToSave = validateReplayRecord(latest.replay);
   if (latest.tutorial === true) {
     // Guided practice games are deliberately excluded from solo stats and daily records.
     return;
@@ -3181,11 +3256,7 @@ async function shareDailyResult() {
   // clipboard-read, so tests verify the composed text here instead of reading it back.
   window.__sequenceLastDailyShareText = text;
   const copied = await writeToClipboard(text);
-  setFlashMessage(
-    copied
-      ? "데일리 결과를 클립보드에 복사했습니다. 붙여넣기로 공유하세요."
-      : "클립보드 복사에 실패했습니다. 브라우저 권한을 확인해 주세요."
-  );
+  setFlashMessage(copied ? t("share.dailyCopied") : t("share.shareFailed"));
   if (copied) {
     playSound("tap");
   }
@@ -3456,10 +3527,10 @@ function renderHistory() {
     meta.className = "history-item-meta";
     const mode =
       record.testMode === "solo"
-        ? `혼자 테스트 · ${BOT_MODE_LABELS[record.botDifficulty] || "전략"}`
+        ? t("history.soloTest", { mode: botModeLabel(record.botDifficulty) })
         : record.testMode === "local-solo"
-          ? `오프라인 솔로 · ${BOT_MODE_LABELS[record.botDifficulty] || "전략"}`
-          : "멀티플레이";
+          ? t("history.offlineSolo", { mode: botModeLabel(record.botDifficulty) })
+          : t("history.multiplayer");
     meta.append(
       buildHistoryMeta(index === 0 ? "최근 경기" : `#${record.matchNumber}`, index === 0 ? "latest" : ""),
       buildHistoryMeta(formatHistoryTime(record.finishedAt)),
@@ -3722,18 +3793,23 @@ function renderStatus() {
       !clientState.sessionTakenOver
   );
   refs.connectionIndicator.textContent = clientState.localMode
-    ? "오프라인 솔로"
+    ? t("conn.offlineSolo")
       : offlineOnlyRuntime
-        ? "GitHub Pages 정적판"
+        ? t("conn.staticBuild")
         : clientState.socketReady
-          ? "실시간 연결됨"
+          ? t("conn.live")
           : clientState.reconnectPaused
-            ? "연결이 중단됨"
+            ? t("conn.paused")
             : isReconnecting
-              ? `연결 복구 중${
-                clientState.reconnectAttempts ? ` (${clientState.reconnectAttempts}회)` : ""
-              }${clientState.reconnectDelayMs > 0 ? ` · ${formatRetryDelay(clientState.reconnectDelayMs)} 재시도` : ""}`
-              : "연결 복구 대기";
+              ? t("conn.recovering", {
+                attempts: clientState.reconnectAttempts
+                  ? t("conn.recoveringAttempts", { count: clientState.reconnectAttempts })
+                  : "",
+                delay: clientState.reconnectDelayMs > 0
+                  ? t("conn.recoveringDelay", { delay: formatRetryDelay(clientState.reconnectDelayMs) })
+                  : "",
+              })
+              : t("conn.waiting");
   refs.currentOrigin.textContent = window.location.origin;
   if (refs.gatewaySubtitle) {
     refs.gatewaySubtitle.textContent = offlineOnlyRuntime
@@ -3890,13 +3966,13 @@ function renderStatus() {
   if (!clientState.game) {
     refs.victoryCard.hidden = true;
     refs.rematchBtn.disabled = true;
-    refs.rematchVoteStatus.textContent = "0 / 0 동의";
+    refs.rematchVoteStatus.textContent = t("rematch.voteStatus", { votes: 0, required: 0 });
     refs.turnSubtitle.textContent = clientState.localMode
-      ? "솔로 대기"
+      ? t("turn.soloWaiting")
       : clientState.roomCode
-        ? `로비 대기 중 · ${matchLabel}`
-        : "방 미접속";
-    refs.turnPlayer.textContent = clientState.localMode ? "솔로" : clientState.roomCode ? "플레이어 대기" : "대기 중";
+        ? t("turn.lobbyWaiting", { match: matchLabel })
+        : t("turn.notInRoom");
+    refs.turnPlayer.textContent = clientState.localMode ? t("turn.solo") : clientState.roomCode ? t("turn.playerWaiting") : t("turn.waiting");
     if (refs.turnTeamName) {
       refs.turnTeamName.textContent = "-";
     } else {
@@ -3928,7 +4004,7 @@ function renderStatus() {
     refs.scoreCobalt.textContent = `0 / 2 시퀀스`;
     refs.deckCount.textContent = "0장";
     refs.discardCount.textContent = "0장";
-    refs.handCaption.textContent = "게임이 시작되면 이 칸에 내 손패가 보입니다.";
+    refs.handCaption.textContent = t("hand.captionPregame");
     refs.selectionHint.textContent = selectedCardHint
       ? selectedCardHint
       : clientState.localMode
@@ -4000,15 +4076,15 @@ function renderStatus() {
 
   refs.turnSubtitle.textContent =
     clientState.game.phase === "finished"
-      ? "게임 종료"
+      ? t("turn.finished")
       : pendingStep?.type === "discard"
-        ? "카드 내려놓기"
+        ? t("turn.discard")
       : pendingStep?.type === "draw"
-        ? "덱에서 뽑기"
+        ? t("turn.draw")
       : isBotThinking
-        ? "AI 계산 중"
-      : `${player?.seatIndex + 1 || "-"}번 좌석 차례`;
-  refs.turnPlayer.textContent = player?.name || "알 수 없음";
+        ? t("turn.aiThinking")
+      : t("turn.seatTurn", { seat: player?.seatIndex + 1 || "-" });
+  refs.turnPlayer.textContent = player?.name || t("turn.unknownPlayer");
   const turnTeamLabel = player ? TEAM_LABELS[player.team] || TEAM_META[player.team].name : "-";
   refs.turnTeam.className = player?.team === "A" ? "team-ruby" : player?.team === "B" ? "team-cobalt" : "";
   if (refs.turnTeamName) {
@@ -4051,6 +4127,11 @@ function renderStatus() {
   if (refs.shareDailyBtn) {
     refs.shareDailyBtn.hidden = !dailyEntry;
   }
+  if (refs.saveReplayBtn) {
+    // A replay is offered only for a finished local game whose reproducible record was
+    // captured. Networked games have no replay (client lacks full state).
+    refs.saveReplayBtn.hidden = !(winnerMeta && clientState.localMode && pendingReplayToSave);
+  }
   if (winnerMeta) {
     const voteCount = clientState.rematchVoteSeatIndexes.length;
     const requiredVotes = clientState.rematchRequiredVotes || 0;
@@ -4065,38 +4146,38 @@ function renderStatus() {
       const dailyRun = localSolo && Boolean(clientState.dailyChallenge);
       refs.rematchVoteStatus.textContent = localSolo
         ? dailyRun
-          ? "기록은 첫 판 기준"
-          : "바로 재시작 가능"
+          ? t("rematch.recordsFirstGame")
+          : t("rematch.canRestart")
         : isHost()
-          ? "방장 시작 가능"
-          : "방장 시작 대기";
+          ? t("rematch.hostCanStart")
+          : t("rematch.hostWaiting");
       refs.rematchBtn.disabled = clientState.roomPhase !== "finished" || (!localSolo && !isHost());
-      refs.rematchBtn.textContent = localSolo ? (dailyRun ? "같은 퍼즐 재도전" : "리매치 시작") : isHost() ? "리매치 시작" : "방장 대기";
+      refs.rematchBtn.textContent = localSolo ? (dailyRun ? t("rematch.retryPuzzle") : t("rematch.start")) : isHost() ? t("rematch.start") : t("rematch.hostWait");
       refs.rematchBtn.setAttribute(
         "aria-label",
-        localSolo ? `${refs.rematchBtn.textContent} (R)` : isHost() ? "방장만 리매치 시작 (R)" : "방장 대기 (R)"
+        localSolo ? t("rematch.retryPuzzleAria", { label: refs.rematchBtn.textContent }) : isHost() ? t("rematch.hostOnlyAria") : t("rematch.hostWaitAria")
       );
     } else {
-      refs.rematchVoteStatus.textContent = `${voteCount} / ${requiredVotes} 동의`;
+      refs.rematchVoteStatus.textContent = t("rematch.voteStatus", { votes: voteCount, required: requiredVotes });
       // Toggle UX: a player who already voted can click again to retract, so we keep the
       // button enabled and re-label it. Spectators and pre-finish phase stay disabled.
       refs.rematchBtn.disabled = clientState.roomPhase !== "finished" || clientState.yourRole !== "player";
-      refs.rematchBtn.textContent = alreadyVoted ? "동의 취소" : "리매치 동의";
-      refs.rematchBtn.setAttribute("aria-label", `${refs.rematchBtn.textContent} (R)`);
+      refs.rematchBtn.textContent = alreadyVoted ? t("rematch.retractVote") : t("rematch.agree");
+      refs.rematchBtn.setAttribute("aria-label", t("rematch.agreeAria", { label: refs.rematchBtn.textContent }));
     }
   } else {
     refs.rematchBtn.disabled = true;
-    refs.rematchBtn.textContent = "리매치 동의";
-    refs.rematchVoteStatus.textContent = "0 / 0 동의";
-    refs.rematchBtn.setAttribute("aria-label", "리매치 동의 (R)");
+    refs.rematchBtn.textContent = t("rematch.agree");
+    refs.rematchVoteStatus.textContent = t("rematch.voteStatus", { votes: 0, required: 0 });
+    refs.rematchBtn.setAttribute("aria-label", t("rematch.defaultAria"));
   }
 
   if (clientState.game.winner) {
     const winnerName = TEAM_LABELS[clientState.game.winner] || TEAM_META[clientState.game.winner].name;
     refs.statusMessage.textContent =
       clientState.rematchMode === "host"
-        ? `${winnerName} 승리. 방장이 같은 좌석으로 리매치를 시작할 수 있습니다.`
-        : `${winnerName} 승리. 모든 접속 플레이어가 동의하면 같은 좌석으로 리매치가 시작됩니다.`;
+        ? t("status.winnerHost", { winner: winnerName })
+        : t("status.winnerVote", { winner: winnerName });
   } else if (pendingStep?.type === "discard") {
     const cardLabel = pendingStep.card?.label || "사용한 카드";
     refs.statusMessage.textContent = isPendingForMe("discard")
@@ -4132,10 +4213,14 @@ function renderStatus() {
 
   const me = yourPlayer();
   refs.handCaption.textContent = clientState.yourRole === "spectator"
-    ? "관전 모드 · 플레이어 손패는 비공개입니다."
+    ? t("hand.captionSpectator")
     : me
-      ? `${me.name} · ${TEAM_LABELS[me.team] || TEAM_META[me.team].name} · ${isYourTurn() ? "내 차례" : "대기 중"}`
-    : "내 좌석 정보가 아직 없습니다.";
+      ? t("hand.captionMine", {
+          name: me.name,
+          team: TEAM_LABELS[me.team] || TEAM_META[me.team].name,
+          turn: isYourTurn() ? t("hand.captionMyTurn") : t("hand.captionWaiting"),
+        })
+    : t("hand.captionNoSeat");
 
   refs.selectionHint.textContent =
     clientState.yourRole === "spectator"
@@ -4611,11 +4696,70 @@ function toggleTheme() {
 applyTheme(resolveInitialTheme());
 refs.themeToggleBtn?.addEventListener("click", toggleTheme);
 
+// English UI toggle (i18n). Korean stays the product default; this only *adds* English as a
+// persisted opt-in, mirroring the theme-toggle pattern above. The Korean text authored in
+// index.html is the shipped default, so a pre-boot / no-JS render stays Korean.
+function updateLocaleToggleButton() {
+  if (!refs.localeToggleBtn) return;
+  const isEnglish = activeLocale() === "en";
+  // Button shows the language it will switch TO, matching the theme toggle's intent-forward label.
+  refs.localeToggleBtn.textContent = isEnglish ? "한" : "EN";
+  refs.localeToggleBtn.setAttribute("aria-pressed", String(isEnglish));
+  refs.localeToggleBtn.setAttribute(
+    "aria-label",
+    isEnglish ? t("topbar.locale.toKorean.aria") : t("topbar.locale.toEnglish.aria")
+  );
+  refs.localeToggleBtn.title = isEnglish ? t("topbar.locale.toKorean.title") : t("topbar.locale.toEnglish.title");
+}
+
+function applyLocale(locale, { announce = false } = {}) {
+  setLocale(locale);
+  document.documentElement.lang = activeLocale();
+  applyStaticTranslations(document);
+  updateLocaleToggleButton();
+  // Re-run the dynamic render pass so t()-routed labels (bot mode, stats, status) refresh.
+  if (typeof render === "function") {
+    render();
+  }
+  // Re-translate the join-code hint surface, which is driven by input events rather than the
+  // render pass, so a mid-typing locale toggle repaints its neutral/invalid/valid copy.
+  if (typeof updateJoinCodeValidity === "function" && refs.joinCode) {
+    updateJoinCodeValidity();
+  }
+  if (announce) {
+    announcePolite(
+      activeLocale() === "en" ? t("topbar.locale.switchedToEnglish") : t("topbar.locale.switchedToKorean")
+    );
+  }
+}
+
+function toggleLocale() {
+  const next = activeLocale() === "en" ? "ko" : "en";
+  safeLocalStorage.set(STORAGE_KEYS.locale, next);
+  applyLocale(next, { announce: true });
+}
+
+// Boot: adopt any persisted locale. getLocale() reads through the guarded default storage.
+getLocale();
+document.documentElement.lang = activeLocale();
+updateLocaleToggleButton();
+if (activeLocale() !== "ko") {
+  // Only repaint static nodes when the user previously chose English; the ko default is
+  // already the authored content, so a fresh ko session skips this work.
+  applyStaticTranslations(document);
+}
+refs.localeToggleBtn?.addEventListener("click", toggleLocale);
+
 // Room code inputs are ASCII-only and should visually feel uppercase as the user types.
 // The hint element doubles as the error surface. Cache the original neutral copy at boot
 // so the validation flow can swap to error text on bad input and restore on recovery —
 // without a cached copy, an upstream string change would silently desync.
 const JOIN_CODE_HINT_DEFAULT = refs.joinCodeHint?.textContent || "4~6자리 영문/숫자";
+// Neutral placeholder resolved through t() at call time so a locale toggle re-translates the
+// empty/reset state; mirrors the static [data-i18n] gateway.roomCodeHint key.
+function joinCodeHintDefault() {
+  return t("gateway.roomCodeHint");
+}
 const JOIN_CODE_HINT_ERROR = "방 코드는 4~6자 영문/숫자여야 합니다.";
 const JOIN_CODE_HINT_INVALID_CHARS = "영문/숫자만 입력하세요. (하이픈, 공백은 제거됩니다)";
 const JOIN_CODE_HINT_SERVER_NOT_FOUND =
@@ -4709,13 +4853,13 @@ function updateJoinCodeValidity(hasInvalidCharacters = false) {
   // user has committed at least one character that doesn't yet meet the 4-6 length range.
   if (value.length === 0) {
     refs.joinCode.removeAttribute("aria-invalid");
-    if (hint) hint.textContent = JOIN_CODE_HINT_DEFAULT;
+    if (hint) hint.textContent = joinCodeHintDefault();
     announceJoinCodeHint("");
     return;
   }
   if (value.length < 4) {
     refs.joinCode.setAttribute("aria-invalid", "true");
-    const message = hasInputCharacters ? JOIN_CODE_HINT_INVALID_CHARS : JOIN_CODE_HINT_ERROR;
+    const message = hasInputCharacters ? JOIN_CODE_HINT_INVALID_CHARS : t("join.codeInvalid");
     if (hint) hint.textContent = message;
     announceJoinCodeHint(message);
     return;
@@ -4727,8 +4871,10 @@ function updateJoinCodeValidity(hasInvalidCharacters = false) {
     return;
   }
   refs.joinCode.removeAttribute("aria-invalid");
-  if (hint) hint.textContent = JOIN_CODE_HINT_DEFAULT;
-  announceJoinCodeHint(JOIN_CODE_HINT_DEFAULT);
+  // Persistent hint reverts to the neutral format copy on recovery (matches the empty/reset
+  // branch and pre-i18n behavior). Readiness is surfaced only as a transient SR announcement.
+  if (hint) hint.textContent = joinCodeHintDefault();
+  announceJoinCodeHint(t("join.codeValid"));
 }
 
 function hasValidJoinName() {
@@ -4921,6 +5067,7 @@ function openModalElement() {
   // At most one of these is ever visible at a time.
   if (refs.helpModal && !refs.helpModal.hidden) return refs.helpModal;
   if (refs.statsModal && !refs.statsModal.hidden) return refs.statsModal;
+  if (refs.replayModal && !refs.replayModal.hidden) return refs.replayModal;
   return null;
 }
 
@@ -4975,7 +5122,10 @@ function closeStatsModal() {
   }
 }
 
-const STATS_DIFFICULTY_LABELS = { easy: "쉬움", smart: "전략", aggressive: "공격" };
+function statsDifficultyLabel(key) {
+  const mapped = { easy: "statsDiff.easy", smart: "statsDiff.smart", aggressive: "statsDiff.aggressive", master: "statsDiff.master" }[key];
+  return mapped ? t(mapped) : key;
+}
 
 function buildStatsSummaryItem(term, value) {
   const wrap = document.createElement("div");
@@ -4986,6 +5136,106 @@ function buildStatsSummaryItem(term, value) {
   dd.textContent = value;
   wrap.append(dt, dd);
   return wrap;
+}
+
+// Human-friendly Korean label for a Sunday-start week, e.g. "6월 14일 ~ 6월 20일".
+function formatWeekRangeLabel(startKey, endKey) {
+  const [, sMonth, sDay] = startKey.split("-");
+  const [, eMonth, eDay] = endKey.split("-");
+  return `${Number(sMonth)}월 ${Number(sDay)}일 ~ ${Number(eMonth)}월 ${Number(eDay)}일`;
+}
+
+function formatWeekDurationKo(durationMs) {
+  const totalSeconds = Math.max(0, Math.round(Number(durationMs) / 1000) || 0);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  if (minutes === 0) return `${seconds}초`;
+  if (seconds === 0) return `${minutes}분`;
+  return `${minutes}분 ${seconds}초`;
+}
+
+// Renders the PERSONAL weekly leaderboard — a ranking of the player's own daily-challenge
+// weeks against each other, entirely from localStorage. DOM built with createElement +
+// textContent only (SAST forbids innerHTML/inline handlers).
+function renderWeeklyLeaderboard(todayKey) {
+  const view = buildWeeklyLeaderboardView(dailyResultsCache, todayKey, 8);
+  if (refs.statsWeeklyList) {
+    // Only weeks the player actually played appear as ranked rows, ordered by rank.
+    const rows = view.rows.filter((row) => row.played > 0).sort((a, b) => a.rank - b.rank);
+    const items = rows.map((row) => {
+      const item = document.createElement("li");
+      item.className = `stats-weekly-row${row.isCurrentWeek ? " current" : ""}${row.isPersonalBest ? " best" : ""}`;
+
+      const rank = document.createElement("span");
+      rank.className = "stats-weekly-rank";
+      rank.textContent = `#${row.rank}`;
+
+      const info = document.createElement("span");
+      info.className = "stats-weekly-info";
+      const range = document.createElement("span");
+      range.className = "stats-weekly-range";
+      range.textContent = formatWeekRangeLabel(row.startKey, row.endKey);
+      const tags = document.createElement("span");
+      tags.className = "stats-weekly-tags";
+      const tagParts = [];
+      if (row.isCurrentWeek) tagParts.push("이번 주");
+      if (row.isPersonalBest) tagParts.push("최고 기록 주");
+      tags.textContent = tagParts.join(" · ");
+      info.append(range, tags);
+
+      const record = document.createElement("span");
+      record.className = "stats-weekly-record";
+      const bits = [`${row.wins}승 ${row.losses}패`, `${row.points}점`];
+      if (row.weekStreak > 1) bits.push(`🔥${row.weekStreak}일`);
+      if (row.wins > 0 && row.bestDurationMs > 0) bits.push(`⏱️${formatWeekDurationKo(row.bestDurationMs)}`);
+      record.textContent = bits.join(" · ");
+
+      item.append(rank, info, record);
+      const streakText = row.weekStreak > 1 ? `, 주간 최고 ${row.weekStreak}일 연속` : "";
+      item.setAttribute(
+        "aria-label",
+        `${row.rank}위: ${formatWeekRangeLabel(row.startKey, row.endKey)}${row.isCurrentWeek ? " (이번 주)" : ""}${row.isPersonalBest ? " (최고 기록 주)" : ""}. ${row.wins}승 ${row.losses}패, ${row.points}점${streakText}.`
+      );
+      return item;
+    });
+    refs.statsWeeklyList.replaceChildren(...items);
+  }
+  if (refs.statsWeeklySrSummary) {
+    refs.statsWeeklySrSummary.textContent = view.hasHistory
+      ? `내 데일리 기록으로 만든 개인 주간 순위입니다. 최근 8주 중 ${view.playedWeeks}주를 플레이했습니다.`
+      : "아직 주간 기록이 없습니다.";
+  }
+  if (refs.statsWeeklyShareBtn) {
+    refs.statsWeeklyShareBtn.disabled = !view.hasHistory;
+  }
+}
+
+async function shareWeeklyResult() {
+  const todayKey = dailyDateKey();
+  const view = buildWeeklyLeaderboardView(dailyResultsCache, todayKey, 8);
+  const currentRow = view.rows.find((row) => row.isCurrentWeek);
+  if (!currentRow || currentRow.played === 0) {
+    setFlashMessage("이번 주 데일리 챌린지를 플레이하면 주간 기록을 공유할 수 있습니다.");
+    return;
+  }
+  const text = formatWeeklyShareText({
+    weekKey: currentRow.weekKey,
+    wins: currentRow.wins,
+    played: currentRow.played,
+    weekStreak: currentRow.weekStreak,
+    bestDurationMs: currentRow.bestDurationMs,
+    // ?mode=daily lands recipients straight in the same daily-challenge flow.
+    url: `${PAGES_PUBLIC_URL}?mode=daily`,
+  });
+  // Mirrored for ui-regression: clipboard-read is denied by Permissions-Policy, so tests
+  // verify the composed text here instead of reading it back.
+  window.__sequenceLastWeeklyShareText = text;
+  const copied = await writeToClipboard(text);
+  setFlashMessage(
+    copied
+      ? "이번 주 기록을 클립보드에 복사했습니다. 붙여넣기로 공유하세요."
+      : "클립보드 복사에 실패했습니다. 브라우저 권한을 확인해 주세요."
+  );
 }
 
 function renderStatsModal() {
@@ -5003,7 +5253,7 @@ function renderStatsModal() {
     ];
     const difficultyParts = Object.entries(summary.solo.byDifficulty)
       .filter(([, record]) => record.games > 0)
-      .map(([key, record]) => `${STATS_DIFFICULTY_LABELS[key] || key} ${record.wins}/${record.games}`);
+      .map(([key, record]) => `${statsDifficultyLabel(key)} ${record.wins}/${record.games}`);
     if (difficultyParts.length > 0) {
       items.push(buildStatsSummaryItem("난이도별", difficultyParts.join(" · ")));
     }
@@ -5047,12 +5297,18 @@ function renderStatsModal() {
     refs.statsCalendarMonths.replaceChildren(...labels);
   }
 
+  renderWeeklyLeaderboard(todayKey);
+
   if (refs.statsEmpty) {
     refs.statsEmpty.hidden = hasAnyHistory;
   }
   const calendarSection = refs.statsModal?.querySelector(".stats-calendar-section");
   if (calendarSection) {
     calendarSection.hidden = summary.daily.played === 0;
+  }
+  const weeklySection = refs.statsModal?.querySelector(".stats-weekly-section");
+  if (weeklySection) {
+    weeklySection.hidden = summary.daily.played === 0;
   }
   if (refs.statsSrSummary) {
     refs.statsSrSummary.textContent = hasAnyHistory
@@ -5074,6 +5330,282 @@ refs.statsModal?.addEventListener("click", (event) => {
 refs.statsEmptyDailyBtn?.addEventListener("click", () => {
   closeStatsModal();
   startOfflineSolo({ daily: true });
+});
+refs.statsWeeklyShareBtn?.addEventListener("click", shareWeeklyResult);
+
+// --- Replay system UI ----------------------------------------------------------------
+//
+// Client-only, offline: saved replays live in localStorage; playback re-simulates the
+// deterministic engine via shared/replay.js. All DOM is built with createElement +
+// textContent (SAST: no innerHTML/inline handlers).
+
+let replayPreviousFocus = null;
+// The replay currently loaded into the player: { snapshots, index, record } or null.
+let activeReplayPlayback = null;
+
+function persistStoredReplays() {
+  try {
+    safeLocalStorage.set(
+      STORAGE_KEYS.replays,
+      JSON.stringify(
+        storedReplaysCache.map((entry) => ({
+          id: entry.id,
+          savedAt: entry.savedAt,
+          label: entry.label,
+          record: entry.record,
+        }))
+      )
+    );
+  } catch {
+    // ignore: a denied/full storage simply won't persist this replay
+  }
+}
+
+function describeReplayRecord(record) {
+  const winnerLabel = record.winner === "A" ? "루비 승" : record.winner === "B" ? "코발트 승" : "무승부";
+  const modeLabel = record.tutorial
+    ? "가이드"
+    : record.daily
+      ? `데일리 #${record.daily.number}`
+      : `솔로 · ${statsDifficultyLabel(record.difficulty)}`;
+  return `${modeLabel} · ${winnerLabel} · ${record.moves.length}수`;
+}
+
+function savePendingReplay() {
+  if (!pendingReplayToSave) {
+    setFlashMessage("저장할 리플레이가 없습니다.");
+    render();
+    return;
+  }
+  const savedAt = new Date().toISOString();
+  const entry = {
+    id: `${pendingReplayToSave.seed}-${savedAt}`,
+    savedAt,
+    label: describeReplayRecord(pendingReplayToSave),
+    record: pendingReplayToSave,
+  };
+  // Newest first, de-duplicated by seed+finishedAt so re-clicking save is idempotent.
+  storedReplaysCache = [entry, ...storedReplaysCache.filter((existing) => existing.id !== entry.id)].slice(
+    0,
+    MAX_STORED_REPLAYS
+  );
+  persistStoredReplays();
+  pendingReplayToSave = null;
+  if (refs.saveReplayBtn) {
+    refs.saveReplayBtn.hidden = true;
+  }
+  setFlashMessage("리플레이를 저장했습니다. 🎬 버튼에서 다시 볼 수 있습니다.");
+  announcePolite("리플레이를 저장했습니다.");
+  playSound("tap");
+  render();
+}
+
+// Render one replay snapshot into the player board as a lightweight 10×10 grid of cell
+// labels tinted by chip team. Deliberately simple (not the full canvas) so playback stays
+// self-contained and SAST-safe.
+function renderReplaySnapshot() {
+  if (!activeReplayPlayback || !refs.replayPlayerBoard) return;
+  const snapshot = activeReplayPlayback.snapshots[activeReplayPlayback.index];
+  const total = activeReplayPlayback.snapshots.length;
+  refs.replayPlayerBoard.hidden = false;
+  refs.replayPlayerBoard.style.setProperty("--replay-board-size", String(BOARD_SIZE));
+  const cells = snapshot.board.map((cell) => {
+    const div = document.createElement("span");
+    let className = "replay-cell";
+    if (cell.corner) className += " corner";
+    if (cell.chip === "A") className += " ruby";
+    else if (cell.chip === "B") className += " cobalt";
+    if (cell.seqCount > 0) className += " locked";
+    if (cell.id === snapshot.lastPlacedCellId) className += " last";
+    div.className = className;
+    div.textContent = cell.corner ? "★" : cell.label;
+    return div;
+  });
+  refs.replayPlayerBoard.replaceChildren(...cells);
+  if (refs.replayPlayerControls) {
+    refs.replayPlayerControls.hidden = false;
+  }
+  if (refs.replayStepLabel) {
+    refs.replayStepLabel.textContent = `${activeReplayPlayback.index} / ${total - 1}`;
+  }
+  if (refs.replayPrevBtn) refs.replayPrevBtn.disabled = activeReplayPlayback.index <= 0;
+  if (refs.replayNextBtn) refs.replayNextBtn.disabled = activeReplayPlayback.index >= total - 1;
+  const scores = snapshot.scores || { A: 0, B: 0 };
+  const statusText =
+    snapshot.winner && activeReplayPlayback.index === total - 1
+      ? `${snapshot.winner === "A" ? "루비 팀" : "코발트 팀"} 승리 · Ruby ${scores.A} : ${scores.B} Cobalt`
+      : `${activeReplayPlayback.index}수 진행 · Ruby ${scores.A} : ${scores.B} Cobalt`;
+  if (refs.replayPlayerStatus) {
+    refs.replayPlayerStatus.textContent = statusText;
+  }
+  if (refs.replaySrSummary) {
+    refs.replaySrSummary.textContent = `리플레이 ${activeReplayPlayback.index}번째 수, 전체 ${total - 1}수. ${statusText}`;
+  }
+}
+
+// Load a validated record into the player and show its first state.
+function startReplayPlayback(record) {
+  const clean = validateReplayRecord(record);
+  if (!clean) {
+    setReplayImportFeedback("리플레이를 재생할 수 없습니다. 올바른 리플레이가 아닙니다.");
+    return false;
+  }
+  let result;
+  try {
+    result = replayGame(clean);
+  } catch {
+    setReplayImportFeedback("리플레이를 재생하는 중 오류가 발생했습니다.");
+    return false;
+  }
+  activeReplayPlayback = { snapshots: result.snapshots, index: 0, record: clean };
+  renderReplaySnapshot();
+  return true;
+}
+
+function stepReplay(delta) {
+  if (!activeReplayPlayback) return;
+  const total = activeReplayPlayback.snapshots.length;
+  const next = Math.min(total - 1, Math.max(0, activeReplayPlayback.index + delta));
+  if (next === activeReplayPlayback.index) return;
+  activeReplayPlayback.index = next;
+  renderReplaySnapshot();
+}
+
+function setReplayImportFeedback(text) {
+  if (refs.replayImportFeedback) {
+    refs.replayImportFeedback.textContent = text || "";
+  }
+}
+
+async function copyReplayShareString(record) {
+  const encoded = encodeReplayString(record);
+  if (!encoded) {
+    setFlashMessage("리플레이 공유 문자열을 만들지 못했습니다.");
+    render();
+    return;
+  }
+  window.__sequenceLastReplayShareString = encoded;
+  const copied = await writeToClipboard(encoded);
+  setFlashMessage(
+    copied
+      ? "리플레이 공유 문자열을 클립보드에 복사했습니다."
+      : "클립보드 복사에 실패했습니다. 브라우저 권한을 확인해 주세요."
+  );
+  if (copied) playSound("tap");
+  render();
+}
+
+function renderReplayList() {
+  if (!refs.replayList) return;
+  const items = storedReplaysCache.map((entry) => {
+    const li = document.createElement("li");
+    li.className = "replay-list-item";
+
+    const meta = document.createElement("div");
+    meta.className = "replay-item-meta";
+    const label = document.createElement("span");
+    label.className = "replay-item-label";
+    label.textContent = entry.label || describeReplayRecord(entry.record);
+    const when = document.createElement("span");
+    when.className = "replay-item-when";
+    when.textContent = entry.savedAt ? entry.savedAt.slice(0, 10) : "";
+    meta.append(label, when);
+
+    const actions = document.createElement("div");
+    actions.className = "replay-item-actions";
+
+    const playBtn = document.createElement("button");
+    playBtn.type = "button";
+    playBtn.className = "primary-button replay-play-btn";
+    playBtn.textContent = "▶ 재생";
+    playBtn.setAttribute("aria-label", `${label.textContent} 재생`);
+    playBtn.addEventListener("click", () => {
+      if (startReplayPlayback(entry.record)) {
+        setReplayImportFeedback("");
+      }
+    });
+
+    const shareBtn = document.createElement("button");
+    shareBtn.type = "button";
+    shareBtn.className = "ghost-button replay-share-btn";
+    shareBtn.textContent = "공유 문자열 복사";
+    shareBtn.setAttribute("aria-label", `${label.textContent} 공유 문자열 복사`);
+    shareBtn.addEventListener("click", () => copyReplayShareString(entry.record));
+
+    const deleteBtn = document.createElement("button");
+    deleteBtn.type = "button";
+    deleteBtn.className = "ghost-button replay-delete-btn";
+    deleteBtn.textContent = "삭제";
+    deleteBtn.setAttribute("aria-label", `${label.textContent} 삭제`);
+    deleteBtn.addEventListener("click", () => {
+      storedReplaysCache = storedReplaysCache.filter((existing) => existing.id !== entry.id);
+      persistStoredReplays();
+      renderReplayList();
+    });
+
+    actions.append(playBtn, shareBtn, deleteBtn);
+    li.append(meta, actions);
+    return li;
+  });
+  refs.replayList.replaceChildren(...items);
+  if (refs.replayEmpty) {
+    refs.replayEmpty.hidden = storedReplaysCache.length > 0;
+  }
+}
+
+function openReplayModal() {
+  if (!refs.replayModal) return;
+  replayPreviousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+  renderReplayList();
+  refs.replayModal.hidden = false;
+  document.body.classList.add("help-open");
+  refs.replayBtn?.setAttribute("aria-expanded", "true");
+  setBackgroundInert(true, refs.replayModal);
+  refs.replayCloseBtn?.focus();
+}
+
+function closeReplayModal() {
+  if (!refs.replayModal) return;
+  refs.replayModal.hidden = true;
+  document.body.classList.remove("help-open");
+  refs.replayBtn?.setAttribute("aria-expanded", "false");
+  setBackgroundInert(false, refs.replayModal);
+  if (replayPreviousFocus && replayPreviousFocus.isConnected) {
+    replayPreviousFocus.focus();
+  } else {
+    refs.replayBtn?.focus();
+  }
+}
+
+function importReplayFromInput() {
+  const raw = refs.replayImportInput?.value || "";
+  const record = decodeReplayString(raw.trim());
+  if (!record) {
+    setReplayImportFeedback("리플레이 문자열을 인식하지 못했습니다. 올바른 공유 문자열을 붙여넣어 주세요.");
+    return;
+  }
+  if (startReplayPlayback(record)) {
+    setReplayImportFeedback(`불러왔습니다: ${describeReplayRecord(record)}. 재생 컨트롤로 수를 넘겨 보세요.`);
+    playSound("tap");
+  }
+}
+
+refs.replayBtn?.addEventListener("click", openReplayModal);
+refs.replayCloseBtn?.addEventListener("click", closeReplayModal);
+refs.saveReplayBtn?.addEventListener("click", savePendingReplay);
+refs.replayModal?.addEventListener("click", (event) => {
+  if (event.target instanceof HTMLElement && event.target.dataset.replayDismiss != null) {
+    closeReplayModal();
+  }
+});
+refs.replayPrevBtn?.addEventListener("click", () => stepReplay(-1));
+refs.replayNextBtn?.addEventListener("click", () => stepReplay(1));
+refs.replayImportBtn?.addEventListener("click", importReplayFromInput);
+refs.replayImportInput?.addEventListener("keydown", (event) => {
+  if (event.key === "Enter") {
+    event.preventDefault();
+    importReplayFromInput();
+  }
 });
 
 function shouldShowWelcome() {
@@ -5619,6 +6151,11 @@ document.addEventListener("keydown", (event) => {
   if (refs.statsModal && !refs.statsModal.hidden && key === "escape") {
     event.preventDefault();
     closeStatsModal();
+    return;
+  }
+  if (refs.replayModal && !refs.replayModal.hidden && key === "escape") {
+    event.preventDefault();
+    closeReplayModal();
     return;
   }
   if (key === "escape" && tutorialMachine.active && !selectedCard()) {

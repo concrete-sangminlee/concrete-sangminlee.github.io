@@ -21,7 +21,9 @@
     <link rel="canonical" href="https://concrete-sangminlee.github.io/sequence-arena/" />
     <link rel="stylesheet" href="./styles.css" />
     <link rel="modulepreload" href="./app.js" />
+    <link rel="modulepreload" href="./client/i18n.js" />
     <link rel="modulepreload" href="./shared/game-core.js" />
+    <link rel="modulepreload" href="./shared/replay.js" />
     <link rel="modulepreload" href="./client/board-paint.js" />
     <link rel="modulepreload" href="./client/board-render.js" />
     <link rel="modulepreload" href="./client/net-client.js" />
@@ -65,7 +67,7 @@
     </script>
   </head>
   <body data-runtime-mode="github-pages">
-    <a class="skip-link" href="#main-content">본문으로 바로가기</a>
+    <a class="skip-link" href="#main-content" data-i18n="skip.toContent">본문으로 바로가기</a>
     <noscript>
       <div class="noscript-notice" role="alert">
         <h1>Sequence Arena</h1>
@@ -103,7 +105,7 @@
         <div class="brand-lockup">
           <span class="brand-mark" aria-hidden="true">SA</span>
           <div>
-            <p class="eyebrow">실시간 팀전 보드게임</p>
+            <p class="eyebrow" data-i18n="app.tagline">실시간 팀전 보드게임</p>
             <h1>Sequence Arena</h1>
           </div>
         </div>
@@ -112,10 +114,12 @@
             <span id="ruby-seat-legend" class="legend-chip ruby">루비 1 · 3 · 5</span>
             <span id="cobalt-seat-legend" class="legend-chip cobalt">코발트 2 · 4 · 6</span>
           </div>
+          <button id="locale-toggle-btn" class="icon-button locale-toggle" type="button" aria-label="영어로 전환" title="English">EN</button>
           <button id="theme-toggle-btn" class="icon-button theme-toggle" type="button" aria-label="다크 모드 켜기" title="다크 모드 켜기">☾</button>
-          <button id="stats-btn" class="icon-button stats-toggle" type="button" aria-label="내 기록 보기" aria-haspopup="dialog" aria-controls="stats-modal" aria-expanded="false" title="내 기록 (데일리 캘린더 · 전적)">📊</button>
-          <button id="help-btn" class="icon-button help-toggle" type="button" aria-label="게임 규칙과 단축키 보기" aria-keyshortcuts="?" aria-haspopup="dialog" aria-controls="help-modal" aria-expanded="false" title="게임 규칙 · 단축키 (?)">?</button>
-          <button id="install-app-btn" class="icon-button install-toggle" type="button" aria-label="앱 설치" title="앱 설치" hidden>↓</button>
+          <button id="stats-btn" class="icon-button stats-toggle" type="button" aria-label="내 기록 보기" aria-haspopup="dialog" aria-controls="stats-modal" aria-expanded="false" title="내 기록 (데일리 캘린더 · 전적)" data-i18n-attr="aria-label:topbar.stats.aria;title:topbar.stats.title">📊</button>
+          <button id="replay-btn" class="icon-button replay-toggle" type="button" aria-label="리플레이 보기" aria-haspopup="dialog" aria-controls="replay-modal" aria-expanded="false" title="리플레이 (저장된 경기 재생 · 공유)">🎬</button>
+          <button id="help-btn" class="icon-button help-toggle" type="button" aria-label="게임 규칙과 단축키 보기" aria-keyshortcuts="?" aria-haspopup="dialog" aria-controls="help-modal" aria-expanded="false" title="게임 규칙 · 단축키 (?)" data-i18n-attr="aria-label:topbar.help.aria;title:topbar.help.title">?</button>
+          <button id="install-app-btn" class="icon-button install-toggle" type="button" aria-label="앱 설치" title="앱 설치" data-i18n-attr="aria-label:topbar.install.aria;title:topbar.install.title" hidden>↓</button>
           <button id="notification-toggle-btn" class="icon-button notification-toggle" type="button" aria-label="내 차례 브라우저 알림 켜기" title="내 차례 알림 켜기">!</button>
           <button id="sound-toggle-btn" class="icon-button sound-toggle" type="button" aria-label="사운드 켜기" title="사운드 켜기">♪</button>
           <button id="haptics-toggle-btn" class="icon-button haptics-toggle" type="button" aria-label="진동 피드백 끄기" title="진동 끄기">◉</button>
@@ -125,15 +129,15 @@
       <main id="main-content" class="main-grid">
         <section class="panel gateway-panel">
           <div class="panel-head">
-            <h2>방</h2>
+            <h2 data-i18n="gateway.heading">방</h2>
             <p id="gateway-subtitle">방을 만들거나 받은 코드로 입장하세요. 같은 브라우저에서는 좌석이 복구됩니다.</p>
             <p id="gateway-mode-hint" class="gateway-mode-hint" aria-live="polite" aria-atomic="true">게임 모드: 확인 중입니다.</p>
             <button id="solo-stats-strip" class="solo-stats-strip" type="button" aria-haspopup="dialog" aria-controls="stats-modal" title="내 기록 자세히 보기" hidden></button>
           </div>
 
           <div id="welcome-card" class="welcome-card">
-            <button id="welcome-dismiss-btn" class="welcome-dismiss" type="button" aria-label="환영 카드 닫기" title="닫기">✕</button>
-            <strong class="welcome-title">Sequence Arena에 오신 걸 환영합니다</strong>
+            <button id="welcome-dismiss-btn" class="welcome-dismiss" type="button" aria-label="환영 카드 닫기" title="닫기" data-i18n-attr="aria-label:welcome.dismiss.aria;title:common.close">✕</button>
+            <strong class="welcome-title" data-i18n="welcome.title">Sequence Arena에 오신 걸 환영합니다</strong>
             <p class="welcome-body">보드의 같은 카드 칸에 칩을 놓고, <strong>5칸 일렬</strong>을 먼저 두 개 만들면 승리합니다.</p>
             <!-- Pre-filled with the multiplayer-mode copy (same line counts as the offline
                  variant) so updateWelcomeModePanel() swaps TEXT only. Leaving these empty
@@ -147,19 +151,19 @@
               <li>3단계: 도움말 확인</li>
             </ul>
             <div class="welcome-actions">
-              <button id="welcome-rejoin-btn" class="ghost-button" type="button" hidden>직전 방으로 이어하기</button>
+              <button id="welcome-rejoin-btn" class="ghost-button" type="button" data-i18n="welcome.rejoin" hidden>직전 방으로 이어하기</button>
               <button id="welcome-create-btn" class="primary-button" type="button">바로 솔로 플레이</button>
-              <button id="welcome-tutorial-btn" class="ghost-button tutorial-start-button" type="button" title="안내를 따라 첫 턴을 배우는 연습 게임입니다.">가이드 플레이</button>
-              <button id="welcome-daily-btn" class="ghost-button daily-challenge-button" type="button">오늘의 챌린지</button>
-              <button id="welcome-help-btn" class="ghost-button" type="button">자세한 규칙 보기</button>
+              <button id="welcome-tutorial-btn" class="ghost-button tutorial-start-button" type="button" title="안내를 따라 첫 턴을 배우는 연습 게임입니다." data-i18n="welcome.guidePlay">가이드 플레이</button>
+              <button id="welcome-daily-btn" class="ghost-button daily-challenge-button" type="button" data-i18n="gateway.dailyChallenge">오늘의 챌린지</button>
+              <button id="welcome-help-btn" class="ghost-button" type="button" data-i18n="welcome.viewRules">자세한 규칙 보기</button>
             </div>
           </div>
 
           <div class="gateway-grid">
             <form id="create-form" class="stack-card">
-              <h3>새 방 만들기</h3>
+              <h3 data-i18n="gateway.createHeading">새 방 만들기</h3>
               <label>
-                <span>내 이름</span>
+                <span data-i18n="gateway.myName">내 이름</span>
                 <input
                   id="create-name"
                   type="text"
@@ -178,7 +182,7 @@
               </label>
               <div class="host-setting create-match-setting">
                 <div class="setting-topline">
-                  <span>대결 방식</span>
+                  <span data-i18n="gateway.matchFormat">대결 방식</span>
                   <strong id="create-team-size-label">3대3</strong>
                 </div>
                 <div id="create-team-size-control" class="segmented-control team-size-control" role="group" aria-label="대결 방식">
@@ -187,15 +191,15 @@
                   <button type="button" data-create-team-size="3">3대3</button>
                 </div>
               </div>
-              <button id="create-room-btn" class="primary-button" type="submit">방 만들기</button>
-              <button id="offline-solo-btn" class="ghost-button" type="button">오프라인 솔로</button>
-              <button id="daily-challenge-btn" class="ghost-button daily-challenge-button" type="button">오늘의 챌린지</button>
+              <button id="create-room-btn" class="primary-button" type="submit" data-i18n="gateway.createRoom">방 만들기</button>
+              <button id="offline-solo-btn" class="ghost-button" type="button" data-i18n="gateway.offlineSolo">오프라인 솔로</button>
+              <button id="daily-challenge-btn" class="ghost-button daily-challenge-button" type="button" data-i18n="gateway.dailyChallenge">오늘의 챌린지</button>
             </form>
 
             <form id="join-form" class="stack-card">
-              <h3>기존 방 입장</h3>
+              <h3 data-i18n="gateway.joinHeading">기존 방 입장</h3>
               <label>
-                <span>내 이름</span>
+                <span data-i18n="gateway.myName">내 이름</span>
                 <input
                   id="join-name"
                   type="text"
@@ -213,7 +217,7 @@
                 <small id="join-name-hint" class="input-hint">이름을 입력하세요.</small>
               </label>
             <label>
-              <span>방 코드</span>
+              <span data-i18n="gateway.roomCode">방 코드</span>
               <div class="join-code-control">
                 <input
                   id="join-code"
@@ -231,7 +235,7 @@
                   pattern="[A-Za-z0-9]{4,6}"
                   aria-describedby="join-code-hint join-code-live-feedback"
                 />
-                <button id="join-code-paste-btn" class="ghost-button join-code-paste-btn" type="button">
+                <button id="join-code-paste-btn" class="ghost-button join-code-paste-btn" type="button" data-i18n="gateway.pasteClipboard">
                   클립보드 붙여넣기
                 </button>
               </div>
@@ -239,27 +243,27 @@
               <small id="join-code-live-feedback" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></small>
             </label>
               <label class="host-setting toggle-row">
-                <span>관전 입장</span>
+                <span data-i18n="gateway.spectatorJoin">관전 입장</span>
                 <input id="join-as-spectator" type="checkbox" />
               </label>
-              <button id="join-room-btn" class="primary-button secondary-tone" type="submit">방 입장</button>
+              <button id="join-room-btn" class="primary-button secondary-tone" type="submit" data-i18n="gateway.joinRoom">방 입장</button>
             </form>
           </div>
 
           <div class="share-grid">
             <div class="share-status-card">
               <div>
-                <strong>연결 상태</strong>
+                <strong data-i18n="share.connectionStatus">연결 상태</strong>
                 <span id="connection-indicator" aria-live="polite" aria-atomic="true">소켓 연결 중</span>
               </div>
               <div>
-                <strong>현재 접속 주소</strong>
+                <strong data-i18n="share.currentOrigin">현재 접속 주소</strong>
                 <span id="current-origin">-</span>
               </div>
             </div>
 
             <div class="invite-card">
-              <span class="invite-label">현재 방 코드</span>
+              <span class="invite-label" data-i18n="share.currentRoomCode">현재 방 코드</span>
               <button
                 id="active-room-code"
                 class="room-code-display"
@@ -288,7 +292,7 @@
               <span id="room-link-preview-desc" class="sr-only">방 링크를 클릭하면 클립보드로 링크를 복사합니다.</span>
               <div class="invite-progress-card" id="invite-progress-card">
                 <div class="invite-progress-topline">
-                  <span>입장 인원</span>
+                  <span data-i18n="share.enterCount">입장 인원</span>
                   <strong id="invite-progress-count" aria-live="polite" aria-atomic="true">0 / 6</strong>
                 </div>
                 <div class="occupancy-meter compact">
@@ -300,12 +304,12 @@
 
             <div class="ai-mode-card host-settings-card">
               <div class="mode-card-head">
-                <span>방장 설정</span>
+                <span data-i18n="host.settings">방장 설정</span>
                 <strong id="host-settings-label">잠김</strong>
               </div>
               <div class="host-setting">
                 <div class="setting-topline">
-                  <span>대결 방식</span>
+                  <span data-i18n="gateway.matchFormat">대결 방식</span>
                   <strong id="team-size-label">3대3</strong>
                 </div>
                 <div id="team-size-control" class="segmented-control team-size-control" role="group" aria-label="대결 방식">
@@ -316,42 +320,43 @@
               </div>
               <div class="host-setting">
                 <div class="setting-topline">
-                  <span>AI 난이도</span>
+                  <span data-i18n="host.aiDifficulty">AI 난이도</span>
                   <strong id="ai-mode-label">전략</strong>
                 </div>
                 <div id="ai-mode-control" class="segmented-control" role="group" aria-label="AI 난이도 선택">
-                  <button type="button" data-ai-mode="easy">쉬움</button>
-                  <button type="button" data-ai-mode="smart">전략</button>
-                  <button type="button" data-ai-mode="aggressive">공격</button>
+                  <button type="button" data-ai-mode="easy" data-i18n="host.aiEasy">쉬움</button>
+                  <button type="button" data-ai-mode="smart" data-i18n="host.aiSmart">전략</button>
+                  <button type="button" data-ai-mode="aggressive" data-i18n="host.aiAggressive">공격</button>
+                  <button type="button" data-ai-mode="master" data-i18n="host.aiMaster">마스터</button>
                 </div>
               </div>
               <div class="host-setting">
                 <label class="toggle-row" for="allow-spectators-toggle">
-                  <span>관전 입장</span>
+                  <span data-i18n="gateway.spectatorJoin">관전 입장</span>
                   <input id="allow-spectators-toggle" type="checkbox" checked />
                   <strong id="spectator-mode-label">열림</strong>
                 </label>
               </div>
               <div class="host-setting">
                 <div class="setting-topline">
-                  <span>리매치</span>
+                  <span data-i18n="host.rematch">리매치</span>
                   <strong id="rematch-mode-label">전원 동의</strong>
                 </div>
                 <div id="rematch-mode-control" class="segmented-control rematch-mode-control" role="group" aria-label="리매치 방식 선택">
-                  <button type="button" data-rematch-mode="all">전원 동의</button>
-                  <button type="button" data-rematch-mode="host">방장 시작</button>
+                  <button type="button" data-rematch-mode="all" data-i18n="host.rematchAll">전원 동의</button>
+                  <button type="button" data-rematch-mode="host" data-i18n="host.rematchHost">방장 시작</button>
                 </div>
               </div>
             </div>
 
             <div class="share-actions-card">
-              <button id="start-test-btn" class="primary-button" type="button">혼자 테스트 시작</button>
-              <button id="copy-code-btn" class="ghost-button" type="button">코드 복사</button>
-              <button id="copy-room-btn" class="ghost-button" type="button" aria-keyshortcuts="C" title="링크 복사 (C)">링크 복사</button>
-              <button id="copy-spectator-link-btn" class="ghost-button" type="button">관전 링크</button>
-              <button id="share-room-btn" class="primary-button secondary-tone" type="button">공유</button>
-              <button id="leave-room-btn" class="warning-action ghost-button" type="button">방 나가기</button>
-              <a id="open-room-link" class="ghost-button button-link" href="./" target="_blank" rel="noopener noreferrer">
+              <button id="start-test-btn" class="primary-button" type="button" data-i18n="share.startTest">혼자 테스트 시작</button>
+              <button id="copy-code-btn" class="ghost-button" type="button" data-i18n="share.copyCode">코드 복사</button>
+              <button id="copy-room-btn" class="ghost-button" type="button" aria-keyshortcuts="C" title="링크 복사 (C)" data-i18n="share.copyLink">링크 복사</button>
+              <button id="copy-spectator-link-btn" class="ghost-button" type="button" data-i18n="share.spectatorLink">관전 링크</button>
+              <button id="share-room-btn" class="primary-button secondary-tone" type="button" data-i18n="share.share">공유</button>
+              <button id="leave-room-btn" class="warning-action ghost-button" type="button" data-i18n="share.leaveRoom">방 나가기</button>
+              <a id="open-room-link" class="ghost-button button-link" href="./" target="_blank" rel="noopener noreferrer" data-i18n="share.openLink">
                 링크 열기
               </a>
             </div>
@@ -362,7 +367,7 @@
 
         <section class="panel room-panel">
           <div class="panel-head">
-            <h2>좌석</h2>
+            <h2 data-i18n="room.heading">좌석</h2>
             <p id="room-subtitle">방에 입장하면 좌석 현황이 표시됩니다.</p>
           </div>
           <div class="occupancy-card">
@@ -397,7 +402,7 @@
           <aside class="sidebar">
             <section class="panel status-panel">
               <div class="panel-head compact">
-                <h2>현재 상태</h2>
+                <h2 data-i18n="status.heading">현재 상태</h2>
                 <p id="turn-subtitle">게임 시작 전입니다.</p>
                 <span id="daily-badge" class="daily-badge" hidden></span>
               </div>
@@ -419,37 +424,38 @@
                 <small id="lobby-progress-hint">필요 인원이 모두 들어오면 자동 시작됩니다.</small>
               </div>
               <div id="victory-card" class="victory-card" hidden>
-                <span class="victory-kicker">최종 결과</span>
+                <span class="victory-kicker" data-i18n="status.finalResult">최종 결과</span>
                 <strong id="victory-winner">-</strong>
                 <span id="victory-score">0 : 0</span>
                 <button id="rematch-btn" class="primary-button" type="button" aria-keyshortcuts="R" title="리매치 투표 (R)">리매치 투표</button>
                 <span id="rematch-vote-status" class="rematch-vote-status">0 / 0 동의</span>
                 <span id="victory-daily-result" class="victory-daily-result" hidden></span>
-                <button id="share-daily-btn" class="ghost-button share-daily-button" type="button" hidden>데일리 결과 공유</button>
+                <button id="share-daily-btn" class="ghost-button share-daily-button" type="button" data-i18n="status.shareDaily" hidden>데일리 결과 공유</button>
+                <button id="save-replay-btn" class="ghost-button save-replay-button" type="button" data-i18n="status.saveReplay" hidden>리플레이 저장</button>
               </div>
               <p id="status-message" class="status-message">방에 필요한 인원이 모두 들어오면 자동으로 게임이 시작됩니다.</p>
               <div class="score-row ruby">
-                <strong>루비 팀</strong>
+                <strong data-i18n="status.rubyTeam">루비 팀</strong>
                 <span id="score-ruby">0 / 2 시퀀스</span>
               </div>
               <div class="score-row cobalt">
-                <strong>코발트 팀</strong>
+                <strong data-i18n="status.cobaltTeam">코발트 팀</strong>
                 <span id="score-cobalt">0 / 2 시퀀스</span>
               </div>
               <div class="score-row neutral">
-                <strong>관전</strong>
+                <strong data-i18n="status.spectate">관전</strong>
                 <span id="spectator-count">0명</span>
               </div>
               <div class="pile-actions" aria-label="카드 더미">
                 <button id="discard-pile-btn" class="pile-button discard" type="button">
-                  <span>버림 더미</span>
+                  <span data-i18n="status.discardPile">버림 더미</span>
                   <strong id="discard-count">0장</strong>
                   <small id="discard-top-card">비어 있음</small>
                 </button>
                 <button id="deck-pile-btn" class="pile-button deck" type="button">
-                  <span>덱</span>
+                  <span data-i18n="status.deck">덱</span>
                   <strong id="deck-count">0장</strong>
-                  <small>새 카드 뽑기</small>
+                  <small data-i18n="status.drawNew">새 카드 뽑기</small>
                 </button>
               </div>
             </section>
@@ -464,11 +470,11 @@
 
             <section class="panel chat-panel">
               <div class="panel-head compact">
-                <h2>채팅</h2>
-                <p>같은 방 사람들과 대화하세요.</p>
+                <h2 data-i18n="chat.heading">채팅</h2>
+                <p data-i18n="chat.subtitle">같은 방 사람들과 대화하세요.</p>
               </div>
               <div id="chat-log" class="chat-log" aria-live="polite"></div>
-              <div class="chat-emoji-row" aria-label="이모지 빠른 전송">
+              <div class="chat-emoji-row" aria-label="이모지 빠른 전송" data-i18n-attr="aria-label:chat.emojiRow.aria">
                 <button class="emoji-btn" type="button" data-chat-emoji="👍">👍</button>
                 <button class="emoji-btn" type="button" data-chat-emoji="👏">👏</button>
                 <button class="emoji-btn" type="button" data-chat-emoji="😂">😂</button>
@@ -493,8 +499,9 @@
                   placeholder="메시지 입력"
                   aria-label="메시지 입력"
                   autocomplete="off"
+                  data-i18n-attr="placeholder:chat.inputPlaceholder;aria-label:chat.inputAria"
                 />
-                <button id="chat-send-btn" class="primary-button" type="submit">전송</button>
+                <button id="chat-send-btn" class="primary-button" type="submit" data-i18n="chat.send">전송</button>
               </form>
               <small id="chat-char-count" class="chat-char-count" aria-live="polite" aria-atomic="true">0 / 140</small>
               <small id="chat-feedback" class="chat-feedback" aria-live="polite" aria-atomic="true" data-status="hidden"></small>
@@ -502,22 +509,22 @@
 
             <section class="panel hand-panel">
               <div class="panel-head compact">
-                <h2>내 손패</h2>
+                <h2 data-i18n="hand.heading">내 손패</h2>
                 <p id="hand-caption">내 차례가 되면 카드를 선택해 보드를 클릭하세요.</p>
               </div>
               <div id="hand-container" class="hand-container"></div>
               <div class="button-row">
-                <button id="hint-btn" class="ghost-button hint-button" type="button" aria-keyshortcuts="H" title="추천 수 보기 (H) — 전략 봇이 추천하는 카드와 칸을 표시합니다" hidden>💡 힌트</button>
-                <button id="cancel-selection-btn" class="ghost-button" type="button" aria-keyshortcuts="Escape" title="선택 취소 (Esc)">선택 취소</button>
-                <button id="discard-dead-btn" class="ghost-button" type="button">죽은 카드 버리기</button>
+                <button id="hint-btn" class="ghost-button hint-button" type="button" aria-keyshortcuts="H" title="추천 수 보기 (H) — 전략 봇이 추천하는 카드와 칸을 표시합니다" data-i18n="hand.hint" hidden>💡 힌트</button>
+                <button id="cancel-selection-btn" class="ghost-button" type="button" aria-keyshortcuts="Escape" title="선택 취소 (Esc)" data-i18n="hand.cancelSelection">선택 취소</button>
+                <button id="discard-dead-btn" class="ghost-button" type="button" data-i18n="hand.discardDead">죽은 카드 버리기</button>
               </div>
               <p id="selection-hint" class="selection-hint">카드를 고르면 놓을 수 있는 칸이 보드에 초록색으로 표시됩니다.</p>
             </section>
 
             <section class="panel log-panel">
               <div class="panel-head compact">
-                <h2>게임 로그</h2>
-                <p>방 전체에 공유되는 최근 액션입니다.</p>
+                <h2 data-i18n="log.heading">게임 로그</h2>
+                <p data-i18n="log.subtitle">방 전체에 공유되는 최근 액션입니다.</p>
               </div>
               <ol id="log-list" class="log-list"></ol>
             </section>
@@ -525,8 +532,8 @@
             <section class="panel history-panel">
               <div class="panel-head compact panel-head-with-actions">
                 <div class="panel-head-copy">
-                  <h2>경기 기록</h2>
-                  <p>이 방에서 끝난 최근 결과입니다.</p>
+                  <h2 data-i18n="history.heading">경기 기록</h2>
+                  <p data-i18n="history.subtitle">이 방에서 끝난 최근 결과입니다.</p>
                 </div>
                 <button id="clear-history-btn" class="ghost-button warning-action" type="button" hidden>경기 기록 없음</button>
               </div>
@@ -550,7 +557,7 @@
       <p id="tutorial-body"></p>
       <div class="tutorial-actions">
         <button id="tutorial-next-btn" class="primary-button" type="button">다음</button>
-        <button id="tutorial-skip-btn" class="ghost-button" type="button" title="안내를 끝내고 자유롭게 플레이합니다 (Esc)">건너뛰기</button>
+        <button id="tutorial-skip-btn" class="ghost-button" type="button" title="안내를 끝내고 자유롭게 플레이합니다 (Esc)" data-i18n="tutorial.skip">건너뛰기</button>
       </div>
     </aside>
 
@@ -558,8 +565,8 @@
       <div class="help-backdrop" data-stats-dismiss></div>
       <div class="help-dialog stats-dialog">
         <header class="help-header">
-          <h2 id="stats-modal-title">내 기록</h2>
-          <button id="stats-close-btn" class="icon-button help-close" type="button" aria-label="내 기록 닫기" title="닫기">✕</button>
+          <h2 id="stats-modal-title" data-i18n="stats.title">내 기록</h2>
+          <button id="stats-close-btn" class="icon-button help-close" type="button" aria-label="내 기록 닫기" title="닫기" data-i18n-attr="aria-label:stats.close.aria;title:common.close">✕</button>
         </header>
         <div class="stats-body">
           <p id="stats-sr-summary" class="sr-only" aria-live="polite"></p>
@@ -576,10 +583,56 @@
             <div id="stats-calendar-months" class="stats-calendar-months" aria-hidden="true"></div>
             <div id="stats-calendar-grid" class="stats-calendar-grid" role="img"></div>
           </section>
+          <section class="stats-weekly-section" aria-label="주간 리더보드">
+            <div class="stats-weekly-head">
+              <h3>주간 리더보드 · 최근 8주</h3>
+              <button id="stats-weekly-share-btn" class="ghost-button stats-weekly-share" type="button" title="이번 주 기록 복사">주간 기록 복사</button>
+            </div>
+            <p class="stats-weekly-note">내 데일리 기록만으로 만드는 개인 주간 순위예요. 다른 사람과 겨루는 전체 순위가 아닙니다.</p>
+            <p id="stats-weekly-sr-summary" class="sr-only" aria-live="polite"></p>
+            <ol id="stats-weekly-list" class="stats-weekly-list" aria-label="주간 순위 목록"></ol>
+          </section>
           <div id="stats-empty" class="stats-empty" hidden>
             <p>아직 데일리 기록이 없어요. 오늘의 챌린지를 끝내면 여기에 캘린더와 연속 기록이 쌓입니다.</p>
-            <button id="stats-empty-daily-btn" class="primary-button" type="button">오늘의 챌린지 시작</button>
+            <button id="stats-empty-daily-btn" class="primary-button" type="button" data-i18n="stats.startDaily">오늘의 챌린지 시작</button>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="replay-modal" class="help-modal replay-modal" role="dialog" aria-modal="true" aria-labelledby="replay-modal-title" hidden>
+      <div class="help-backdrop" data-replay-dismiss></div>
+      <div class="help-dialog replay-dialog">
+        <header class="help-header">
+          <h2 id="replay-modal-title">리플레이</h2>
+          <button id="replay-close-btn" class="icon-button help-close" type="button" aria-label="리플레이 닫기" title="닫기">✕</button>
+        </header>
+        <div class="replay-body">
+          <p id="replay-sr-summary" class="sr-only" aria-live="polite"></p>
+          <section class="replay-player-section" aria-label="리플레이 재생">
+            <p id="replay-player-status" class="replay-player-status" aria-live="polite">저장된 리플레이를 선택하거나 공유 문자열을 붙여넣어 오프라인에서 재생하세요.</p>
+            <div id="replay-player-board" class="replay-player-board" role="img" aria-label="리플레이 보드" hidden></div>
+            <div class="replay-player-controls" hidden id="replay-player-controls">
+              <button id="replay-prev-btn" class="ghost-button" type="button" aria-label="이전 수">◀ 이전</button>
+              <span id="replay-step-label" class="replay-step-label">0 / 0</span>
+              <button id="replay-next-btn" class="ghost-button" type="button" aria-label="다음 수">다음 ▶</button>
+            </div>
+          </section>
+          <section class="replay-import-section" aria-label="리플레이 불러오기">
+            <label for="replay-import-input" class="replay-import-label">공유 문자열로 불러오기</label>
+            <div class="replay-import-row">
+              <input id="replay-import-input" class="replay-import-input" type="text" inputmode="text" autocomplete="off" placeholder="리플레이 공유 문자열 붙여넣기" />
+              <button id="replay-import-btn" class="primary-button" type="button">재생</button>
+            </div>
+            <p id="replay-import-feedback" class="replay-import-feedback" aria-live="polite"></p>
+          </section>
+          <section class="replay-list-section" aria-label="저장된 리플레이">
+            <h3>저장된 리플레이</h3>
+            <ul id="replay-list" class="replay-list"></ul>
+            <div id="replay-empty" class="replay-empty" hidden>
+              <p>아직 저장된 리플레이가 없어요. 경기를 끝낸 뒤 "리플레이 저장"을 누르면 여기에 쌓입니다.</p>
+            </div>
+          </section>
         </div>
       </div>
     </div>
@@ -588,17 +641,17 @@
       <div class="help-backdrop" data-help-dismiss></div>
       <div class="help-dialog">
         <header class="help-header">
-          <h2 id="help-modal-title">게임 규칙 · 단축키</h2>
-          <button id="help-close-btn" class="icon-button help-close" type="button" aria-label="도움말 닫기" title="닫기">✕</button>
+          <h2 id="help-modal-title" data-i18n="help.title">게임 규칙 · 단축키</h2>
+          <button id="help-close-btn" class="icon-button help-close" type="button" aria-label="도움말 닫기" title="닫기" data-i18n-attr="aria-label:help.close.aria;title:common.close">✕</button>
         </header>
         <div class="help-body">
           <section class="help-section">
-            <h3>목표</h3>
+            <h3 data-i18n="help.goal">목표</h3>
             <p>팀 색 칩으로 연속 5칸 <strong>시퀀스</strong> 2개를 먼저 만드는 팀이 이깁니다. 코너 ★는 모든 팀이 공유하는 자동 칩입니다.</p>
             <button id="help-tutorial-btn" class="ghost-button tutorial-start-button" type="button">가이드 플레이로 배우기</button>
           </section>
           <section class="help-section">
-            <h3>턴 진행</h3>
+            <h3 data-i18n="help.turnFlow">턴 진행</h3>
             <ol>
               <li>손패에서 카드를 선택합니다.</li>
               <li>보드에서 강조된 칸을 눌러 칩을 놓거나 잭 액션을 실행합니다.</li>
@@ -607,22 +660,22 @@
             </ol>
           </section>
           <section class="help-section">
-            <h3>잭(J) 특수 규칙</h3>
+            <h3 data-i18n="help.jackRules">잭(J) 특수 규칙</h3>
             <ul class="help-grid">
               <li><span class="help-tag wild">J♣ · J♦ · 와일드</span>빈 칸 어디든 내 팀 칩을 놓을 수 있습니다(코너 제외).</li>
               <li><span class="help-tag cut">J♥ · J♠ · 컷</span>상대 팀의 <em>잠기지 않은</em> 칩을 제거합니다. 시퀀스 칩은 보호됩니다.</li>
             </ul>
           </section>
           <section class="help-section">
-            <h3>오늘의 챌린지</h3>
+            <h3 data-i18n="help.dailyChallenge">오늘의 챌린지</h3>
             <p>매일 모두에게 <strong>같은 보드·같은 손패</strong>가 주어지는 시드 퍼즐입니다(현지 자정 기준 갱신, 봇은 SMART 고정). 그날의 기록은 첫 판 기준으로 저장되고, 재도전은 시도 횟수만 누적됩니다. 끝나면 연속 달성 일수와 함께 결과를 복사해 공유할 수 있습니다.</p>
           </section>
           <section class="help-section">
-            <h3>죽은 카드</h3>
+            <h3 data-i18n="help.deadCard">죽은 카드</h3>
             <p>보드에 둘 곳이 없는 숫자/그림 카드는 <strong>죽은 카드 버리기</strong> 버튼으로 제거하고 새 카드를 뽑을 수 있습니다.</p>
           </section>
           <section class="help-section">
-            <h3>키보드 · 접근성</h3>
+            <h3 data-i18n="help.keyboard">키보드 · 접근성</h3>
             <ul>
                 <li>손패에서 ← → ↑ ↓로 카드 이동, <kbd>Enter</kbd>로 선택.</li>
                 <li>카드 선택 후 ← → ↑ ↓로 보드 커서 이동, <kbd>Enter</kbd>/<kbd>Space</kbd>로 확정.</li>
@@ -632,16 +685,16 @@
             </ul>
           </section>
           <section class="help-section" id="help-feedback-section">
-            <h3>오디오 · 햅틱 설정</h3>
+            <h3 data-i18n="help.audioHaptics">오디오 · 햅틱 설정</h3>
             <div class="help-control-row">
-              <label for="sound-volume-slider">효과음</label>
+              <label for="sound-volume-slider" data-i18n="help.sound">효과음</label>
               <div class="help-control-group">
                 <input id="sound-volume-slider" class="range-slider" type="range" min="0" max="100" step="5" value="70" aria-describedby="sound-volume-value" />
                 <output id="sound-volume-value" for="sound-volume-slider">70%</output>
               </div>
             </div>
             <div class="help-control-row">
-              <label for="haptic-intensity-slider">햅틱 세기</label>
+              <label for="haptic-intensity-slider" data-i18n="help.hapticStrength">햅틱 세기</label>
               <div class="help-control-group">
                 <input
                   id="haptic-intensity-slider"
@@ -659,7 +712,7 @@
             </div>
           </section>
           <section class="help-section" id="help-privacy-section">
-            <h3>개인정보 처리방침</h3>
+            <h3 data-i18n="help.privacy">개인정보 처리방침</h3>
             <ul>
               <li><strong>수집 항목:</strong> 입력하신 닉네임(메모리에 일시 보관), 접속 IP(연결 제한·보안 로그용), 자동 발급 세션 ID(브라우저 localStorage). 이메일·전화번호·실명은 받지 않습니다.</li>
               <li><strong>보관 기간:</strong> 닉네임과 세션 정보는 방을 닫거나 브라우저를 끄면 즉시 사라집니다. 종료된 매치 기록(점수·승패)은 서버 디스크에 최대 12경기, 200개 방까지만 저장됩니다.</li>

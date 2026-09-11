@@ -173,6 +173,132 @@ function formatDurationKo(durationMs) {
   return `${minutes}분 ${seconds}초`;
 }
 
+// --- Weekly leaderboard (personal, client-side, offline) -----------------------------
+// This is NOT a networked global leaderboard. Free-tier hosting keeps daily results in the
+// player's own localStorage, so the "weekly leaderboard" is a ranking of the SAME player's
+// own daily-challenge weeks against each other (this week vs prior weeks). All date math
+// goes through shiftDateKey so it stays DST-immune, and todayKey is always injected so the
+// aggregation is pure and node-testable.
+
+// Sunday-start week identity, consistent with the weekdayIndex Sunday=0 grid used by the
+// calendar. The key is the date-key of that week's Sunday (its start), e.g. "2026-06-14".
+// Using shiftDateKey (UTC day arithmetic) makes it immune to DST offsets.
+export function weekKey(dateKey) {
+  return shiftDateKey(dateKey, -weekdayIndex(dateKey));
+}
+
+// Points metric (documented so the ranking is reproducible): each win is worth WEEK_WIN_POINTS
+// (100). A small speed bonus rewards faster average wins: up to WEEK_SPEED_BONUS_MAX (30) per
+// win, scaled linearly from a 5-minute (300s) target down to 0 at/after that target. Losses
+// score nothing. Points therefore never go negative and are dominated by win count, with the
+// speed bonus only breaking near-ties — matching the sort order below.
+const WEEK_WIN_POINTS = 100;
+const WEEK_SPEED_BONUS_MAX = 30;
+const WEEK_SPEED_TARGET_MS = 300_000;
+
+function weekSpeedBonus(bestDurationMs) {
+  if (!Number.isFinite(bestDurationMs) || bestDurationMs <= 0) return 0;
+  const ratio = Math.max(0, (WEEK_SPEED_TARGET_MS - bestDurationMs) / WEEK_SPEED_TARGET_MS);
+  return Math.round(ratio * WEEK_SPEED_BONUS_MAX);
+}
+
+// Longest consecutive-won-day run WITHIN a single week (Sunday..Saturday), independent of the
+// all-time daily streak. `wonDays` is the set of won date-keys belonging to that week.
+function weekInternalStreak(startKey, wonDays) {
+  let best = 0;
+  let run = 0;
+  for (let offset = 0; offset < 7; offset += 1) {
+    if (wonDays.has(shiftDateKey(startKey, offset))) {
+      run += 1;
+      best = Math.max(best, run);
+    } else {
+      run = 0;
+    }
+  }
+  return best;
+}
+
+// Aggregate the player's own daily results into per-week rows and rank them. Returns the most
+// recent `weeks` weeks (current week last-covered), each row carrying counts + a rank. Ranking:
+// higher points first, then more wins, then faster bestDurationMs, then more recent week — a
+// total order so ranks are stable. rank is 1-based dense over the returned rows.
+export function buildWeeklyLeaderboard(results, todayKey = dailyDateKey(), weeks = 8) {
+  const base = normalizeDailyResults(results);
+  const weekCount = Math.max(1, Math.trunc(weeks));
+  const currentWeekStart = weekKey(todayKey);
+
+  const rows = [];
+  for (let index = 0; index < weekCount; index += 1) {
+    const startKey = shiftDateKey(currentWeekStart, -index * 7);
+    const endKey = shiftDateKey(startKey, 6);
+    let played = 0;
+    let wins = 0;
+    let bestDurationMs = 0;
+    const wonDays = new Set();
+    for (let offset = 0; offset < 7; offset += 1) {
+      const dayKey = shiftDateKey(startKey, offset);
+      const entry = base[dayKey];
+      if (!entry) continue;
+      played += 1;
+      if (entry.won) {
+        wins += 1;
+        wonDays.add(dayKey);
+        if (entry.durationMs > 0 && (bestDurationMs === 0 || entry.durationMs < bestDurationMs)) {
+          bestDurationMs = entry.durationMs;
+        }
+      }
+    }
+    const losses = played - wins;
+    const weekStreak = weekInternalStreak(startKey, wonDays);
+    const points = wins * WEEK_WIN_POINTS + (wins > 0 ? weekSpeedBonus(bestDurationMs) : 0);
+    rows.push({
+      weekKey: startKey,
+      startKey,
+      endKey,
+      played,
+      wins,
+      losses,
+      winRate: played ? Math.round((wins / played) * 100) : 0,
+      bestDurationMs,
+      weekStreak,
+      points,
+      isCurrentWeek: startKey === currentWeekStart,
+    });
+  }
+
+  const ranked = [...rows].sort((a, b) => {
+    if (b.points !== a.points) return b.points - a.points;
+    if (b.wins !== a.wins) return b.wins - a.wins;
+    const aTime = a.bestDurationMs || Infinity;
+    const bTime = b.bestDurationMs || Infinity;
+    if (aTime !== bTime) return aTime - bTime;
+    return b.startKey.localeCompare(a.startKey);
+  });
+  const rankByWeek = new Map();
+  ranked.forEach((row, idx) => {
+    rankByWeek.set(row.weekKey, idx + 1);
+  });
+  for (const row of rows) {
+    row.rank = rankByWeek.get(row.weekKey);
+  }
+  return rows;
+}
+
+// Compact Korean share summary for a single week, mirroring formatDailyShareText.
+export function formatWeeklyShareText({ weekKey: weekStart, wins = 0, played = 0, weekStreak = 0, bestDurationMs = 0, url = "" } = {}) {
+  const lines = [`Sequence Arena 주간 기록 (${weekStart} 주간) · ${wins}승 / ${played}판`];
+  if (weekStreak > 1) {
+    lines.push(`🔥 주간 최고 ${weekStreak}일 연속`);
+  }
+  if (wins > 0 && bestDurationMs > 0) {
+    lines.push(`⏱️ 최고 기록 ${formatDurationKo(bestDurationMs)}`);
+  }
+  if (url) {
+    lines.push(url);
+  }
+  return lines.join("\n");
+}
+
 export function formatDailyShareText({ number, won, durationMs, streakCurrent = 0, url = "" } = {}) {
   const marker = won ? "✅ 승리" : "❌ 패배";
   const lines = [`Sequence Arena 데일리 #${number} ${marker} · ${formatDurationKo(durationMs)}`];

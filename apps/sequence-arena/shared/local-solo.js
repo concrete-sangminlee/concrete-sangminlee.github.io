@@ -10,6 +10,7 @@ import {
 } from "./game-core.js";
 import { BOT_DIFFICULTIES, chooseBotAction, normalizeBotDifficulty } from "./bot-ai.js";
 import { createSeededRng } from "./rng.js";
+import { buildReplayRecord } from "./replay.js";
 
 const LOCAL_ROOM_CODE = "SOLO";
 const LOCAL_BOT_SESSION_ID = "local-cobalt-bot";
@@ -19,6 +20,13 @@ const BOT_TIMER_PENDING = Symbol("bot-timer-pending");
 
 function randomSessionId() {
   return globalThis.crypto?.randomUUID?.() || `local-${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
+}
+
+// Every local match needs a seed so it is replayable. Callers that do not pass one (plain
+// offline solo) get an ephemeral seed generated here; daily/tutorial/rematch pass explicit
+// seeds, so their reproducible-puzzle contract is unaffected.
+function randomReplaySeed() {
+  return `solo-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
 }
 
 function makeSeatSummary(seats) {
@@ -67,6 +75,9 @@ export class LocalSoloRuntime {
     this.seed = "";
     this.daily = null;
     this.rng = Math.random;
+    // Ordered list of the initiating move each turn made (human + bot), keyed to the
+    // current seed/matchNumber; replayed by shared/replay.js to reproduce the match.
+    this.replayMoves = [];
   }
 
   clearBotTimer() {
@@ -88,9 +99,13 @@ export class LocalSoloRuntime {
     // A seed makes the whole match deterministic: board layout, deck order, both hands,
     // and every reshuffle/draw flow through one PRNG stream (bot decisions are already
     // deterministic). The daily challenge relies on this to hand every player the same
-    // puzzle; the seedless path stays Math.random, byte-identical to the old behavior.
-    this.seed = typeof seed === "string" ? seed : "";
-    this.rng = this.seed ? createSeededRng(this.seed) : Math.random;
+    // puzzle. Every local game now gets a seed so it is replayable: a seedless caller
+    // gets an ephemeral seed generated here (the previous seedless Math.random path was
+    // not reproducible), while explicit seeds (daily/tutorial/rematch) are used verbatim,
+    // preserving their shared-puzzle contract.
+    this.seed = typeof seed === "string" && seed ? seed : randomReplaySeed();
+    this.rng = createSeededRng(this.seed);
+    this.replayMoves = [];
     this.daily =
       daily && typeof daily === "object" && typeof daily.dateKey === "string" && Number.isFinite(Number(daily.number))
         ? { dateKey: daily.dateKey, number: Math.max(1, Math.trunc(Number(daily.number))) }
@@ -213,15 +228,23 @@ export class LocalSoloRuntime {
     }
   }
 
+  recordReplayMove(move) {
+    // Cap defensively so a pathological game can never grow the list without bound.
+    if (this.replayMoves.length >= 400) return;
+    this.replayMoves.push(move);
+  }
+
   playCard(payload) {
     const result = playCard(this.room.game, 0, payload.cardId, payload.targetCellId, this.rng);
     if (!result.ok) return this.emit(result.error);
+    this.recordReplayMove({ type: "play", cardId: payload.cardId, targetCellId: payload.targetCellId });
     return this.emit();
   }
 
   discardDead(payload) {
     const result = discardDeadCard(this.room.game, 0, payload.cardId, this.rng);
     if (!result.ok) return this.emit(result.error);
+    this.recordReplayMove({ type: "discard_dead", cardId: payload.cardId, targetCellId: null });
     return this.emit();
   }
 
@@ -297,9 +320,11 @@ export class LocalSoloRuntime {
     const action = chooseBotAction(this.room.game, current, this.room.botDifficulty);
     let moved = false;
     if (action?.type === "play_card") {
-      moved = playCard(this.room.game, current.seatIndex, action.cardId, action.targetCellId).ok;
+      moved = playCard(this.room.game, current.seatIndex, action.cardId, action.targetCellId, this.rng).ok;
+      if (moved) this.recordReplayMove({ type: "play", cardId: action.cardId, targetCellId: action.targetCellId });
     } else if (action?.type === "discard_dead") {
-      moved = discardDeadCard(this.room.game, current.seatIndex, action.cardId).ok;
+      moved = discardDeadCard(this.room.game, current.seatIndex, action.cardId, this.rng).ok;
+      if (moved) this.recordReplayMove({ type: "discard_dead", cardId: action.cardId, targetCellId: null });
     }
     if (moved) {
       moved = this.finishPendingTurn(seatIndex);
@@ -332,18 +357,31 @@ export class LocalSoloRuntime {
     if (!wasFinished && this.room.game.winner) {
       const matchNumber = this.room.game.matchNumber || this.room.matchNumber;
       if (this.lastRecordedMatchNumber !== matchNumber) {
+        const finishedAt = new Date().toISOString();
+        // A completed match carries its full replay record so the client can offer to save
+        // it without re-deriving anything. Reproducible offline via shared/replay.js.
+        const replay = buildReplayRecord({
+          seed: this.seed,
+          difficulty: this.room.botDifficulty,
+          daily: this.room.dailyChallenge ?? null,
+          tutorial: this.room.tutorialMode === true,
+          moves: this.replayMoves,
+          winner: this.room.game.winner,
+          finishedAt,
+        });
         this.matchHistory = [
           {
             matchNumber,
             winner: this.room.game.winner,
             winnerName: TEAM_META[this.room.game.winner].name,
             scores: { A: this.room.game.teamScores.A, B: this.room.game.teamScores.B },
-            finishedAt: new Date().toISOString(),
+            finishedAt,
             durationMs: Date.now() - this.room.matchStartedAt,
             testMode: "local-solo",
             botDifficulty: this.room.botDifficulty,
             daily: this.room.dailyChallenge ?? null,
             tutorial: this.room.tutorialMode === true,
+            replay,
           },
           ...this.matchHistory,
         ].slice(0, 12);

@@ -8,6 +8,7 @@ import {
   computeDailyStreak,
   shiftDateKey,
   weekdayIndex,
+  buildWeeklyLeaderboard,
 } from "../shared/daily.js";
 
 function monthOf(dateKey) {
@@ -69,5 +70,29 @@ export function buildStatsSummary(rawResults, rawStats, todayKey) {
       streak: computeDailyStreak(results, todayKey),
     },
     solo: stats,
+  };
+}
+
+// View model for the personal weekly leaderboard section of the "내 기록" modal. Wraps the
+// shared buildWeeklyLeaderboard aggregation (consistent with buildDailyCalendar living here)
+// and pre-computes a few UI-facing extras: only weeks the player actually played are shown as
+// ranked rows, the personal-best week (rank 1 among played weeks) is flagged, and a boolean
+// says whether there is anything to render. Pure — todayKey is injected.
+export function buildWeeklyLeaderboardView(rawResults, todayKey, weeks = 8) {
+  const rows = buildWeeklyLeaderboard(rawResults, todayKey, weeks);
+  const played = rows.filter((row) => row.played > 0);
+  const bestWeekKey = played.reduce(
+    (best, row) => (best == null || row.rank < best.rank ? row : best),
+    null
+  );
+  const decorated = rows.map((row) => ({
+    ...row,
+    isPersonalBest: bestWeekKey != null && row.weekKey === bestWeekKey.weekKey && row.played > 0,
+  }));
+  return {
+    rows: decorated,
+    playedWeeks: played.length,
+    hasHistory: played.length > 0,
+    bestWeekKey: bestWeekKey ? bestWeekKey.weekKey : null,
   };
 }
