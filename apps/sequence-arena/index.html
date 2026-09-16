@@ -24,6 +24,9 @@
     <link rel="modulepreload" href="./client/i18n.js" />
     <link rel="modulepreload" href="./shared/game-core.js" />
     <link rel="modulepreload" href="./shared/replay.js" />
+    <link rel="modulepreload" href="./shared/progression.js" />
+    <link rel="modulepreload" href="./shared/solo-modes.js" />
+    <link rel="modulepreload" href="./shared/analysis.js" />
     <link rel="modulepreload" href="./client/board-paint.js" />
     <link rel="modulepreload" href="./client/board-render.js" />
     <link rel="modulepreload" href="./client/net-client.js" />
@@ -135,6 +138,30 @@
             <button id="solo-stats-strip" class="solo-stats-strip" type="button" aria-haspopup="dialog" aria-controls="stats-modal" title="내 기록 자세히 보기" hidden></button>
           </div>
 
+          <section id="home-meta-card" class="home-meta-card" aria-label="내 프로필 카드" data-i18n-attr="aria-label:meta.card.aria" hidden>
+            <div class="home-meta-head">
+              <div class="home-meta-identity">
+                <span id="home-meta-rank" class="home-meta-rank"></span>
+                <span id="home-meta-title" class="home-meta-title" data-i18n="meta.heading">내 프로필</span>
+              </div>
+              <button id="home-meta-share-btn" class="ghost-button home-meta-share" type="button" title="프로필 요약 복사" data-i18n-attr="title:meta.shareTitle" data-i18n="meta.share">프로필 공유</button>
+            </div>
+            <div id="home-meta-stats" class="home-meta-stats"></div>
+            <div class="home-meta-xp" role="progressbar" id="home-meta-xp" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+              <div id="home-meta-xp-fill" class="home-meta-xp-fill"></div>
+            </div>
+            <div class="home-meta-goals">
+              <span class="home-meta-goals-label" data-i18n="meta.goals">오늘의 목표</span>
+              <ul id="home-meta-goals-list" class="home-meta-goals-list" aria-label="오늘의 목표 목록" data-i18n-attr="aria-label:meta.goalsAria"></ul>
+            </div>
+            <div class="home-meta-entry" role="group" aria-label="바로 가기" data-i18n-attr="aria-label:meta.entryPoints">
+              <button id="home-meta-daily-btn" class="ghost-button" type="button" data-i18n="meta.openDaily">오늘의 챌린지</button>
+              <button id="home-meta-modes-btn" class="ghost-button" type="button" aria-haspopup="dialog" aria-controls="modes-modal" data-i18n="meta.openModes">모드 / 퍼즐</button>
+              <button id="home-meta-stats-btn" class="ghost-button" type="button" aria-haspopup="dialog" aria-controls="stats-modal" data-i18n="meta.openStats">기록 자세히</button>
+            </div>
+            <p id="home-meta-live" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></p>
+          </section>
+
           <div id="welcome-card" class="welcome-card">
             <button id="welcome-dismiss-btn" class="welcome-dismiss" type="button" aria-label="환영 카드 닫기" title="닫기" data-i18n-attr="aria-label:welcome.dismiss.aria;title:common.close">✕</button>
             <strong class="welcome-title" data-i18n="welcome.title">Sequence Arena에 오신 걸 환영합니다</strong>
@@ -194,6 +221,7 @@
               <button id="create-room-btn" class="primary-button" type="submit" data-i18n="gateway.createRoom">방 만들기</button>
               <button id="offline-solo-btn" class="ghost-button" type="button" data-i18n="gateway.offlineSolo">오프라인 솔로</button>
               <button id="daily-challenge-btn" class="ghost-button daily-challenge-button" type="button" data-i18n="gateway.dailyChallenge">오늘의 챌린지</button>
+              <button id="modes-btn" class="ghost-button modes-button" type="button" aria-haspopup="dialog" aria-controls="modes-modal" aria-expanded="false" data-i18n="gateway.modes">모드 / 퍼즐</button>
             </form>
 
             <form id="join-form" class="stack-card">
@@ -328,6 +356,7 @@
                   <button type="button" data-ai-mode="smart" data-i18n="host.aiSmart">전략</button>
                   <button type="button" data-ai-mode="aggressive" data-i18n="host.aiAggressive">공격</button>
                   <button type="button" data-ai-mode="master" data-i18n="host.aiMaster">마스터</button>
+                  <button type="button" data-ai-mode="grandmaster" data-i18n="host.aiGrandmaster">그랜드마스터</button>
                 </div>
               </div>
               <div class="host-setting">
@@ -431,7 +460,9 @@
                 <span id="rematch-vote-status" class="rematch-vote-status">0 / 0 동의</span>
                 <span id="victory-daily-result" class="victory-daily-result" hidden></span>
                 <button id="share-daily-btn" class="ghost-button share-daily-button" type="button" data-i18n="status.shareDaily" hidden>데일리 결과 공유</button>
+                <button id="share-mode-btn" class="ghost-button share-mode-button" type="button" data-i18n="status.shareMode" hidden>모드 결과 공유</button>
                 <button id="save-replay-btn" class="ghost-button save-replay-button" type="button" data-i18n="status.saveReplay" hidden>리플레이 저장</button>
+                <button id="view-analysis-btn" class="ghost-button view-analysis-button" type="button" data-i18n="status.viewAnalysis" hidden>분석 보기</button>
               </div>
               <p id="status-message" class="status-message">방에 필요한 인원이 모두 들어오면 자동으로 게임이 시작됩니다.</p>
               <div class="score-row ruby">
@@ -561,6 +592,27 @@
       </div>
     </aside>
 
+    <div id="modes-modal" class="help-modal modes-modal" role="dialog" aria-modal="true" aria-labelledby="modes-modal-title" hidden>
+      <div class="help-backdrop" data-modes-dismiss></div>
+      <div class="help-dialog modes-dialog">
+        <header class="help-header">
+          <h2 id="modes-modal-title" data-i18n="modes.title">모드 / 퍼즐</h2>
+          <button id="modes-close-btn" class="icon-button help-close" type="button" aria-label="모드 닫기" title="닫기" data-i18n-attr="aria-label:modes.close.aria;title:common.close">✕</button>
+        </header>
+        <div class="modes-body">
+          <p class="modes-note" data-i18n="modes.note">모두 이 브라우저에만 저장되는 오프라인·시드 콘텐츠예요. 서버가 필요 없습니다.</p>
+          <section class="modes-section" aria-label="솔로 모드" data-i18n-attr="aria-label:modes.modesAria">
+            <h3 data-i18n="modes.modesHeading">솔로 모드</h3>
+            <div id="modes-mode-list" class="modes-mode-list"></div>
+          </section>
+          <section class="modes-section" aria-label="퍼즐 팩" data-i18n-attr="aria-label:modes.puzzlesAria">
+            <h3 data-i18n="modes.puzzlesHeading">퍼즐 팩</h3>
+            <div id="modes-puzzle-list" class="modes-puzzle-list"></div>
+          </section>
+        </div>
+      </div>
+    </div>
+
     <div id="stats-modal" class="help-modal stats-modal" role="dialog" aria-modal="true" aria-labelledby="stats-modal-title" hidden>
       <div class="help-backdrop" data-stats-dismiss></div>
       <div class="help-dialog stats-dialog">
@@ -570,7 +622,28 @@
         </header>
         <div class="stats-body">
           <p id="stats-sr-summary" class="sr-only" aria-live="polite"></p>
+          <section class="stats-meta-section" aria-label="프로필 · 오늘의 목표 · 다음 목표" data-i18n-attr="aria-label:meta.sectionAria">
+            <div class="stats-meta-head">
+              <h3 data-i18n="meta.heading">내 프로필</h3>
+              <button id="stats-meta-share-btn" class="ghost-button stats-meta-share" type="button" title="프로필 요약 복사" data-i18n-attr="title:meta.shareTitle" data-i18n="meta.share">프로필 공유</button>
+            </div>
+            <div id="stats-meta-overview" class="stats-meta-overview"></div>
+            <div id="stats-meta-next" class="stats-meta-next"></div>
+          </section>
           <dl id="stats-summary-grid" class="stats-summary-grid"></dl>
+          <section class="stats-progression-section" aria-label="진행도" data-i18n-attr="aria-label:progression.sectionAria">
+            <div class="stats-progression-head">
+              <h3 data-i18n="progression.title">진행도</h3>
+              <button id="stats-progression-share-btn" class="ghost-button stats-progression-share" type="button" title="진행도 복사" data-i18n-attr="title:progression.shareTitle" data-i18n="progression.share">진행도 복사</button>
+            </div>
+            <p class="stats-progression-note" data-i18n="progression.offlineNote">레이팅·레벨은 이 브라우저에만 저장되는 개인 오프라인 기록이에요. 서버 순위표가 아닙니다.</p>
+            <div id="stats-progression-overview" class="stats-progression-overview"></div>
+            <div id="stats-progression-achievements" class="stats-progression-achievements" aria-label="업적" data-i18n-attr="aria-label:progression.achievementsAria"></div>
+            <div class="stats-progression-cosmetics-head">
+              <h4 data-i18n="progression.cosmeticsTitle">외형 (게임에 영향 없음)</h4>
+            </div>
+            <div id="stats-progression-cosmetics" class="stats-progression-cosmetics" aria-label="외형 선택" data-i18n-attr="aria-label:progression.cosmeticsAria"></div>
+          </section>
           <section class="stats-calendar-section" aria-label="데일리 챌린지 캘린더">
             <div class="stats-calendar-head">
               <h3>데일리 캘린더 · 최근 12주</h3>
@@ -612,11 +685,19 @@
           <section class="replay-player-section" aria-label="리플레이 재생">
             <p id="replay-player-status" class="replay-player-status" aria-live="polite">저장된 리플레이를 선택하거나 공유 문자열을 붙여넣어 오프라인에서 재생하세요.</p>
             <div id="replay-player-board" class="replay-player-board" role="img" aria-label="리플레이 보드" hidden></div>
+            <div id="replay-eval-bar" class="replay-eval-bar" role="img" aria-label="국면 우세 막대" hidden>
+              <div id="replay-eval-fill" class="replay-eval-fill"></div>
+            </div>
             <div class="replay-player-controls" hidden id="replay-player-controls">
               <button id="replay-prev-btn" class="ghost-button" type="button" aria-label="이전 수">◀ 이전</button>
               <span id="replay-step-label" class="replay-step-label">0 / 0</span>
               <button id="replay-next-btn" class="ghost-button" type="button" aria-label="다음 수">다음 ▶</button>
             </div>
+          </section>
+          <section id="replay-analysis-section" class="replay-analysis-section" aria-label="경기 분석" hidden>
+            <h3 id="replay-analysis-title" data-i18n="analysis.title">경기 분석</h3>
+            <p id="replay-analysis-summary" class="replay-analysis-summary" aria-live="polite"></p>
+            <ul id="replay-analysis-moments" class="replay-analysis-moments"></ul>
           </section>
           <section class="replay-import-section" aria-label="리플레이 불러오기">
             <label for="replay-import-input" class="replay-import-label">공유 문자열로 불러오기</label>

@@ -35,7 +35,13 @@ import {
 } from "./client/net-client.js";
 import { HAPTIC, playSoundPattern } from "./client/sound-bank.js";
 import { TUTORIAL_SEED, TUTORIAL_STEPS, createTutorialMachine } from "./client/tutorial.js";
-import { buildDailyCalendar, buildStatsSummary, buildWeeklyLeaderboardView } from "./client/stats-view.js";
+import {
+  buildDailyCalendar,
+  buildStatsSummary,
+  buildWeeklyLeaderboardView,
+  buildProgressionView,
+  buildHomeMetaView,
+} from "./client/stats-view.js";
 import {
   buildReplayRecord,
   validateReplayRecord,
@@ -43,6 +49,38 @@ import {
   decodeReplayString,
   replayGame,
 } from "./shared/replay.js";
+import {
+  normalizeProgression,
+  applyMatchResult,
+  formatProgressionShareText,
+  formatMetaProfileShareText,
+  rankTitleForRating,
+  ACHIEVEMENTS,
+  COSMETICS,
+} from "./shared/progression.js";
+import {
+  PUZZLE_PACKS,
+  listPuzzles,
+  loadPuzzle,
+  scorePuzzleAttempt,
+  buildGauntletRun,
+  advanceGauntlet,
+  currentGauntletStage,
+  createSurvivalState,
+  recordSurvival,
+  scoreTimeAttack,
+  GAUNTLET_TIERS,
+  formatPuzzleShareText,
+  formatGauntletShareText,
+  formatSurvivalShareText,
+  formatTimeAttackShareText,
+} from "./shared/solo-modes.js";
+import {
+  analyzeReplay,
+  explainMove,
+  MOMENT_KINDS,
+  EXPLAIN_TAGS,
+} from "./shared/analysis.js";
 import { sanitizeName, ROOM_CODE_PATTERN, MAX_ROOM_CODE_LENGTH } from "./shared/validation.js";
 import {
   t,
@@ -72,6 +110,9 @@ const STORAGE_KEYS = {
   soloStats: "sequence-arena-solo-stats",
   tutorialDone: "sequence-arena-tutorial-done",
   replays: "sequence-arena-replays",
+  progression: "sequence-arena-progression",
+  puzzleProgress: "sequence-arena-puzzle-progress",
+  modeStats: "sequence-arena-mode-stats",
 };
 
 // Cap the stored replay list so localStorage stays bounded (mirrors matchHistory .slice and
@@ -93,7 +134,26 @@ const refs = {
   createRoomBtn: document.getElementById("create-room-btn"),
   offlineSoloBtn: document.getElementById("offline-solo-btn"),
   dailyChallengeBtn: document.getElementById("daily-challenge-btn"),
+  modesBtn: document.getElementById("modes-btn"),
+  modesModal: document.getElementById("modes-modal"),
+  modesCloseBtn: document.getElementById("modes-close-btn"),
+  modesModeList: document.getElementById("modes-mode-list"),
+  modesPuzzleList: document.getElementById("modes-puzzle-list"),
   soloStatsStrip: document.getElementById("solo-stats-strip"),
+  homeMetaCard: document.getElementById("home-meta-card"),
+  homeMetaRank: document.getElementById("home-meta-rank"),
+  homeMetaStats: document.getElementById("home-meta-stats"),
+  homeMetaXp: document.getElementById("home-meta-xp"),
+  homeMetaXpFill: document.getElementById("home-meta-xp-fill"),
+  homeMetaGoalsList: document.getElementById("home-meta-goals-list"),
+  homeMetaDailyBtn: document.getElementById("home-meta-daily-btn"),
+  homeMetaModesBtn: document.getElementById("home-meta-modes-btn"),
+  homeMetaStatsBtn: document.getElementById("home-meta-stats-btn"),
+  homeMetaShareBtn: document.getElementById("home-meta-share-btn"),
+  homeMetaLive: document.getElementById("home-meta-live"),
+  statsMetaOverview: document.getElementById("stats-meta-overview"),
+  statsMetaNext: document.getElementById("stats-meta-next"),
+  statsMetaShareBtn: document.getElementById("stats-meta-share-btn"),
   joinRoomBtn: document.getElementById("join-room-btn"),
   gatewaySubtitle: document.getElementById("gateway-subtitle"),
   gatewayModeHint: document.getElementById("gateway-mode-hint"),
@@ -136,6 +196,10 @@ const refs = {
   statsWeeklyList: document.getElementById("stats-weekly-list"),
   statsWeeklySrSummary: document.getElementById("stats-weekly-sr-summary"),
   statsWeeklyShareBtn: document.getElementById("stats-weekly-share-btn"),
+  statsProgressionOverview: document.getElementById("stats-progression-overview"),
+  statsProgressionAchievements: document.getElementById("stats-progression-achievements"),
+  statsProgressionCosmetics: document.getElementById("stats-progression-cosmetics"),
+  statsProgressionShareBtn: document.getElementById("stats-progression-share-btn"),
   statsEmpty: document.getElementById("stats-empty"),
   statsEmptyDailyBtn: document.getElementById("stats-empty-daily-btn"),
   helpCloseBtn: document.getElementById("help-close-btn"),
@@ -203,7 +267,9 @@ const refs = {
   victoryCard: document.getElementById("victory-card"),
   victoryDailyResult: document.getElementById("victory-daily-result"),
   shareDailyBtn: document.getElementById("share-daily-btn"),
+  shareModeBtn: document.getElementById("share-mode-btn"),
   saveReplayBtn: document.getElementById("save-replay-btn"),
+  viewAnalysisBtn: document.getElementById("view-analysis-btn"),
   replayBtn: document.getElementById("replay-btn"),
   replayModal: document.getElementById("replay-modal"),
   replayCloseBtn: document.getElementById("replay-close-btn"),
@@ -214,6 +280,11 @@ const refs = {
   replayPrevBtn: document.getElementById("replay-prev-btn"),
   replayNextBtn: document.getElementById("replay-next-btn"),
   replayStepLabel: document.getElementById("replay-step-label"),
+  replayEvalBar: document.getElementById("replay-eval-bar"),
+  replayEvalFill: document.getElementById("replay-eval-fill"),
+  replayAnalysisSection: document.getElementById("replay-analysis-section"),
+  replayAnalysisSummary: document.getElementById("replay-analysis-summary"),
+  replayAnalysisMoments: document.getElementById("replay-analysis-moments"),
   replayImportInput: document.getElementById("replay-import-input"),
   replayImportBtn: document.getElementById("replay-import-btn"),
   replayImportFeedback: document.getElementById("replay-import-feedback"),
@@ -357,6 +428,14 @@ function loadSoloStats() {
 // Stored replays are a saved-list of validated replay records (offline, client-only). The
 // stored payload is defensively re-validated on load so a corrupted/foreign entry can never
 // reach the replay engine.
+function loadProgression() {
+  try {
+    return normalizeProgression(JSON.parse(safeLocalStorage.get(STORAGE_KEYS.progression) || "null"));
+  } catch {
+    return normalizeProgression(null);
+  }
+}
+
 function loadStoredReplays() {
   try {
     const raw = JSON.parse(safeLocalStorage.get(STORAGE_KEYS.replays) || "[]");
@@ -380,14 +459,72 @@ function loadStoredReplays() {
   }
 }
 
+// Normalize the stored puzzle-progress blob to a { [puzzleId]: stars } map, dropping unknown ids
+// and clamping stars to 0..3. Defensive: a corrupted/foreign blob yields an empty map.
+function normalizePuzzleProgress(raw) {
+  const known = new Set(listPuzzles().map((puzzle) => puzzle.id));
+  const clean = {};
+  if (raw && typeof raw === "object" && !Array.isArray(raw)) {
+    for (const [id, stars] of Object.entries(raw)) {
+      if (!known.has(id)) continue;
+      const value = Math.max(0, Math.min(3, Math.trunc(Number(stars) || 0)));
+      if (value > 0) clean[id] = value;
+    }
+  }
+  return clean;
+}
+
+function loadPuzzleProgress() {
+  try {
+    return normalizePuzzleProgress(JSON.parse(safeLocalStorage.get(STORAGE_KEYS.puzzleProgress) || "{}"));
+  } catch {
+    return {};
+  }
+}
+
+// Normalize the mode-stats blob: gauntlet best-cleared, survival best-streak, time-attack best
+// medal rank. All clamped/defensive. Medal stored as its string tier; a rank map orders them.
+const TIME_ATTACK_MEDAL_RANK = { none: 0, bronze: 1, silver: 2, gold: 3 };
+function normalizeModeStats(raw) {
+  const source = raw && typeof raw === "object" && !Array.isArray(raw) ? raw : {};
+  const clampInt = (value) => Math.max(0, Math.trunc(Number(value) || 0));
+  const medal = typeof source.timeAttackBestMedal === "string" && source.timeAttackBestMedal in TIME_ATTACK_MEDAL_RANK
+    ? source.timeAttackBestMedal
+    : "none";
+  return {
+    gauntletBestCleared: clampInt(source.gauntletBestCleared),
+    survivalBestStreak: clampInt(source.survivalBestStreak),
+    timeAttackBestMedal: medal,
+  };
+}
+
+function loadModeStats() {
+  try {
+    return normalizeModeStats(JSON.parse(safeLocalStorage.get(STORAGE_KEYS.modeStats) || "null"));
+  } catch {
+    return normalizeModeStats(null);
+  }
+}
+
 // Parsed once at boot and kept in memory; every write goes through the recorder so the
 // render path never touches localStorage/JSON on its hot path.
 let dailyResultsCache = loadDailyResults();
 let soloStatsCache = loadSoloStats();
+let progressionCache = loadProgression();
 let storedReplaysCache = loadStoredReplays();
+// Offline, client-only solo-content progress: puzzle stars (id -> best-star count 0..3) and mode
+// bests (gauntlet best-cleared, survival best-streak, time-attack best-medal). Both are plain
+// serializable localStorage blobs, defensively normalized on load. No server / no gameplay unlock.
+let puzzleProgressCache = loadPuzzleProgress();
+let modeStatsCache = loadModeStats();
 // The replay record of the most recently finished local game, offered on the victory card.
 let pendingReplayToSave = null;
 let lastRecordedLocalMatchNumber = 0;
+// The most recent solo-mode result, staged for the mode-specific ko/en share affordance.
+let pendingModeShare = null;
+// The active solo-mode session context (mode kind + which puzzle/tier), so a finished match can
+// be recorded against the right mode and a mode retry re-runs the same content.
+let activeModeContext = null;
 
 function readPercentPreference(key, fallback, min = 0, max = 100) {
   const raw = safeLocalStorage.get(key);
@@ -633,7 +770,7 @@ let localSoloRuntime = null;
 // Localised via i18n t() at call time so a locale toggle re-renders these labels. Kept as a
 // function (not a frozen object) because t() resolves against the active locale each call.
 function botModeLabel(mode) {
-  const key = { easy: "bot.easy", smart: "bot.smart", aggressive: "bot.aggressive", master: "bot.master" }[mode];
+  const key = { easy: "bot.easy", smart: "bot.smart", aggressive: "bot.aggressive", master: "bot.master", grandmaster: "bot.grandmaster" }[mode];
   return key ? t(key) : t("bot.smart");
 }
 
@@ -776,7 +913,7 @@ function normalizeTeamSize(value) {
 }
 
 function normalizeBotDifficulty(value) {
-  return value === "easy" || value === "aggressive" || value === "master" ? value : "smart";
+  return value === "easy" || value === "aggressive" || value === "master" || value === "grandmaster" ? value : "smart";
 }
 
 function asSafeArray(value) {
@@ -2011,6 +2148,59 @@ function startOfflineSolo(options = {}) {
   playSound("tap");
 }
 
+// Start a solo-content game (puzzle / gauntlet / survival / time-attack): a seeded local match
+// that may begin from a curated setup prefix and carries mode metadata into finish. Reuses the
+// same teardown as startOfflineSolo, then starts the runtime with the mode context. Plain solo /
+// daily / tutorial keep their own dedicated entry points untouched.
+function startSoloContent({ difficulty = clientState.botDifficulty, seed = "", setupMoves = null, mode = null, flash = "" } = {}) {
+  if (tutorialMachine.active) {
+    tutorialMachine.finish("skipped");
+  }
+  const name = normalizePlayerName(refs.createName?.value || clientState.lastName || "플레이어");
+  if (typeof dismissWelcome === "function") {
+    dismissWelcome();
+  }
+  clientState.lastName = name;
+  if (refs.createName) {
+    refs.createName.value = name;
+  }
+  safeLocalStorage.set(STORAGE_KEYS.name, name);
+  clientState.localMode = true;
+  clientState.socketReady = false;
+  clientState.reconnectAttempted = false;
+  clientState.reconnectAttempts = 0;
+  clearBotThinkingTimer();
+  if (clientState.reconnectTimer) {
+    window.clearTimeout(clientState.reconnectTimer);
+    clientState.reconnectTimer = null;
+  }
+  if (clientState.socket && clientState.socket.readyState !== WebSocket.CLOSED) {
+    try {
+      clientState.socket.close();
+    } catch {
+      // ignore
+    }
+  }
+  clientState.roomCode = "";
+  updateUrlRoom();
+  pendingModeShare = null;
+  localSoloRuntime = new LocalSoloRuntime({
+    onSnapshot: applyRoomSnapshot,
+  });
+  localSoloRuntime.start({
+    name,
+    sessionId: clientState.sessionId,
+    difficulty,
+    seed,
+    setupMoves,
+    mode,
+  });
+  if (flash) {
+    setFlashMessage(flash);
+  }
+  playSound("tap");
+}
+
 function handleCreateRoom(event) {
   event.preventDefault();
   if (refs.createRoomBtn?.disabled) return;
@@ -2509,7 +2699,8 @@ function showHint() {
   if (!canShowHint()) {
     return;
   }
-  const suggestion = localSoloRuntime.suggestMove();
+  const explained = localSoloRuntime.suggestMoveExplained();
+  const suggestion = explained ? explained.suggestion : null;
   if (!suggestion) {
     setFlashMessage("지금은 추천할 수 있는 수가 없습니다.");
     render();
@@ -2519,6 +2710,9 @@ function showHint() {
   computeSelectionState();
   const card = yourHand().find((entry) => entry.id === suggestion.cardId);
   const cardLabel = card ? card.label : "추천 카드";
+  // The explanation is an i18n KEY resolved to the active locale — a read-only teaching line
+  // shown next to the recommendation. Derived from real board facts by shared/analysis.js.
+  const reason = explained && explained.explanation ? t(explained.explanation.ko) : "";
 
   if (suggestion.type === "discard_dead") {
     setFlashMessage(`추천: ${cardLabel}는 지금 놓을 곳이 없어 버리는 게 좋아요.`);
@@ -2530,8 +2724,9 @@ function showHint() {
     }
     const cell = clientState.game?.board?.find((entry) => entry.id === suggestion.targetCellId);
     const cellLabel = cell?.label || "추천 칸";
-    setFlashMessage(`추천 수: ${cardLabel} → ${cellLabel} 칸`);
-    announcePolite(`추천 수: ${cardLabel} 카드를 ${cellLabel} 칸에 놓으세요.`);
+    const reasonSuffix = reason ? ` · ${reason}` : "";
+    setFlashMessage(`추천 수: ${cardLabel} → ${cellLabel} 칸${reasonSuffix}`);
+    announcePolite(`추천 수: ${cardLabel} 카드를 ${cellLabel} 칸에 놓으세요.${reasonSuffix}`);
   }
   playSound("select");
   triggerHaptic([8]);
@@ -3212,11 +3407,20 @@ function maybeRecordLocalSoloResult() {
     return;
   }
   const won = latest.winner === "A";
+  const difficulty = latest.botDifficulty || clientState.botDifficulty;
+  // Solo-mode (puzzle / gauntlet / survival / time-attack) completion is recorded on its own
+  // track (stars / mode bests + a mode-tagged progression feed) and returns early, keeping the
+  // plain-solo/daily stats path below unchanged.
+  if (latest.mode && typeof latest.mode === "object") {
+    recordSoloModeResult(latest, won, difficulty);
+    return;
+  }
   soloStatsCache = recordSoloResult(soloStatsCache, {
-    difficulty: latest.botDifficulty || clientState.botDifficulty,
+    difficulty,
     won,
   });
   safeLocalStorage.set(STORAGE_KEYS.soloStats, JSON.stringify(soloStatsCache));
+  let dailyStreakForProgression = 0;
   if (latest.daily?.dateKey) {
     dailyResultsCache = recordDailyResult(dailyResultsCache, latest.daily.dateKey, {
       won,
@@ -3224,12 +3428,210 @@ function maybeRecordLocalSoloResult() {
     });
     safeLocalStorage.set(STORAGE_KEYS.dailyResults, JSON.stringify(dailyResultsCache));
     const streak = computeDailyStreak(dailyResultsCache, dailyDateKey());
+    dailyStreakForProgression = streak.current;
     announcePolite(
       won
         ? `오늘의 챌린지 #${latest.daily.number} 승리가 기록되었습니다. 현재 ${streak.current}일 연속 달성입니다.`
         : `오늘의 챌린지 #${latest.daily.number} 결과가 기록되었습니다. 같은 퍼즐로 다시 도전할 수 있습니다.`
     );
   }
+  // Progression spine: every non-tutorial local finish feeds the offline rating/xp/level +
+  // audited achievements. applyMatchResult is pure and returns the newly-unlocked achievement ids
+  // for the non-blocking toast + level-up flash.
+  recordProgressionResult({
+    difficulty,
+    won,
+    mode: latest.daily?.dateKey ? "daily" : "solo",
+    durationMs: latest.durationMs,
+    dailyStreak: dailyStreakForProgression,
+  });
+}
+
+// Record a finished SOLO-MODE match (puzzle / gauntlet / survival / time-attack). Updates the
+// mode's own offline progress (stars / bests), feeds Phase 2 progression with the mode tag (a
+// mode multiplier + puzzle-complete achievement hook), and stages the mode-specific share text.
+// No gameplay-affecting unlock — purely cosmetic/record-keeping (free-tier, fairness-preserving).
+function recordSoloModeResult(latest, won, difficulty) {
+  const mode = latest.mode;
+  const kind = typeof mode.kind === "string" ? mode.kind : "";
+  let progressionMode = "solo";
+  let puzzlePackCompleted = false;
+
+  if (kind === "puzzle") {
+    const puzzle = loadPuzzle(mode.puzzleId);
+    if (puzzle) {
+      // The player's own solving moves are exactly the recorded replay move count (the setup
+      // prefix is not captured). Score into stars and keep only the best per puzzle.
+      const moves = Array.isArray(latest.replay?.moves) ? latest.replay.moves.length : 0;
+      const scored = scorePuzzleAttempt(puzzle, { moves, won });
+      const previousStars = puzzleProgressCache[puzzle.id] || 0;
+      if (scored.stars > previousStars) {
+        puzzleProgressCache = { ...puzzleProgressCache, [puzzle.id]: scored.stars };
+        safeLocalStorage.set(STORAGE_KEYS.puzzleProgress, JSON.stringify(puzzleProgressCache));
+      }
+      progressionMode = "puzzle";
+      puzzlePackCompleted = isPuzzlePackComplete(puzzle.packId);
+      pendingModeShare = {
+        kind: "puzzle",
+        packKo: packLabel(puzzle.packId, "ko"),
+        puzzleKo: t(`puzzle.name.${puzzle.id}`),
+        stars: scored.stars,
+        par: scored.par,
+        moveCount: scored.moveCount,
+      };
+      announcePolite(
+        won
+          ? t("modes.puzzleSolvedFlash", { stars: String(scored.stars) })
+          : t("modes.puzzleFailedFlash")
+      );
+    }
+  } else if (kind === "gauntlet") {
+    progressionMode = "gauntlet";
+    const cleared = Math.max(0, Math.trunc(Number(mode.stageCleared) || 0));
+    if (cleared > modeStatsCache.gauntletBestCleared) {
+      modeStatsCache = { ...modeStatsCache, gauntletBestCleared: cleared };
+      safeLocalStorage.set(STORAGE_KEYS.modeStats, JSON.stringify(modeStatsCache));
+    }
+    pendingModeShare = { kind: "gauntlet", cleared, total: GAUNTLET_TIERS.length };
+  } else if (kind === "survival") {
+    const streak = Math.max(0, Math.trunc(Number(mode.streak) || 0));
+    if (streak > modeStatsCache.survivalBestStreak) {
+      modeStatsCache = { ...modeStatsCache, survivalBestStreak: streak };
+      safeLocalStorage.set(STORAGE_KEYS.modeStats, JSON.stringify(modeStatsCache));
+    }
+    pendingModeShare = { kind: "survival", best: Math.max(streak, modeStatsCache.survivalBestStreak) };
+  } else if (kind === "timeAttack") {
+    const scored = scoreTimeAttack({ won, durationMs: latest.durationMs });
+    if (TIME_ATTACK_MEDAL_RANK[scored.medal] > TIME_ATTACK_MEDAL_RANK[modeStatsCache.timeAttackBestMedal]) {
+      modeStatsCache = { ...modeStatsCache, timeAttackBestMedal: scored.medal };
+      safeLocalStorage.set(STORAGE_KEYS.modeStats, JSON.stringify(modeStatsCache));
+    }
+    pendingModeShare = { kind: "timeAttack", medal: scored.medal, durationMs: scored.durationMs };
+  }
+
+  recordProgressionResult({
+    difficulty,
+    won,
+    mode: progressionMode,
+    durationMs: latest.durationMs,
+    puzzlePackCompleted,
+  });
+}
+
+// A puzzle pack is "complete" once every puzzle in it has at least 1 star (solved). Drives the
+// Phase 2 puzzle-pack-complete achievement hook. Pure read over the progress cache.
+function isPuzzlePackComplete(packId) {
+  const pack = PUZZLE_PACKS.find((entry) => entry.id === packId);
+  if (!pack) return false;
+  return pack.puzzles.every((puzzle) => (puzzleProgressCache[puzzle.id] || 0) >= 1);
+}
+
+function packLabel(packId, locale) {
+  const pack = PUZZLE_PACKS.find((entry) => entry.id === packId);
+  if (!pack) return "";
+  return locale === "en" ? pack.en : pack.ko;
+}
+
+// Applies one finished match to the offline progression state, persists it, and surfaces any
+// level-up / achievement unlock with a non-blocking toast. Pure math lives in shared/progression;
+// this wrapper is the only place that writes STORAGE_KEYS.progression.
+function recordProgressionResult(facts) {
+  const previousLevel = progressionCache.level;
+  const next = applyMatchResult(progressionCache, { ...facts, now: () => new Date() });
+  const newAchievements = Array.isArray(next.newAchievements) ? next.newAchievements : [];
+  // Strip the transient newAchievements field before persisting the canonical blob.
+  const { newAchievements: _ignored, ...persistable } = next;
+  progressionCache = normalizeProgression(persistable);
+  safeLocalStorage.set(STORAGE_KEYS.progression, JSON.stringify(progressionCache));
+  if (progressionCache.level > previousLevel) {
+    showProgressionToast(t("progression.levelUpFlash", { level: String(progressionCache.level) }));
+    flashLevelUp();
+  }
+  for (const id of newAchievements) {
+    const label = achievementLabel(id);
+    if (label) {
+      showProgressionToast(t("progression.achievementUnlocked", { name: label }));
+    }
+  }
+}
+
+function achievementLabel(id) {
+  const achievement = ACHIEVEMENTS.find((entry) => entry.id === id);
+  if (!achievement) return "";
+  return t(`achievement.${id}`);
+}
+
+// One-shot level-up glow on the home meta XP bar. Retriggers the keyframe by removing the class,
+// forcing a reflow, then re-adding it. Purely decorative: the reduced-motion catch-all in
+// styles.css neutralizes the animation for sensitive viewers, and the class is cosmetic-only so it
+// never gates any gameplay/logic (does not slow chained play).
+function flashLevelUp() {
+  const bar = refs.homeMetaXp;
+  if (!bar) return;
+  bar.classList.remove("leveled");
+  // Reading offsetWidth forces a reflow so re-adding the class replays the animation.
+  void bar.offsetWidth;
+  bar.classList.add("leveled");
+}
+
+// Non-blocking progression toast built with createElement + textContent only (SAST-clean: no
+// innerHTML/inline handlers). Auto-dismisses; multiple toasts stack in the shared container.
+let progressionToastContainer = null;
+function showProgressionToast(message) {
+  if (!message) return;
+  if (!progressionToastContainer) {
+    progressionToastContainer = document.createElement("div");
+    progressionToastContainer.className = "progression-toast-stack";
+    progressionToastContainer.setAttribute("aria-live", "polite");
+    document.body.appendChild(progressionToastContainer);
+  }
+  const toast = document.createElement("div");
+  toast.className = "progression-toast";
+  toast.textContent = message;
+  progressionToastContainer.appendChild(toast);
+  window.setTimeout(() => {
+    toast.remove();
+  }, 4200);
+}
+
+// Compose + copy the mode-specific ko/en share text for the just-finished solo-mode game. The
+// pure ko builders live in shared/solo-modes.js; the en variants are composed here via i18n so
+// the module stays a node-testable ko-first builder. SAST-clean (no DOM-string sinks).
+async function shareModeResult() {
+  const share = pendingModeShare;
+  if (!share) return;
+  const url = `${PAGES_PUBLIC_URL}?mode=solo`;
+  let text = "";
+  if (activeLocale() === "en") {
+    if (share.kind === "puzzle") {
+      const stars = "★".repeat(share.stars) + "☆".repeat(3 - share.stars);
+      text = `Sequence Arena puzzle · ${share.packKo} · ${share.puzzleKo}\n${stars} · ${share.moveCount} moves (par ${share.par})\n${url}`;
+    } else if (share.kind === "gauntlet") {
+      text = `Sequence Arena Gauntlet · cleared ${share.cleared}/${share.total} stages\n${url}`;
+    } else if (share.kind === "survival") {
+      text = `Sequence Arena Survival · best ${share.best}-win streak\n${url}`;
+    } else if (share.kind === "timeAttack") {
+      const seconds = Math.max(0, Math.round(share.durationMs / 1000));
+      text = `Sequence Arena Time Attack · ${medalLabel(share.medal)} · ${seconds}s\n${url}`;
+    }
+  } else if (share.kind === "puzzle") {
+    text = formatPuzzleShareText({ packKo: share.packKo, puzzleKo: share.puzzleKo, stars: share.stars, par: share.par, moveCount: share.moveCount, url });
+  } else if (share.kind === "gauntlet") {
+    text = formatGauntletShareText({ cleared: share.cleared, total: share.total, url });
+  } else if (share.kind === "survival") {
+    text = formatSurvivalShareText({ best: share.best, url });
+  } else if (share.kind === "timeAttack") {
+    text = formatTimeAttackShareText({ medal: share.medal, durationMs: share.durationMs, url });
+  }
+  if (!text) return;
+  // Mirrored for ui-regression like the daily share, since clipboard-read is policy-denied.
+  window.__sequenceLastModeShareText = text;
+  const copied = await writeToClipboard(text);
+  setFlashMessage(copied ? t("share.modeCopied") : t("share.shareFailed"));
+  if (copied) {
+    playSound("tap");
+  }
+  render();
 }
 
 async function shareDailyResult() {
@@ -3301,6 +3703,7 @@ function renderDailySurfaces() {
       refs.dailyBadge.textContent = `데일리 챌린지 #${clientState.dailyChallenge.number}`;
     }
   }
+  renderHomeMetaCard();
 }
 
 function normalizeMatchHistory(rawHistory) {
@@ -4132,6 +4535,16 @@ function renderStatus() {
     // captured. Networked games have no replay (client lacks full state).
     refs.saveReplayBtn.hidden = !(winnerMeta && clientState.localMode && pendingReplayToSave);
   }
+  if (refs.viewAnalysisBtn) {
+    // The offline analysis is offered for the same finished local games that carry a replay —
+    // it opens the replay modal preloaded with the just-finished game + its moments/eval bar.
+    refs.viewAnalysisBtn.hidden = !(winnerMeta && clientState.localMode && pendingReplayToSave);
+  }
+  if (refs.shareModeBtn) {
+    // The mode-result share is offered only for a finished solo-mode game (puzzle/gauntlet/
+    // survival/time-attack) that staged share text on finish.
+    refs.shareModeBtn.hidden = !(winnerMeta && clientState.localMode && pendingModeShare);
+  }
   if (winnerMeta) {
     const voteCount = clientState.rematchVoteSeatIndexes.length;
     const requiredVotes = clientState.rematchRequiredVotes || 0;
@@ -4515,6 +4928,9 @@ refs.dailyChallengeBtn?.addEventListener("click", () => startOfflineSolo({ daily
 refs.welcomeDailyBtn?.addEventListener("click", () => startOfflineSolo({ daily: true }));
 refs.shareDailyBtn?.addEventListener("click", () => {
   shareDailyResult();
+});
+refs.shareModeBtn?.addEventListener("click", () => {
+  shareModeResult();
 });
 refs.welcomeTutorialBtn?.addEventListener("click", startTutorial);
 refs.helpTutorialBtn?.addEventListener("click", startTutorial);
@@ -5068,6 +5484,7 @@ function openModalElement() {
   if (refs.helpModal && !refs.helpModal.hidden) return refs.helpModal;
   if (refs.statsModal && !refs.statsModal.hidden) return refs.statsModal;
   if (refs.replayModal && !refs.replayModal.hidden) return refs.replayModal;
+  if (refs.modesModal && !refs.modesModal.hidden) return refs.modesModal;
   return null;
 }
 
@@ -5123,8 +5540,180 @@ function closeStatsModal() {
 }
 
 function statsDifficultyLabel(key) {
-  const mapped = { easy: "statsDiff.easy", smart: "statsDiff.smart", aggressive: "statsDiff.aggressive", master: "statsDiff.master" }[key];
+  const mapped = { easy: "statsDiff.easy", smart: "statsDiff.smart", aggressive: "statsDiff.aggressive", master: "statsDiff.master", grandmaster: "statsDiff.grandmaster" }[key];
   return mapped ? t(mapped) : key;
+}
+
+// --- solo modes / puzzle picker --------------------------------------------------------
+
+// Fixed bot tiers for the streak/time modes (documented, deterministic). SMART is the fair,
+// reproducible baseline the daily challenge also uses.
+const BOT_MODE_DEFAULT_SURVIVAL = "smart";
+const BOT_MODE_DEFAULT_TIME_ATTACK = "smart";
+
+let modesPreviousFocus = null;
+
+function openModesModal() {
+  if (!refs.modesModal) return;
+  modesPreviousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+  renderModesModal();
+  refs.modesModal.hidden = false;
+  document.body.classList.add("help-open");
+  refs.modesBtn?.setAttribute("aria-expanded", "true");
+  setBackgroundInert(true, refs.modesModal);
+  refs.modesCloseBtn?.focus();
+}
+
+function closeModesModal() {
+  if (!refs.modesModal) return;
+  refs.modesModal.hidden = true;
+  document.body.classList.remove("help-open");
+  refs.modesBtn?.setAttribute("aria-expanded", "false");
+  setBackgroundInert(false, refs.modesModal);
+  if (modesPreviousFocus && modesPreviousFocus.isConnected) {
+    modesPreviousFocus.focus();
+  } else {
+    refs.modesBtn?.focus();
+  }
+}
+
+// Build the mode + puzzle picker. DOM assembled with createElement + textContent/setAttribute
+// only (SAST forbids innerHTML/inline handlers); actions are wired via addEventListener.
+function renderModesModal() {
+  renderModesModeList();
+  renderModesPuzzleList();
+}
+
+function renderModesModeList() {
+  const container = refs.modesModeList;
+  if (!container) return;
+  container.replaceChildren();
+  const modes = [
+    { kind: "gauntlet", title: t("modes.gauntletTitle"), desc: t("modes.gauntletDesc"), best: t("modes.gauntletBest", { cleared: String(modeStatsCache.gauntletBestCleared), total: String(GAUNTLET_TIERS.length) }) },
+    { kind: "survival", title: t("modes.survivalTitle"), desc: t("modes.survivalDesc"), best: t("modes.survivalBest", { streak: String(modeStatsCache.survivalBestStreak) }) },
+    { kind: "timeAttack", title: t("modes.timeAttackTitle"), desc: t("modes.timeAttackDesc"), best: t("modes.timeAttackBest", { medal: medalLabel(modeStatsCache.timeAttackBestMedal) }) },
+  ];
+  for (const mode of modes) {
+    const card = document.createElement("button");
+    card.type = "button";
+    card.className = "modes-card modes-mode-card";
+    const title = document.createElement("span");
+    title.className = "modes-card-title";
+    title.textContent = mode.title;
+    const desc = document.createElement("span");
+    desc.className = "modes-card-desc";
+    desc.textContent = mode.desc;
+    const best = document.createElement("span");
+    best.className = "modes-card-best";
+    best.textContent = mode.best;
+    card.append(title, desc, best);
+    card.addEventListener("click", () => startSoloMode(mode.kind));
+    container.appendChild(card);
+  }
+}
+
+function renderModesPuzzleList() {
+  const container = refs.modesPuzzleList;
+  if (!container) return;
+  container.replaceChildren();
+  for (const pack of PUZZLE_PACKS) {
+    const packWrap = document.createElement("div");
+    packWrap.className = "modes-pack";
+    const packHead = document.createElement("h4");
+    packHead.className = "modes-pack-title";
+    packHead.textContent = activeLocale() === "en" ? pack.en : pack.ko;
+    const packProgress = document.createElement("span");
+    packProgress.className = "modes-pack-progress";
+    const solved = pack.puzzles.filter((puzzle) => (puzzleProgressCache[puzzle.id] || 0) >= 1).length;
+    packProgress.textContent = t("modes.packProgress", { solved: String(solved), total: String(pack.puzzles.length) });
+    packHead.appendChild(packProgress);
+    packWrap.appendChild(packHead);
+    for (const puzzle of pack.puzzles) {
+      const card = document.createElement("button");
+      card.type = "button";
+      card.className = "modes-card modes-puzzle-card";
+      const title = document.createElement("span");
+      title.className = "modes-card-title";
+      title.textContent = t(`puzzle.name.${puzzle.id}`);
+      const stars = document.createElement("span");
+      stars.className = "modes-card-stars";
+      stars.setAttribute("role", "img");
+      const earned = puzzleProgressCache[puzzle.id] || 0;
+      // Individual star glyphs so earned stars can carry the one-shot reveal animation (decorative;
+      // reduced-motion neutralizes it). Built with createElement + textContent (SAST-clean).
+      for (let index = 0; index < 3; index += 1) {
+        const star = document.createElement("span");
+        const isEarned = index < earned;
+        star.className = `star${isEarned ? " earned" : ""}`;
+        star.setAttribute("aria-hidden", "true");
+        star.textContent = isEarned ? "★" : "☆";
+        stars.appendChild(star);
+      }
+      stars.setAttribute("aria-label", t("modes.starsAria", { earned: String(earned) }));
+      const par = document.createElement("span");
+      par.className = "modes-card-best";
+      par.textContent = t("modes.par", { par: String(puzzle.par) });
+      card.append(title, stars, par);
+      card.addEventListener("click", () => startPuzzle(puzzle.id));
+      packWrap.appendChild(card);
+    }
+    container.appendChild(packWrap);
+  }
+}
+
+function medalLabel(medal) {
+  return t(`modes.medal.${medal || "none"}`);
+}
+
+// Start a puzzle: replay seed+setupMoves through the seeded runtime before handing control to the
+// player, carrying the puzzle's mode metadata into finish so scoring/progression fire correctly.
+function startPuzzle(puzzleId) {
+  const puzzle = loadPuzzle(puzzleId);
+  if (!puzzle) return;
+  closeModesModal();
+  activeModeContext = { kind: "puzzle", puzzleId: puzzle.id, packId: puzzle.packId, par: puzzle.par };
+  startSoloContent({
+    difficulty: puzzle.difficulty,
+    seed: puzzle.seed,
+    setupMoves: puzzle.setupMoves,
+    mode: { kind: "puzzle", puzzleId: puzzle.id, packId: puzzle.packId, par: puzzle.par, setupMoves: puzzle.setupMoves },
+    flash: t("modes.puzzleStartFlash", { name: t(`puzzle.name.${puzzle.id}`) }),
+  });
+}
+
+// Start a solo mode (gauntlet stage 1 / survival game 1 / a time-attack game). Each is a seeded
+// solo game; the mode's own progress (best cleared / streak / medal) is tracked at finish.
+function startSoloMode(kind) {
+  closeModesModal();
+  if (kind === "gauntlet") {
+    const run = buildGauntletRun(`gauntlet-${Date.now().toString(36)}`);
+    const stage = currentGauntletStage(run);
+    activeModeContext = { kind: "gauntlet", run, stageIndex: run.stageIndex };
+    startSoloContent({
+      difficulty: stage.difficulty,
+      seed: stage.seed,
+      mode: { kind: "gauntlet", stageCleared: 0, difficulty: stage.difficulty },
+      flash: t("modes.gauntletStartFlash", { tier: statsDifficultyLabel(stage.difficulty) }),
+    });
+  } else if (kind === "survival") {
+    const state = createSurvivalState(`survival-${Date.now().toString(36)}`, BOT_MODE_DEFAULT_SURVIVAL);
+    activeModeContext = { kind: "survival", state, gameIndex: 0 };
+    startSoloContent({
+      difficulty: state.difficulty,
+      seed: `s-${state.seed}-0`,
+      mode: { kind: "survival", streak: 0, difficulty: state.difficulty },
+      flash: t("modes.survivalStartFlash"),
+    });
+  } else if (kind === "timeAttack") {
+    const seed = `timeattack-${Date.now().toString(36)}`;
+    activeModeContext = { kind: "timeAttack", seed };
+    startSoloContent({
+      difficulty: BOT_MODE_DEFAULT_TIME_ATTACK,
+      seed,
+      mode: { kind: "timeAttack" },
+      flash: t("modes.timeAttackStartFlash"),
+    });
+  }
 }
 
 function buildStatsSummaryItem(term, value) {
@@ -5297,7 +5886,9 @@ function renderStatsModal() {
     refs.statsCalendarMonths.replaceChildren(...labels);
   }
 
+  renderStatsMetaSection();
   renderWeeklyLeaderboard(todayKey);
+  renderProgressionSection();
 
   if (refs.statsEmpty) {
     refs.statsEmpty.hidden = hasAnyHistory;
@@ -5317,6 +5908,325 @@ function renderStatsModal() {
   }
 }
 
+// Localized cosmetic label (falls back to the catalog ko text if the i18n key is absent).
+function cosmeticLabel(id) {
+  return t(`cosmetic.${id}`);
+}
+
+// Renders the progression section of the stats modal: an overview (level/rating/xp-to-next +
+// win-loss), grouped unlocked/locked achievements, and a per-category cosmetic picker. All DOM is
+// built with createElement + textContent/setAttribute (SAST-clean). Cosmetics are visual-only:
+// selecting one only writes progressionCache.cosmetic + re-applies chip/board/title styling.
+function renderProgressionSection() {
+  const view = buildProgressionView(progressionCache);
+
+  if (refs.statsProgressionOverview) {
+    const items = [
+      buildStatsSummaryItem(t("progression.level"), `Lv.${view.level}`),
+      buildStatsSummaryItem(t("progression.rating"), String(view.rating)),
+      buildStatsSummaryItem(t("progression.xpToNext"), `${view.xpToNext} XP`),
+      buildStatsSummaryItem(
+        t("progression.record"),
+        view.games ? `${view.wins}${t("progression.wins")} ${view.losses}${t("progression.losses")}` : "—"
+      ),
+      buildStatsSummaryItem(
+        t("progression.achievementsCount"),
+        `${view.unlockedCount} / ${view.totalAchievements}`
+      ),
+    ];
+    const overview = document.createElement("dl");
+    overview.className = "stats-summary-grid progression-overview-grid";
+    overview.replaceChildren(...items);
+    const bar = document.createElement("div");
+    bar.className = "progression-xp-bar";
+    bar.setAttribute("role", "progressbar");
+    bar.setAttribute("aria-valuemin", "0");
+    bar.setAttribute("aria-valuemax", "100");
+    bar.setAttribute("aria-valuenow", String(view.levelProgress));
+    bar.setAttribute("aria-label", t("progression.xpBarAria", { level: String(view.level) }));
+    const fill = document.createElement("div");
+    fill.className = "progression-xp-fill";
+    fill.style.width = `${view.levelProgress}%`;
+    bar.appendChild(fill);
+    refs.statsProgressionOverview.replaceChildren(overview, bar);
+  }
+
+  if (refs.statsProgressionAchievements) {
+    const list = document.createElement("ul");
+    list.className = "progression-achievement-list";
+    // Unlocked first, then locked — matches the "earned" emphasis players expect.
+    for (const achievement of [...view.unlockedAchievements, ...view.lockedAchievements]) {
+      const li = document.createElement("li");
+      li.className = `progression-achievement${achievement.unlocked ? " unlocked" : " locked"}`;
+      const icon = document.createElement("span");
+      icon.className = "progression-achievement-icon";
+      icon.setAttribute("aria-hidden", "true");
+      icon.textContent = achievement.unlocked ? "🏅" : "🔒";
+      const label = document.createElement("span");
+      label.className = "progression-achievement-label";
+      label.textContent = t(`achievement.${achievement.id}`);
+      li.append(icon, label);
+      li.setAttribute(
+        "aria-label",
+        `${label.textContent}: ${achievement.unlocked ? t("progression.unlocked") : t("progression.locked")}`
+      );
+      list.appendChild(li);
+    }
+    refs.statsProgressionAchievements.replaceChildren(list);
+  }
+
+  if (refs.statsProgressionCosmetics) {
+    const groups = [];
+    for (const category of ["chipStyle", "boardTheme", "title"]) {
+      const group = document.createElement("div");
+      group.className = "progression-cosmetic-group";
+      const heading = document.createElement("h5");
+      heading.className = "progression-cosmetic-heading";
+      heading.textContent = t(`progression.cosmetic.${category}`);
+      group.appendChild(heading);
+      const options = document.createElement("div");
+      options.className = "progression-cosmetic-options";
+      for (const cosmetic of view.cosmetics.filter((c) => c.category === category)) {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = `progression-cosmetic-option${cosmetic.selected ? " selected" : ""}${cosmetic.owned ? "" : " locked"}`;
+        button.textContent = cosmeticLabel(cosmetic.id);
+        button.disabled = !cosmetic.owned;
+        button.setAttribute("aria-pressed", cosmetic.selected ? "true" : "false");
+        if (!cosmetic.owned) {
+          button.title = t("progression.cosmeticLocked");
+          button.setAttribute("aria-label", `${button.textContent}: ${t("progression.locked")}`);
+        }
+        button.addEventListener("click", () => selectCosmetic(category, cosmetic.id));
+        options.appendChild(button);
+      }
+      group.appendChild(options);
+      groups.push(group);
+    }
+    refs.statsProgressionCosmetics.replaceChildren(...groups);
+  }
+}
+
+// Applies a cosmetic selection: persists the choice (visual-only, no gameplay effect) and
+// re-renders the modal + board so the new chip/board/title styling takes effect.
+function selectCosmetic(category, cosmeticId) {
+  const owned = COSMETICS.some((c) => c.id === cosmeticId && c.category === category);
+  if (!owned) return;
+  const nextCosmetic = { ...progressionCache.cosmetic, [category]: cosmeticId };
+  progressionCache = normalizeProgression({ ...progressionCache, cosmetic: nextCosmetic });
+  safeLocalStorage.set(STORAGE_KEYS.progression, JSON.stringify(progressionCache));
+  applyCosmeticSelection();
+  renderProgressionSection();
+  playSound("tap");
+}
+
+// Applies the currently-selected cosmetics to the document as data attributes. Board render +
+// styles.css key off these (visual-only). Defensive: only ever sets string identifiers.
+function applyCosmeticSelection() {
+  const selection = progressionCache.cosmetic || {};
+  const root = document.documentElement;
+  if (selection.chipStyle) root.setAttribute("data-chip-style", selection.chipStyle);
+  if (selection.boardTheme) root.setAttribute("data-board-theme", selection.boardTheme);
+  if (selection.title) root.setAttribute("data-player-title", selection.title);
+}
+
+async function shareProgressionResult() {
+  const text = formatProgressionShareText({
+    level: progressionCache.level,
+    rating: progressionCache.rating,
+    wins: progressionCache.wins,
+    games: progressionCache.games,
+    url: PAGES_PUBLIC_URL,
+  });
+  window.__sequenceLastProgressionShareText = text;
+  const copied = await writeToClipboard(text);
+  setFlashMessage(copied ? t("progression.shareCopied") : t("share.shareFailed"));
+  if (copied) {
+    playSound("tap");
+  }
+  render();
+}
+
+// --- Home meta-layer (player card) -----------------------------------------------------
+
+// Build the pure home meta-view from the current localStorage caches + today's key. The pure
+// builder in client/stats-view.js does all the work; this just injects the live caches + clock so
+// the model stays deterministic/testable while the UI reads the real player state.
+function currentHomeMetaView() {
+  const todayKey = dailyDateKey();
+  return buildHomeMetaView({
+    progression: progressionCache,
+    dailyStreak: computeDailyStreak(dailyResultsCache, todayKey),
+    weekly: dailyResultsCache,
+    puzzleProgress: puzzleProgressCache,
+    modeStats: modeStatsCache,
+    now: todayKey,
+  });
+}
+
+// Localized rank title for the active locale (ko catalog is the source; en via i18n key).
+function rankTitleLabel(rankTitle) {
+  if (!rankTitle) return "";
+  const key = `meta.rank.${rankTitle.id}`;
+  const label = t(key);
+  return label === key ? (activeLocale() === "en" ? rankTitle.en : rankTitle.ko) : label;
+}
+
+// Localized name for an achievement/cosmetic catalog id, falling back to the model's ko/en text.
+function metaEntryLabel(prefix, entry) {
+  if (!entry) return "";
+  const key = `${prefix}.${entry.id}`;
+  const label = t(key);
+  return label === key ? (activeLocale() === "en" ? entry.en : entry.ko) : label;
+}
+
+// Localized today's-goal label. The pure model already carries ko/en, but we route reach-level
+// through the interpolated i18n key so the level number is localized consistently.
+function metaGoalLabel(goal) {
+  if (goal.id.startsWith("reach-level")) {
+    return t("meta.goal.reach-level", { level: String(goal.target ?? goal.id.split("-").pop()) });
+  }
+  const key = `meta.goal.${goal.id}`;
+  const label = t(key);
+  return label === key ? (activeLocale() === "en" ? goal.en : goal.ko) : label;
+}
+
+// Render the compact home player card. DOM built with createElement + textContent/setAttribute
+// only (SAST-clean). Hidden until the player has any progression/daily footprint so a brand-new
+// visitor still sees the clean gateway first.
+function renderHomeMetaCard() {
+  if (!refs.homeMetaCard) return;
+  const view = currentHomeMetaView();
+  const hasFootprint = view.games > 0 || view.dailyStreak.best > 0 || view.solvedPuzzles > 0;
+  refs.homeMetaCard.hidden = !hasFootprint;
+  if (!hasFootprint) return;
+
+  if (refs.homeMetaRank) {
+    refs.homeMetaRank.textContent = `${rankTitleLabel(view.rankTitle)} · Lv.${view.level}`;
+  }
+  if (refs.homeMetaStats) {
+    const items = [
+      buildStatsSummaryItem(t("meta.rating"), String(view.rating)),
+      buildStatsSummaryItem(
+        t("meta.dailyStreak"),
+        t("meta.dailyStreakValue", { current: String(view.dailyStreak.current), best: String(view.dailyStreak.best) })
+      ),
+      buildStatsSummaryItem(
+        t("meta.thisWeek"),
+        view.thisWeek.played > 0
+          ? t("meta.thisWeekValue", { wins: String(view.thisWeek.wins), rank: String(view.thisWeek.rank) })
+          : t("meta.thisWeekEmpty")
+      ),
+      buildStatsSummaryItem(
+        t("meta.achievementsCount", { unlocked: String(view.unlockedCount), total: String(view.totalAchievements) }),
+        t("meta.puzzlesCount", { solved: String(view.solvedPuzzles), total: String(view.totalPuzzles) })
+      ),
+    ];
+    const grid = document.createElement("dl");
+    grid.className = "stats-summary-grid home-meta-grid";
+    grid.replaceChildren(...items);
+    refs.homeMetaStats.replaceChildren(grid);
+  }
+  if (refs.homeMetaXp && refs.homeMetaXpFill) {
+    refs.homeMetaXp.setAttribute("aria-valuenow", String(view.levelProgress));
+    refs.homeMetaXp.setAttribute("aria-label", t("progression.xpBarAria", { level: String(view.level) }));
+    refs.homeMetaXpFill.style.width = `${view.levelProgress}%`;
+  }
+  if (refs.homeMetaGoalsList) {
+    const items = view.goals.map((goal) => {
+      const li = document.createElement("li");
+      li.className = `home-meta-goal${goal.done ? " done" : ""}`;
+      const icon = document.createElement("span");
+      icon.className = "home-meta-goal-icon";
+      icon.setAttribute("aria-hidden", "true");
+      icon.textContent = goal.done ? "✅" : "▫️";
+      const label = document.createElement("span");
+      label.className = "home-meta-goal-label";
+      label.textContent = metaGoalLabel(goal);
+      li.append(icon, label);
+      li.setAttribute("aria-label", `${label.textContent}: ${goal.done ? t("meta.goalDone") : t("meta.goalTodo")}`);
+      return li;
+    });
+    refs.homeMetaGoalsList.replaceChildren(...items);
+  }
+}
+
+// Render the fuller meta section inside the stats modal: an overview (level/rank/rating/streak/
+// this-week) plus a "next goals" block (next achievements in progress + next unlock). SAST-clean.
+function renderStatsMetaSection() {
+  const view = currentHomeMetaView();
+  if (refs.statsMetaOverview) {
+    const items = [
+      buildStatsSummaryItem(t("meta.rank"), rankTitleLabel(view.rankTitle)),
+      buildStatsSummaryItem(t("meta.level"), `Lv.${view.level}`),
+      buildStatsSummaryItem(t("meta.rating"), String(view.rating)),
+      buildStatsSummaryItem(
+        t("meta.dailyStreak"),
+        t("meta.dailyStreakValue", { current: String(view.dailyStreak.current), best: String(view.dailyStreak.best) })
+      ),
+      buildStatsSummaryItem(
+        t("meta.thisWeek"),
+        view.thisWeek.played > 0
+          ? t("meta.thisWeekValue", { wins: String(view.thisWeek.wins), rank: String(view.thisWeek.rank) })
+          : t("meta.thisWeekEmpty")
+      ),
+    ];
+    const grid = document.createElement("dl");
+    grid.className = "stats-summary-grid";
+    grid.replaceChildren(...items);
+    refs.statsMetaOverview.replaceChildren(grid);
+  }
+  if (refs.statsMetaNext) {
+    const wrap = document.createElement("div");
+    wrap.className = "stats-meta-next-grid";
+    if (view.nextAchievements.length > 0) {
+      const item = document.createElement("div");
+      item.className = "stats-meta-next-item";
+      const label = document.createElement("span");
+      label.className = "stats-meta-next-label";
+      label.textContent = t("meta.nextAchievement");
+      const value = document.createElement("span");
+      value.className = "stats-meta-next-value";
+      value.textContent = view.nextAchievements.map((a) => metaEntryLabel("achievement", a)).join(" · ");
+      item.append(label, value);
+      wrap.appendChild(item);
+    }
+    const unlockItem = document.createElement("div");
+    unlockItem.className = "stats-meta-next-item";
+    const unlockLabel = document.createElement("span");
+    unlockLabel.className = "stats-meta-next-label";
+    unlockLabel.textContent = t("meta.nextUnlock");
+    const unlockValue = document.createElement("span");
+    unlockValue.className = "stats-meta-next-value";
+    unlockValue.textContent = view.nextUnlock ? metaEntryLabel("cosmetic", view.nextUnlock) : t("meta.nextUnlockNone");
+    unlockItem.append(unlockLabel, unlockValue);
+    wrap.appendChild(unlockItem);
+    refs.statsMetaNext.replaceChildren(wrap);
+  }
+}
+
+// Combined profile share: level + rank title + rating + daily streak + achievement count as ko/en
+// text (ko composed by the pure formatMetaProfileShareText; en via i18n). Mirrors shareProgression.
+async function shareMetaProfile() {
+  const view = currentHomeMetaView();
+  const text = formatMetaProfileShareText({
+    level: view.level,
+    rating: view.rating,
+    rankTitleKo: activeLocale() === "en" ? view.rankTitle.en : view.rankTitle.ko,
+    dailyStreakCurrent: view.dailyStreak.current,
+    achievementsUnlocked: view.unlockedCount,
+    achievementsTotal: view.totalAchievements,
+    url: PAGES_PUBLIC_URL,
+  });
+  window.__sequenceLastMetaShareText = text;
+  const copied = await writeToClipboard(text);
+  setFlashMessage(copied ? t("meta.shareCopied") : t("share.shareFailed"));
+  if (copied) {
+    playSound("tap");
+  }
+  render();
+}
+
 refs.helpBtn?.addEventListener("click", openHelpModal);
 refs.helpCloseBtn?.addEventListener("click", closeHelpModal);
 refs.statsBtn?.addEventListener("click", openStatsModal);
@@ -5327,11 +6237,25 @@ refs.statsModal?.addEventListener("click", (event) => {
     closeStatsModal();
   }
 });
+refs.modesBtn?.addEventListener("click", openModesModal);
+refs.modesCloseBtn?.addEventListener("click", closeModesModal);
+refs.modesModal?.addEventListener("click", (event) => {
+  if (event.target instanceof HTMLElement && event.target.dataset.modesDismiss != null) {
+    closeModesModal();
+  }
+});
 refs.statsEmptyDailyBtn?.addEventListener("click", () => {
   closeStatsModal();
   startOfflineSolo({ daily: true });
 });
 refs.statsWeeklyShareBtn?.addEventListener("click", shareWeeklyResult);
+refs.statsProgressionShareBtn?.addEventListener("click", shareProgressionResult);
+refs.statsMetaShareBtn?.addEventListener("click", shareMetaProfile);
+refs.homeMetaShareBtn?.addEventListener("click", shareMetaProfile);
+refs.homeMetaDailyBtn?.addEventListener("click", () => startOfflineSolo({ daily: true }));
+refs.homeMetaModesBtn?.addEventListener("click", openModesModal);
+refs.homeMetaStatsBtn?.addEventListener("click", openStatsModal);
+applyCosmeticSelection();
 
 // --- Replay system UI ----------------------------------------------------------------
 //
@@ -5441,6 +6365,7 @@ function renderReplaySnapshot() {
   if (refs.replaySrSummary) {
     refs.replaySrSummary.textContent = `리플레이 ${activeReplayPlayback.index}번째 수, 전체 ${total - 1}수. ${statusText}`;
   }
+  renderReplayEvalBar();
 }
 
 // Load a validated record into the player and show its first state.
@@ -5457,9 +6382,100 @@ function startReplayPlayback(record) {
     setReplayImportFeedback("리플레이를 재생하는 중 오류가 발생했습니다.");
     return false;
   }
-  activeReplayPlayback = { snapshots: result.snapshots, index: 0, record: clean };
+  // Deterministic offline analysis (fixed reference depth) for the eval bar + moments list.
+  // Purely explanatory — it never touches gameplay. Failures degrade gracefully to no bar.
+  let analysis = { evalTimeline: [], moments: [] };
+  try {
+    analysis = analyzeReplay(clean);
+  } catch {
+    analysis = { evalTimeline: [], moments: [] };
+  }
+  activeReplayPlayback = { snapshots: result.snapshots, index: 0, record: clean, analysis };
+  renderReplayAnalysis();
   renderReplaySnapshot();
   return true;
+}
+
+// Map a raw evaluator score (root = Ruby/team A perspective) to a 0..100 percentage for the
+// eval bar. Squashed through a smooth tanh-like ratio so large tactical swings saturate near
+// the ends without a runaway scale. Pure, deterministic, clock-free.
+function evalToPercent(score) {
+  if (!Number.isFinite(score)) return 50;
+  const scale = 120_000; // ~an open-four advantage maps to a strong (not maxed) lean
+  const squashed = score / (Math.abs(score) + scale);
+  return Math.round((squashed + 1) * 50);
+}
+
+// Render the eval bar for the current playback step. Snapshot index 0 = initial deal (neutral
+// 50%); index i (>=1) reflects evalTimeline[i-1] (the eval AFTER ply i-1). Reduced-motion +
+// forced-colors friendly: the fill width is set inline and CSS owns the transition/hi-contrast.
+function renderReplayEvalBar() {
+  if (!refs.replayEvalBar || !refs.replayEvalFill || !activeReplayPlayback) return;
+  const timeline = activeReplayPlayback.analysis?.evalTimeline || [];
+  if (timeline.length === 0) {
+    refs.replayEvalBar.hidden = true;
+    return;
+  }
+  refs.replayEvalBar.hidden = false;
+  const step = activeReplayPlayback.index;
+  let score = 0;
+  if (step >= 1) {
+    const entry = timeline[Math.min(step - 1, timeline.length - 1)];
+    score = typeof entry === "number" ? entry : entry?.eval ?? 0;
+  }
+  const percent = evalToPercent(score);
+  refs.replayEvalFill.style.width = `${percent}%`;
+  const lean = percent > 55 ? "루비 우세" : percent < 45 ? "코발트 우세" : "균형";
+  refs.replayEvalBar.setAttribute("aria-label", `국면 우세 막대: 루비 ${percent}% · ${lean}`);
+}
+
+// Render the post-game moments list + a one-line summary. i18n KEYS from shared/analysis.js
+// are resolved to the active locale here; the DOM is built with createElement/textContent
+// only (SAST-clean). Stepping to a flagged moment's ply is offered as a jump button.
+function renderReplayAnalysis() {
+  if (!refs.replayAnalysisSection || !activeReplayPlayback) return;
+  const moments = activeReplayPlayback.analysis?.moments || [];
+  if (!refs.replayAnalysisMoments) return;
+  if (moments.length === 0) {
+    refs.replayAnalysisSection.hidden = false;
+    refs.replayAnalysisMoments.replaceChildren();
+    if (refs.replayAnalysisSummary) {
+      refs.replayAnalysisSummary.textContent = t("analysis.summary.clean");
+    }
+    return;
+  }
+  refs.replayAnalysisSection.hidden = false;
+  if (refs.replayAnalysisSummary) {
+    refs.replayAnalysisSummary.textContent = `${t("analysis.summary.count")} ${moments.length}`;
+  }
+  const items = moments.map((moment) => {
+    const li = document.createElement("li");
+    li.className = "replay-moment";
+
+    const kindLabel = document.createElement("span");
+    kindLabel.className = "replay-moment-kind";
+    kindLabel.textContent = t(moment.ko);
+
+    const plyLabel = document.createElement("span");
+    plyLabel.className = "replay-moment-ply";
+    plyLabel.textContent = `${moment.ply + 1}${t("analysis.moment.plySuffix")}`;
+
+    const jumpBtn = document.createElement("button");
+    jumpBtn.type = "button";
+    jumpBtn.className = "ghost-button replay-moment-jump";
+    jumpBtn.textContent = t("analysis.moment.jump");
+    jumpBtn.setAttribute("aria-label", `${t(moment.ko)} ${moment.ply + 1}${t("analysis.moment.plySuffix")}`);
+    jumpBtn.addEventListener("click", () => {
+      if (!activeReplayPlayback) return;
+      const total = activeReplayPlayback.snapshots.length;
+      activeReplayPlayback.index = Math.min(total - 1, Math.max(0, moment.ply + 1));
+      renderReplaySnapshot();
+    });
+
+    li.append(plyLabel, kindLabel, jumpBtn);
+    return li;
+  });
+  refs.replayAnalysisMoments.replaceChildren(...items);
 }
 
 function stepReplay(delta) {
@@ -5590,9 +6606,26 @@ function importReplayFromInput() {
   }
 }
 
+// Open the replay modal preloaded with the just-finished local game, playing straight into
+// the analysis view (moments list + eval bar). Read-only: it reuses the same validated
+// pending record the save flow uses, so it never affects gameplay or stats.
+function openAnalysisForPending() {
+  if (!pendingReplayToSave) {
+    setFlashMessage("분석할 경기가 없습니다.");
+    render();
+    return;
+  }
+  openReplayModal();
+  if (startReplayPlayback(pendingReplayToSave)) {
+    setReplayImportFeedback("");
+    announcePolite(t("analysis.opened"));
+  }
+}
+
 refs.replayBtn?.addEventListener("click", openReplayModal);
 refs.replayCloseBtn?.addEventListener("click", closeReplayModal);
 refs.saveReplayBtn?.addEventListener("click", savePendingReplay);
+refs.viewAnalysisBtn?.addEventListener("click", openAnalysisForPending);
 refs.replayModal?.addEventListener("click", (event) => {
   if (event.target instanceof HTMLElement && event.target.dataset.replayDismiss != null) {
     closeReplayModal();
@@ -6151,6 +7184,11 @@ document.addEventListener("keydown", (event) => {
   if (refs.statsModal && !refs.statsModal.hidden && key === "escape") {
     event.preventDefault();
     closeStatsModal();
+    return;
+  }
+  if (refs.modesModal && !refs.modesModal.hidden && key === "escape") {
+    event.preventDefault();
+    closeModesModal();
     return;
   }
   if (refs.replayModal && !refs.replayModal.hidden && key === "escape") {

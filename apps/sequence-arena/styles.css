@@ -4994,6 +4994,101 @@ body[data-turn-just-arrived="true"] .board-panel {
   font-size: 0.85rem;
 }
 
+/* Eval bar: a horizontal momentum gauge driven by shared/analysis.js evalTimeline. Ruby (team
+   A / root) advantage fills from the left in ruby; the cobalt-tinted track shows the remainder.
+   The fill transition is opt-in and disabled under prefers-reduced-motion; forced-colors falls
+   back to system colors so it stays legible in high-contrast mode. */
+.replay-eval-bar {
+  position: relative;
+  width: 100%;
+  max-width: 420px;
+  height: 12px;
+  margin: 10px auto 0;
+  border-radius: 999px;
+  overflow: hidden;
+  background: #3d68d6;
+  border: 1px solid rgba(50, 34, 14, 0.18);
+}
+
+.replay-eval-bar[hidden] {
+  display: none;
+}
+
+.replay-eval-fill {
+  height: 100%;
+  width: 50%;
+  background: #d44e63;
+  transition: width 220ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .replay-eval-fill {
+    transition: none;
+  }
+}
+
+@media (forced-colors: active) {
+  .replay-eval-bar {
+    background: Canvas;
+    border-color: CanvasText;
+  }
+  .replay-eval-fill {
+    background: CanvasText;
+  }
+}
+
+.replay-analysis-section {
+  display: grid;
+  gap: 8px;
+}
+
+.replay-analysis-section[hidden] {
+  display: none;
+}
+
+.replay-analysis-summary {
+  margin: 0;
+  font-size: 0.85rem;
+  color: rgba(50, 34, 14, 0.85);
+}
+
+.replay-analysis-moments {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.replay-moment {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(50, 34, 14, 0.14);
+  background: rgba(255, 253, 246, 0.55);
+  font-size: 0.85rem;
+}
+
+.replay-moment-ply {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  min-width: 4.5em;
+}
+
+.replay-moment-kind {
+  flex: 1;
+}
+
+.replay-moment-jump {
+  flex: 0 0 auto;
+}
+
+.view-analysis-button[hidden] {
+  display: none;
+}
+
 .replay-import-section {
   display: grid;
   gap: 8px;
@@ -5087,9 +5182,14 @@ body[data-turn-just-arrived="true"] .board-panel {
 }
 
 [data-theme="dark"] .replay-list-item,
-[data-theme="dark"] .replay-empty {
+[data-theme="dark"] .replay-empty,
+[data-theme="dark"] .replay-moment {
   border-color: rgba(255, 248, 233, 0.16);
   background: rgba(255, 248, 233, 0.04);
+}
+
+[data-theme="dark"] .replay-analysis-summary {
+  color: rgba(255, 248, 233, 0.75);
 }
 
 [data-theme="dark"] .replay-import-input {
@@ -5125,4 +5225,368 @@ body[data-turn-just-arrived="true"] .board-panel {
   color: #f3d98c;
   border-color: rgba(243, 217, 140, 0.45);
   background: linear-gradient(180deg, rgba(74, 58, 26, 0.6), rgba(54, 42, 20, 0.5));
+}
+
+/* --- Progression spine (offline rating/xp/levels/achievements/cosmetics) --- */
+.stats-progression-section {
+  margin-top: 12px;
+}
+
+.stats-progression-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 4px;
+}
+
+.stats-progression-head h3 {
+  margin: 0;
+  font-size: 0.92rem;
+}
+
+.stats-progression-note {
+  margin: 0 0 8px;
+  font-size: 0.74rem;
+  color: var(--muted);
+}
+
+.progression-xp-bar {
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(50, 34, 14, 0.14);
+  overflow: hidden;
+  margin: 8px 0 4px;
+}
+
+.progression-xp-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #c79a3c, #e0b94f);
+  transition: width 0.35s ease;
+}
+
+.progression-achievement-list {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 8px;
+}
+
+.progression-achievement {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(50, 34, 14, 0.16);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.progression-achievement.locked {
+  opacity: 0.55;
+}
+
+.progression-achievement.unlocked {
+  background: rgba(224, 185, 79, 0.16);
+  border-color: rgba(199, 154, 60, 0.4);
+}
+
+.progression-achievement-icon {
+  font-size: 1rem;
+}
+
+.stats-progression-cosmetics-head h4 {
+  margin: 14px 0 6px;
+  font-size: 0.84rem;
+}
+
+.progression-cosmetic-group {
+  margin-bottom: 10px;
+}
+
+.progression-cosmetic-heading {
+  margin: 0 0 4px;
+  font-size: 0.74rem;
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.progression-cosmetic-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.progression-cosmetic-option {
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(50, 34, 14, 0.22);
+  background: rgba(255, 253, 246, 0.7);
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  color: var(--ink);
+}
+
+.progression-cosmetic-option.selected {
+  background: rgba(199, 154, 60, 0.28);
+  border-color: rgba(199, 154, 60, 0.6);
+}
+
+.progression-cosmetic-option.locked {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.progression-toast-stack {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 60;
+  pointer-events: none;
+}
+
+.progression-toast {
+  padding: 10px 16px;
+  border-radius: 999px;
+  background: rgba(40, 28, 10, 0.92);
+  color: #f7ead0;
+  font-size: 0.86rem;
+  font-weight: 800;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.28);
+}
+
+[data-theme="dark"] .progression-achievement {
+  border-color: rgba(243, 217, 140, 0.22);
+}
+
+[data-theme="dark"] .progression-cosmetic-option {
+  background: rgba(54, 42, 20, 0.5);
+  border-color: rgba(243, 217, 140, 0.3);
+  color: #f3d98c;
+}
+
+/* ---- Home meta-layer (player card) ---- */
+
+.home-meta-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0 0 14px;
+  padding: 14px 16px;
+  border: 1px solid rgba(199, 154, 60, 0.4);
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(248, 236, 208, 0.7), rgba(240, 224, 186, 0.5));
+  box-shadow: 0 6px 18px rgba(60, 42, 14, 0.1);
+}
+
+.home-meta-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.home-meta-identity {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.home-meta-rank {
+  font-size: 0.96rem;
+  font-weight: 900;
+  color: #7a5a1c;
+  letter-spacing: 0.01em;
+}
+
+.home-meta-title {
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: #8a7043;
+}
+
+.home-meta-grid {
+  margin: 0;
+}
+
+.home-meta-xp {
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(50, 34, 14, 0.14);
+  overflow: hidden;
+}
+
+.home-meta-xp-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #c79a3c, #e0b94f);
+  transition: width 0.35s ease;
+}
+
+.home-meta-goals-label {
+  font-size: 0.74rem;
+  font-weight: 800;
+  color: #8a7043;
+}
+
+.home-meta-goals-list {
+  list-style: none;
+  margin: 6px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.home-meta-goal {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.82rem;
+}
+
+.home-meta-goal.done .home-meta-goal-label {
+  text-decoration: line-through;
+  color: #6b8a5a;
+}
+
+/* Newly-satisfied goal gets a one-shot celebratory pop (reduced-motion neutralizes it). */
+.home-meta-goal.done .home-meta-goal-icon {
+  animation: metaGoalPop 0.5s cubic-bezier(0.22, 0.7, 0.26, 1);
+}
+
+.home-meta-entry {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.stats-meta-section {
+  margin-bottom: 12px;
+}
+
+.stats-meta-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.stats-meta-next-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.stats-meta-next-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 0.82rem;
+}
+
+.stats-meta-next-label {
+  font-weight: 800;
+  color: #8a7043;
+}
+
+/* ---- Game-feel: level-up / achievement / puzzle-star / eval-bar polish ---- */
+
+/* Achievement/level-up toast entrance: a brief rise-and-settle. Decorative, reduced-motion off. */
+.progression-toast {
+  animation: metaToastRise 0.42s cubic-bezier(0.22, 0.7, 0.26, 1);
+}
+
+/* Level-up celebration: the XP bar briefly glows when a new level is reached. */
+.home-meta-xp.leveled,
+.progression-xp-bar.leveled {
+  animation: metaXpGlow 0.9s ease-out;
+}
+
+/* Puzzle-star reveal in the modes/finish UI: each earned star pops in. */
+.modes-card-stars {
+  display: inline-flex;
+  gap: 1px;
+}
+
+.modes-card-stars .star.earned {
+  animation: metaStarPop 0.5s cubic-bezier(0.22, 0.7, 0.26, 1);
+}
+
+@keyframes metaGoalPop {
+  0% { transform: scale(0.6); }
+  55% { transform: scale(1.18); }
+  100% { transform: scale(1); }
+}
+
+@keyframes metaToastRise {
+  0% { opacity: 0; transform: translateY(10px) scale(0.96); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes metaXpGlow {
+  0% { box-shadow: 0 0 0 0 rgba(224, 185, 79, 0.6); }
+  60% { box-shadow: 0 0 0 6px rgba(224, 185, 79, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(224, 185, 79, 0); }
+}
+
+@keyframes metaStarPop {
+  0% { transform: scale(0.4); opacity: 0.4; }
+  60% { transform: scale(1.25); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* Sensitive viewers: no decorative meta animations (the global catch-all also covers these; this
+   is an explicit belt-and-braces so the intent is documented at the source). */
+@media (prefers-reduced-motion: reduce) {
+  .home-meta-goal.done .home-meta-goal-icon,
+  .progression-toast,
+  .home-meta-xp.leveled,
+  .progression-xp-bar.leveled,
+  .modes-card-stars .star.earned,
+  .home-meta-xp-fill {
+    animation: none;
+    transition: none;
+  }
+}
+
+/* Forced-colors: keep the meta card + bars legible with system colors. */
+@media (forced-colors: active) {
+  .home-meta-card {
+    border-color: CanvasText;
+    background: Canvas;
+  }
+  .home-meta-xp,
+  .home-meta-xp-fill {
+    forced-color-adjust: none;
+  }
+  .home-meta-xp-fill {
+    background: Highlight;
+  }
+}
+
+[data-theme="dark"] .home-meta-card {
+  border-color: rgba(240, 217, 160, 0.3);
+  background: linear-gradient(135deg, rgba(52, 42, 22, 0.7), rgba(40, 32, 16, 0.6));
+}
+
+[data-theme="dark"] .home-meta-rank {
+  color: #f0d9a0;
+}
+
+[data-theme="dark"] .home-meta-title,
+[data-theme="dark"] .home-meta-goals-label,
+[data-theme="dark"] .stats-meta-next-label {
+  color: #cbb37f;
 }

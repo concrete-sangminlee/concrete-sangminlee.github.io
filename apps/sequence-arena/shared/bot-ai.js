@@ -8,6 +8,7 @@ import {
   getLegalTargets,
   playCard,
 } from "./game-core.js";
+import { hashStringToSeed } from "./rng.js";
 
 const SCORE = {
   win: 2_000_000,
@@ -30,6 +31,7 @@ export const BOT_DIFFICULTIES = {
   smart: "smart",
   aggressive: "aggressive",
   master: "master",
+  grandmaster: "grandmaster",
 };
 
 // Master search tuning. Depth 3 = bot move → opponent reply → bot reply, leaf evaluated by
@@ -625,7 +627,500 @@ function chooseMasterAction(game, player) {
   };
 }
 
-export function chooseBotAction(game, player, difficultyValue = BOT_DIFFICULTIES.smart) {
+// =======================================================================================
+// GRANDMASTER engine — measurably & DETERMINISTICALLY stronger than MASTER.
+// See docs/superpowers/specs/2026-09-12-grandmaster-engine-design.md.
+//
+// Three changes over MASTER, each necessary (see spec):
+//   (a) Iterative deepening with a hard time budget (LIVE client path) OR an explicit fixed
+//       maxDepth that ignores the clock (DETERMINISTIC test path). A depth's result is only
+//       adopted once that depth COMPLETES, so a timed-out depth is discarded and depth 1
+//       always guarantees a legal move.
+//   (b) A per-search transposition table keyed by a deterministic position hash (FNV-1a via
+//       rng.js hashStringToSeed over a compact board+turn encoding), storing
+//       {depth,value,flag,bestMove} with EXACT/LOWER/UPPER bounds, plus TT/PV-first move
+//       ordering that funds a deeper search by pruning far more of the tree.
+//   (c) A stronger leaf evaluator (evaluateGrandmasterPosition) extending MASTER's with
+//       tempo/turn-to-complete, double-open-four escalation, and a mobility term.
+// =======================================================================================
+
+// Live-client time budget. Sized to fit comfortably inside shared/local-solo.js's ~650ms
+// LOCAL_BOT_DELAY_MS thinking window with margin for the surrounding snapshot/paint work.
+const GM_BUDGET_MS = 450;
+// Iterative-deepening ceiling for the live path. The search rarely reaches this within the
+// budget on a full board, but it caps the clock-free fixed-depth path's implicit max and the
+// live path's best case on sparse boards.
+const GM_MAX_DEPTH = 6;
+// SHIPPING DEFAULT depth for GRANDMASTER when reached through chooseBotAction (solo play,
+// seeded replays, the determinism test). This path is clock-free and therefore FULLY
+// DETERMINISTIC: two runs on the same seed pick identical moves regardless of CPU speed,
+// which the wall-clock time-budget path cannot guarantee. Depth 4 is chosen deliberately:
+//   - Latency: clock-free depth-4 search (iterative deepening + TT + PV/TT ordering + the
+//     depth-narrowed branching below) costs ~175ms median and stays under ~630ms worst-case
+//     on a full board — inside shared/local-solo.js's 650ms LOCAL_BOT_DELAY_MS thinking
+//     window, so interactive solo play never stalls past its own displayed "thinking" delay.
+//   - Strength: still clearly beats MASTER — measured +0.20 same-seed win-rate margin over
+//     the master-vs-master baseline across the 20 board-fairness seed labels (local node
+//     v22), well above the proof's GM_MARGIN=0.10 bar. Depth 4 keeps GRANDMASTER's wider
+//     candidate set and full lookahead over MASTER's depth-3 search.
+// The offline board-fairness strength proof drives GRANDMASTER at its OWN explicit fixed
+// depth (5), unconstrained by interactive latency — see scripts/board-fairness-test.mjs.
+const GM_DEFAULT_FIXED_DEPTH = 4;
+// Wider candidate set than MASTER (10) at shallow plies (near the root, where a missed
+// defensive move is fatal): better ordering + the TT let alpha-beta prune the extra breadth
+// cheaply, and the wider set is what lets GRANDMASTER see defensive/tempo moves MASTER's
+// tighter cap drops. Deeper plies narrow the width (GM_DEEP_BRANCHING / GM_TAIL_BRANCHING) so
+// the extra lookahead depth costs a fraction of a full-width tree — the top ordered moves
+// dominate the value that far down.
+const GM_BRANCHING = 10;
+const GM_DEEP_BRANCHING = 5;
+const GM_TAIL_BRANCHING = 3;
+
+// TT entry bound flags.
+const TT_EXACT = 0;
+const TT_LOWER = 1; // value is a lower bound (fail-high / beta cutoff)
+const TT_UPPER = 2; // value is an upper bound (fail-low / did not raise alpha)
+
+// GRANDMASTER leaf-eval weights. Extends MASTER_EVAL: same open-four/four/three/two ladder and
+// asymmetric opponent-threat lean, PLUS three new terms justified inline.
+const GM_EVAL = {
+  win: MASTER_EVAL.win,
+  openFour: MASTER_EVAL.openFour,
+  four: MASTER_EVAL.four,
+  three: MASTER_EVAL.three,
+  two: MASTER_EVAL.two,
+  forkBonus: MASTER_EVAL.forkBonus,
+  opponentThreatWeight: MASTER_EVAL.opponentThreatWeight,
+  // TEMPO: an open-four is completable on THIS team's next move (a one-move threat). Reward it
+  // beyond the raw openFour term so the search prefers threats it can actually cash before the
+  // opponent replies — MASTER values the shape, GRANDMASTER values the initiative.
+  tempoOpenFour: 12_000,
+  // DOUBLE-OPEN-FOUR escalation: two INDEPENDENT open-fours (distinct completion cells) is
+  // unstoppable — the opponent blocks at most one. Value it at near-win so the search drives
+  // toward these configurations and defends against the opponent's. Super-linear in count.
+  doubleOpenFour: 900_000,
+  // MOBILITY: a small per-live-window term (opponent-free windows the team still has a stake
+  // in). Captures positional flexibility SMART/MASTER ignore; kept tiny so it only breaks ties
+  // between otherwise-equal tactical positions, never overrides a real threat.
+  mobility: 6,
+};
+
+// Compact, deterministic board+turn encoding → FNV-1a hash (rng.js). Used as the transposition
+// table key. Encodes every cell's occupant (., A, B) plus each team's sequence score and whose
+// turn it is, so transposed move orders that reach the SAME board+turn collide (the point of a
+// TT) while genuinely distinct positions do not. Dependency-free and deterministic.
+export function hashGamePosition(game, toMoveTeam) {
+  let encoded = "";
+  const board = game.board;
+  for (let i = 0; i < board.length; i += 1) {
+    const chip = board[i].chip;
+    encoded += chip === "A" ? "A" : chip === "B" ? "B" : ".";
+  }
+  encoded += `|${game.teamScores.A}|${game.teamScores.B}|${toMoveTeam}`;
+  return hashStringToSeed(encoded);
+}
+
+// GRANDMASTER positional evaluator. Absolute score from `team`'s perspective (team value minus
+// asymmetrically-weighted opponent value), like evaluateMasterPosition, then adds the GM_EVAL
+// tempo / double-open-four / mobility terms. Terminal positions short-circuit to +/- win.
+function scoreGrandmasterLinesForTeam(game, team) {
+  let lineScore = 0;
+  let liveWindows = 0; // mobility: count of opponent-free windows with >=1 team stake
+  // Distinct completion cells of the team's open-fours (empty === 1, one move from a 5).
+  const openFourCells = new Set();
+  // Fork signal: per empty cell, how many live >=3 windows pass through it.
+  const forkThreatsByCell = new Map();
+
+  for (const cells of ALL_WINDOWS) {
+    const count = countWindow(game, cells, team);
+    if (count.opponent > 0) {
+      continue;
+    }
+    if (count.team >= 1) {
+      liveWindows += 1;
+    }
+    if (count.team >= 5) {
+      lineScore += GM_EVAL.four;
+    } else if (count.team === 4) {
+      if (count.empty === 1) {
+        lineScore += GM_EVAL.openFour;
+        const emptyCell = cells.find((id) => {
+          const cell = game.board[id];
+          return !cell.corner && cell.chip == null;
+        });
+        if (emptyCell != null) {
+          openFourCells.add(emptyCell);
+          forkThreatsByCell.set(emptyCell, (forkThreatsByCell.get(emptyCell) || 0) + 1);
+        }
+      } else {
+        lineScore += GM_EVAL.four;
+      }
+    } else if (count.team === 3) {
+      lineScore += GM_EVAL.three;
+      for (const id of cells) {
+        const cell = game.board[id];
+        if (!cell.corner && cell.chip == null) {
+          forkThreatsByCell.set(id, (forkThreatsByCell.get(id) || 0) + 1);
+        }
+      }
+    } else if (count.team === 2) {
+      lineScore += GM_EVAL.two;
+    }
+  }
+
+  // Single-cell fork bonus (inherited from MASTER): one empty shared by >=2 live windows.
+  for (const shared of forkThreatsByCell.values()) {
+    if (shared >= 2) {
+      lineScore += GM_EVAL.forkBonus * (shared - 1);
+    }
+  }
+
+  // Double-open-four escalation: two or more INDEPENDENT open-fours (distinct completion
+  // cells) is unstoppable. Super-linear so three is worth more than two.
+  if (openFourCells.size >= 2) {
+    lineScore += GM_EVAL.doubleOpenFour * (openFourCells.size - 1);
+  }
+
+  lineScore += liveWindows * GM_EVAL.mobility;
+  return lineScore;
+}
+
+// Count the team's DISTINCT immediate-win cells: empty, non-corner cells that complete a
+// 5-window for `team` right now (an "open four" completion, given the team already holds a
+// scoring lead so a completion reaches REQUIRED_SEQUENCES). Used for tempo/turn-to-complete.
+function immediateWinCells(game, team) {
+  const cells = new Set();
+  for (const window of ALL_WINDOWS) {
+    const count = countWindow(game, window, team);
+    if (count.opponent === 0 && count.team === 4 && count.empty === 1) {
+      const emptyCell = window.find((id) => {
+        const cell = game.board[id];
+        return !cell.corner && cell.chip == null;
+      });
+      if (emptyCell != null) {
+        cells.add(emptyCell);
+      }
+    }
+  }
+  return cells;
+}
+
+// GRANDMASTER leaf eval. `toMoveTeam` (defaulting to `team` for the exported 2-arg test
+// signature) is used only for a bounded TEMPO term: being on the move with a live open-four
+// (a threat completable THIS turn) is worth more than the same shape when the opponent moves
+// next and can block it. Unlike an unbounded win short-circuit (which distorts the search
+// horizon), this is a bounded bonus layered on top of the positional score, so the search
+// still discriminates finely between non-terminal positions. This turn-to-complete awareness
+// is the tactical signal MASTER lacks.
+export function evaluateGrandmasterPosition(game, team, toMoveTeam = team) {
+  const opponent = opponentTeam(team);
+  if (game.teamScores[team] >= REQUIRED_SEQUENCES || game.winner === team) {
+    return GM_EVAL.win;
+  }
+  if (game.teamScores[opponent] >= REQUIRED_SEQUENCES || game.winner === opponent) {
+    return -GM_EVAL.win;
+  }
+
+  const teamValue = scoreGrandmasterLinesForTeam(game, team) + game.teamScores[team] * GM_EVAL.openFour * 4;
+  const opponentValue =
+    scoreGrandmasterLinesForTeam(game, opponent) + game.teamScores[opponent] * GM_EVAL.openFour * 4;
+  let score = teamValue - GM_EVAL.opponentThreatWeight * opponentValue;
+
+  // Bounded tempo term: reward the side to move for holding an immediate-completion threat,
+  // and penalize the mirror. Kept well below a real win so it only tilts otherwise-close
+  // positions toward keeping the initiative.
+  const teamWinCells = immediateWinCells(game, team).size;
+  const oppWinCells = immediateWinCells(game, opponent).size;
+  if (toMoveTeam === team && teamWinCells >= 1) {
+    score += GM_EVAL.tempoOpenFour;
+  }
+  if (toMoveTeam === opponent && oppWinCells >= 1) {
+    score -= GM_EVAL.opponentThreatWeight * GM_EVAL.tempoOpenFour;
+  }
+  return score;
+}
+
+// Order candidates best-first for the GM search: the TT best move for this position (if any)
+// first, then the existing orderingKey, ties broken by the deterministic compareCandidates
+// secondary keys. `ttBestMove` is a {cardId,targetCellId,type} shape or null.
+function gmOrderedCandidates(game, player, limit, ttBestMove) {
+  const candidates = buildCandidates(game, player);
+  const keyed = candidates.map((candidate) => {
+    const isTtBest =
+      ttBestMove != null &&
+      candidate.type === ttBestMove.type &&
+      candidate.cardId === ttBestMove.cardId &&
+      (candidate.targetCellId ?? null) === (ttBestMove.targetCellId ?? null);
+    return {
+      candidate,
+      // TT/PV move gets a dominating key so it is searched first (best chance of an early
+      // cutoff); everything else falls back to the shallow orderingKey.
+      key: isTtBest ? Number.POSITIVE_INFINITY : orderingKey(game, player, candidate),
+    };
+  });
+  keyed.sort((left, right) => {
+    if (left.key !== right.key) {
+      return right.key - left.key;
+    }
+    const lc = left.candidate;
+    const rc = right.candidate;
+    if (lc.type !== rc.type) {
+      return lc.type === "play_card" ? -1 : 1;
+    }
+    if ((lc.cardIndex ?? 0) !== (rc.cardIndex ?? 0)) {
+      return (lc.cardIndex ?? 0) - (rc.cardIndex ?? 0);
+    }
+    return (lc.targetCellId ?? 0) - (rc.targetCellId ?? 0);
+  });
+  return keyed.slice(0, limit).map((entry) => entry.candidate);
+}
+
+// Sentinel thrown to abort a depth iteration the moment the time budget is exceeded, so a
+// single deep iteration can never overrun the budget (the between-depths check alone is not
+// enough — one depth-5 iteration can take seconds). Caught in chooseGrandmasterAction, which
+// then keeps the last COMPLETED depth's result. Never escapes the module.
+const GM_TIMEOUT = Symbol("gm-timeout");
+
+// Alpha-beta with a transposition table. Absolute score (rootTeam perspective). The maximiser
+// is the root team; every other seat minimises. Returns { value, move } where `move` is the
+// best candidate at this node (used for PV/TT). `tt` is a Map keyed by hashGamePosition.
+// `clock` is a shared { deadline, nowFn, ticks } control (or null for the clock-free fixed-
+// depth path); when the deadline passes, a GM_TIMEOUT sentinel is thrown to abort the depth.
+function gmCheckClock(clock) {
+  if (!clock) {
+    return;
+  }
+  // Sample the clock every few nodes rather than every node (nowFn can be non-trivial).
+  clock.ticks += 1;
+  if ((clock.ticks & 0x3f) === 0 && clock.nowFn() >= clock.deadline) {
+    throw GM_TIMEOUT;
+  }
+}
+
+function gmSearch(game, toMove, rootTeam, depth, alpha, beta, tt, clock) {
+  if (game.winner || depth === 0) {
+    return { value: evaluateGrandmasterPosition(game, rootTeam, toMove.team), move: null };
+  }
+  gmCheckClock(clock);
+
+  const alphaOrig = alpha;
+  const key = hashGamePosition(game, toMove.team);
+  const stored = tt.get(key);
+  let ttBestMove = null;
+  if (stored) {
+    ttBestMove = stored.bestMove;
+    if (stored.depth >= depth) {
+      // A stored entry at >= the remaining depth can be reused directly (EXACT) or used to
+      // tighten the window (LOWER/UPPER), pruning the sub-tree entirely on a cutoff.
+      if (stored.flag === TT_EXACT) {
+        return { value: stored.value, move: stored.bestMove };
+      }
+      if (stored.flag === TT_LOWER && stored.value > alpha) alpha = stored.value;
+      else if (stored.flag === TT_UPPER && stored.value < beta) beta = stored.value;
+      if (alpha >= beta) {
+        return { value: stored.value, move: stored.bestMove };
+      }
+    }
+  }
+
+  // Narrow the branching factor at deeper plies: the top few ordered moves dominate the
+  // value at depth, so spending the full width only near the root (where a missed defensive
+  // move is fatal) buys most of the depth-4/5 lookahead at a fraction of the node count.
+  const width = depth >= 3 ? GM_BRANCHING : depth === 2 ? GM_DEEP_BRANCHING : GM_TAIL_BRANCHING;
+  const candidates = gmOrderedCandidates(game, toMove, width, ttBestMove);
+  if (candidates.length === 0) {
+    return { value: evaluateGrandmasterPosition(game, rootTeam, toMove.team), move: null };
+  }
+
+  const maximising = toMove.team === rootTeam;
+  let best = maximising ? Number.NEGATIVE_INFINITY : Number.POSITIVE_INFINITY;
+  let bestMove = null;
+  let moved = false;
+
+  for (const candidate of candidates) {
+    const next = applyCandidate(game, toMove, candidate);
+    if (!next) {
+      continue;
+    }
+    moved = true;
+    let value;
+    if (next.winner) {
+      value = evaluateGrandmasterPosition(next, rootTeam, next.players[next.currentPlayerIndex].team);
+    } else {
+      const responder = nextSeatForTeam(next, next.players[next.currentPlayerIndex].team);
+      value = gmSearch(next, responder, rootTeam, depth - 1, alpha, beta, tt, clock).value;
+    }
+    if (maximising) {
+      if (value > best || bestMove === null) {
+        best = value;
+        bestMove = candidate;
+      }
+      if (best > alpha) alpha = best;
+    } else {
+      if (value < best || bestMove === null) {
+        best = value;
+        bestMove = candidate;
+      }
+      if (best < beta) beta = best;
+    }
+    if (alpha >= beta) {
+      break; // cutoff
+    }
+  }
+
+  if (!moved) {
+    return { value: evaluateGrandmasterPosition(game, rootTeam, toMove.team), move: null };
+  }
+
+  // Store with the correct bound flag so a later probe can trust or tighten it.
+  let flag = TT_EXACT;
+  if (best <= alphaOrig) flag = TT_UPPER;
+  else if (best >= beta) flag = TT_LOWER;
+  const compactMove = bestMove
+    ? { type: bestMove.type, cardId: bestMove.cardId, targetCellId: bestMove.targetCellId ?? null }
+    : null;
+  const prior = tt.get(key);
+  if (!prior || prior.depth <= depth) {
+    tt.set(key, { depth, value: best, flag, bestMove: compactMove });
+  }
+  return { value: best, move: bestMove };
+}
+
+// Run one full-width root search to a fixed depth. Returns the ordered evaluation list plus
+// the best candidate, deterministic tie-break applied. Reuses the shared transposition table
+// across depths within an iterative-deepening call (earlier-depth entries seed later ordering).
+function gmRootSearch(game, player, depth, tt, clock) {
+  const rootTeam = player.team;
+  const rootKey = hashGamePosition(game, player.team);
+  const ttBestMove = tt.get(rootKey)?.bestMove ?? null;
+  const candidates = gmOrderedCandidates(game, player, GM_BRANCHING, ttBestMove);
+  if (candidates.length === 0) {
+    return null;
+  }
+
+  let alpha = Number.NEGATIVE_INFINITY;
+  const beta = Number.POSITIVE_INFINITY;
+  let bestValue = Number.NEGATIVE_INFINITY;
+  let bestCandidate = null;
+  const evaluated = [];
+
+  for (const candidate of candidates) {
+    const next = applyCandidate(game, player, candidate);
+    if (!next) {
+      continue;
+    }
+    let value;
+    if (next.winner) {
+      value = evaluateGrandmasterPosition(next, rootTeam, next.players[next.currentPlayerIndex].team);
+    } else {
+      const responder = nextSeatForTeam(next, next.players[next.currentPlayerIndex].team);
+      value = gmSearch(next, responder, rootTeam, depth - 1, alpha, beta, tt, clock).value;
+    }
+    evaluated.push({ candidate, value });
+    if (value > bestValue || bestCandidate === null) {
+      bestValue = value;
+      bestCandidate = candidate;
+    }
+    if (value > alpha) alpha = value;
+  }
+
+  if (!bestCandidate) {
+    return null;
+  }
+
+  // Deterministic tie-break: among candidates tying the best value (within epsilon), pick by
+  // compareCandidates so the whole search is reproducible.
+  const EPS = 1e-6;
+  const tied = evaluated
+    .filter((entry) => Math.abs(entry.value - bestValue) <= EPS)
+    .map((entry) => entry.candidate);
+  tied.sort(compareCandidates);
+  const chosen = tied[0] || bestCandidate;
+  // Seed the root TT entry with the chosen move so the next deeper iteration orders it first.
+  tt.set(rootKey, {
+    depth,
+    value: bestValue,
+    flag: TT_EXACT,
+    bestMove: { type: chosen.type, cardId: chosen.cardId, targetCellId: chosen.targetCellId ?? null },
+  });
+  return { candidate: chosen, value: bestValue };
+}
+
+// GRANDMASTER action chooser. Two modes:
+//   - FIXED DEPTH (options.maxDepth set): run iterative deepening 1..maxDepth ignoring the
+//     clock; adopt each depth's result as it completes. Fully deterministic — this is the path
+//     the board-fairness strength proof drives so results are identical on every CPU.
+//   - TIME BUDGET (default / options.budgetMs): iterative deepening 1..GM_MAX_DEPTH, stopping
+//     before starting a depth once elapsed time (via injectable nowFn) exceeds the budget. A
+//     depth is only adopted once it COMPLETES, so a partial depth is discarded and depth 1
+//     always yields a legal move within the budget. This is the live-client path.
+export function chooseGrandmasterAction(game, player, options = {}) {
+  const rootCandidates = buildCandidates(game, player);
+  if (rootCandidates.length === 0) {
+    return null;
+  }
+
+  const fixedDepth = Number.isInteger(options.maxDepth) && options.maxDepth > 0 ? options.maxDepth : null;
+  const budgetMs = Number.isFinite(options.budgetMs) ? options.budgetMs : GM_BUDGET_MS;
+  const nowFn =
+    typeof options.nowFn === "function"
+      ? options.nowFn
+      : () => (typeof performance !== "undefined" && performance.now ? performance.now() : Date.now());
+  const maxDepth = fixedDepth ?? GM_MAX_DEPTH;
+
+  // Shared TT across the iterative-deepening sweep: shallow entries seed deeper-depth ordering.
+  const tt = new Map();
+  // Clock control for the live path only. The fixed-depth (test) path passes null so it runs
+  // to completion ignoring wall-clock time — the deterministic-proof contract. On the live
+  // path, the deadline aborts a depth mid-iteration (GM_TIMEOUT) so a single deep iteration
+  // can never overrun the budget; the last COMPLETED depth's result is kept.
+  const startedAt = fixedDepth ? 0 : nowFn();
+  const clock = fixedDepth ? null : { deadline: startedAt + budgetMs, nowFn, ticks: 0 };
+  let best = null;
+
+  for (let depth = 1; depth <= maxDepth; depth += 1) {
+    if (clock && depth > 1 && nowFn() >= clock.deadline) {
+      // Out of time before starting this depth — keep the last completed depth's result.
+      break;
+    }
+    let result;
+    try {
+      // Depth 1 always runs clock-free so a legal move is guaranteed even under a tiny/expired
+      // budget (it completes in microseconds). Deeper depths honour the deadline.
+      result = gmRootSearch(game, player, depth, tt, depth === 1 ? null : clock);
+    } catch (error) {
+      if (error === GM_TIMEOUT) {
+        // This depth was aborted by the budget; discard its partial work and keep the last
+        // completed depth. Depth 1 has no clock check race (it is always allowed to start and
+        // completes in microseconds), so `best` is guaranteed non-null by the time a deeper
+        // depth can time out.
+        break;
+      }
+      throw error;
+    }
+    if (result) {
+      best = result; // adopt only completed depths
+    }
+    // A decisive win/loss value cannot improve with more depth — stop early (also keeps the
+    // fixed-depth path from wasting iterations once a forced result is found).
+    if (best && Math.abs(best.value) >= GM_EVAL.win) {
+      break;
+    }
+  }
+
+  if (!best) {
+    return null;
+  }
+  const chosen = best.candidate;
+  return {
+    type: chosen.type,
+    cardId: chosen.cardId,
+    targetCellId: chosen.targetCellId,
+    score: Math.round(best.value),
+  };
+}
+
+export function chooseBotAction(game, player, difficultyValue = BOT_DIFFICULTIES.smart, options = {}) {
   const difficulty = normalizeBotDifficulty(difficultyValue);
   const candidates = buildCandidates(game, player);
 
@@ -645,6 +1140,27 @@ export function chooseBotAction(game, player, difficultyValue = BOT_DIFFICULTIES
 
   if (difficulty === BOT_DIFFICULTIES.master) {
     return chooseMasterAction(game, player);
+  }
+
+  if (difficulty === BOT_DIFFICULTIES.grandmaster) {
+    // SHIPPING DEFAULT: deterministic, clock-free fixed-depth search. This is the path solo
+    // play (shared/local-solo.js), seeded replays (shared/replay.js), and the determinism
+    // test take. It upholds the same seed->identical-moves contract every other difficulty
+    // satisfies, so a GRANDMASTER solo game replays byte-identically on any CPU. See
+    // GM_DEFAULT_FIXED_DEPTH for the depth/latency/strength rationale.
+    //
+    // EXPLICIT OPT-IN: pass options.liveTimeBudget === true to take the wall-clock
+    // time-budget iterative-deepening path instead (variable depth, always on time, but
+    // NON-deterministic across machines). Nothing on the seeded/replay/daily/solo/default
+    // path sets this — it exists only for callers that explicitly want "think as deep as
+    // the clock allows" and knowingly accept non-reproducibility.
+    if (options.liveTimeBudget === true) {
+      return chooseGrandmasterAction(game, player, {
+        budgetMs: options.budgetMs,
+        nowFn: options.nowFn,
+      });
+    }
+    return chooseGrandmasterAction(game, player, { maxDepth: GM_DEFAULT_FIXED_DEPTH });
   }
 
   const scored = candidates

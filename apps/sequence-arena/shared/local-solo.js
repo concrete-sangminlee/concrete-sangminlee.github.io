@@ -11,6 +11,7 @@ import {
 import { BOT_DIFFICULTIES, chooseBotAction, normalizeBotDifficulty } from "./bot-ai.js";
 import { createSeededRng } from "./rng.js";
 import { buildReplayRecord } from "./replay.js";
+import { explainMove } from "./analysis.js";
 
 const LOCAL_ROOM_CODE = "SOLO";
 const LOCAL_BOT_SESSION_ID = "local-cobalt-bot";
@@ -90,7 +91,7 @@ export class LocalSoloRuntime {
     }
   }
 
-  start({ name = "플레이어", sessionId = "", difficulty = BOT_DIFFICULTIES.smart, seed = "", daily = null, tutorial = false } = {}) {
+  start({ name = "플레이어", sessionId = "", difficulty = BOT_DIFFICULTIES.smart, seed = "", daily = null, tutorial = false, setupMoves = null, mode = null } = {}) {
     this.clearBotTimer();
     const cleanName = String(name || "플레이어").trim().slice(0, 40) || "플레이어";
     const cleanSessionId = sessionId || randomSessionId();
@@ -111,6 +112,11 @@ export class LocalSoloRuntime {
         ? { dateKey: daily.dateKey, number: Math.max(1, Math.trunc(Number(daily.number))) }
         : null;
     this.tutorial = tutorial === true;
+    // Optional solo-mode context (puzzle / gauntlet / survival / time-attack). Carried through
+    // into matchHistory/finish so the client (app.js) can feed Phase 2 progression the right
+    // mode + grant puzzle-completion achievements. Purely descriptive metadata — it never alters
+    // the rules, and daily/tutorial keep their existing locks below.
+    this.mode = mode && typeof mode === "object" ? mode : null;
     this.room = {
       code: LOCAL_ROOM_CODE,
       phase: "playing",
@@ -134,8 +140,16 @@ export class LocalSoloRuntime {
       matchNumber: this.matchNumber,
       dailyChallenge: this.daily,
       tutorialMode: this.tutorial,
+      mode: this.mode,
     };
     this.room.game.matchNumber = this.matchNumber;
+    // A puzzle starts from a curated position: apply the deterministic setupMoves prefix through
+    // the SAME seeded engine (identical to shared/replay.js) BEFORE handing control to the human.
+    // The prefix is NOT captured into replayMoves (it is part of the puzzle definition, re-derived
+    // from seed+setup), so only the player's own solving moves are recorded/scored.
+    if (Array.isArray(setupMoves) && setupMoves.length > 0) {
+      this.applySetupMoves(setupMoves);
+    }
     return this.emit(
       this.tutorial
         ? "가이드 플레이가 시작되었습니다. 안내를 따라 첫 턴을 진행해 보세요."
@@ -143,6 +157,33 @@ export class LocalSoloRuntime {
           ? `오늘의 챌린지 #${this.daily.number}이 시작되었습니다. 모두에게 같은 보드와 손패가 주어집니다.`
           : "오프라인 솔로 모드가 시작되었습니다. 서버 없이 이 브라우저에서 봇과 1대1로 진행합니다."
     );
+  }
+
+  // Apply a deterministic puzzle setup prefix (same move shape as a replay move) through the
+  // seeded engine, resolving each move's follow-up discard/draw exactly as a live/replay turn.
+  // Advances the game to the curated puzzle position. Stops early on any illegal move (a valid
+  // checked-in puzzle never hits this). These moves are intentionally NOT recorded into
+  // replayMoves — the puzzle is reproduced from seed+setup, and only the player's solving moves
+  // count toward the replay/par.
+  applySetupMoves(setupMoves) {
+    for (const move of setupMoves) {
+      if (this.room.game.phase !== "playing") break;
+      const current = getCurrentPlayer(this.room.game);
+      if (!current) break;
+      const seatIndex = current.seatIndex;
+      let ok = false;
+      if (move?.type === "play") {
+        ok = playCard(this.room.game, seatIndex, move.cardId, move.targetCellId, this.rng).ok;
+      } else if (move?.type === "discard_dead") {
+        ok = discardDeadCard(this.room.game, seatIndex, move.cardId, this.rng).ok;
+      }
+      if (!ok) break;
+      const pending = this.room.game.pendingStep;
+      if (pending?.seatIndex === seatIndex) {
+        if (pending.type === "discard") discardPendingCard(this.room.game, seatIndex);
+        if (this.room.game.pendingStep?.type === "draw") drawReplacementCard(this.room.game, seatIndex, this.rng);
+      }
+    }
   }
 
   // Strategic hint for the human seat: the SMART bot's recommended action from the real
@@ -162,6 +203,27 @@ export class LocalSoloRuntime {
       return null;
     }
     return { type: action.type, cardId: action.cardId, targetCellId: action.targetCellId };
+  }
+
+  // Read-only teaching companion to suggestMove(): return the recommended action PLUS an
+  // explanation ({ ko, en, tags }) of WHY the engine likes it, derived from concrete board
+  // facts by shared/analysis.js. i18n keys only (copy lives in client/i18n.js). null off-turn.
+  suggestMoveExplained() {
+    const suggestion = this.suggestMove();
+    if (!suggestion) {
+      return null;
+    }
+    const current = getCurrentPlayer(this.room.game);
+    if (!current) {
+      return { suggestion, explanation: null };
+    }
+    const move = {
+      type: "play_card",
+      cardId: suggestion.cardId,
+      targetCellId: suggestion.targetCellId ?? null,
+    };
+    const explanation = suggestion.type === "discard_dead" ? null : explainMove(this.room.game, current, move);
+    return { suggestion, explanation };
   }
 
   snapshot(systemMessage = "") {
@@ -274,7 +336,18 @@ export class LocalSoloRuntime {
     // hands), not a fresh random game; the result freeze in shared/daily.js keeps the
     // first completion as the record. A tutorial rematch stays a stats-excluded practice
     // run on the same scripted board.
-    return this.start({ name, sessionId, difficulty, seed: this.seed, daily: this.daily, tutorial: this.tutorial });
+    // A puzzle/mode rematch replays the same curated setup (same seed → same board, hands, and
+    // setup prefix) so a retry is the identical position; the mode metadata is preserved too.
+    return this.start({
+      name,
+      sessionId,
+      difficulty,
+      seed: this.seed,
+      daily: this.daily,
+      tutorial: this.tutorial,
+      setupMoves: this.mode?.setupMoves ?? null,
+      mode: this.mode,
+    });
   }
 
   setBotDifficulty(difficulty) {
@@ -381,6 +454,7 @@ export class LocalSoloRuntime {
             botDifficulty: this.room.botDifficulty,
             daily: this.room.dailyChallenge ?? null,
             tutorial: this.room.tutorialMode === true,
+            mode: this.room.mode ?? null,
             replay,
           },
           ...this.matchHistory,
