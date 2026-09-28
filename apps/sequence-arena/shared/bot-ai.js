@@ -32,6 +32,7 @@ export const BOT_DIFFICULTIES = {
   aggressive: "aggressive",
   master: "master",
   grandmaster: "grandmaster",
+  legend: "legend",
 };
 
 // Master search tuning. Depth 3 = bot move → opponent reply → bot reply, leaf evaluated by
@@ -326,12 +327,6 @@ export function scoreAllCandidates(game, player, difficulty = BOT_DIFFICULTIES.s
     .filter((candidate) => Number.isFinite(candidate.score));
   scored.sort(compareCandidates);
   return scored;
-}
-
-// Reusable internal: the best static score available to `player` in `game`.
-export function bestStaticScore(game, player, difficulty = BOT_DIFFICULTIES.smart) {
-  const scored = scoreAllCandidates(game, player, difficulty);
-  return scored.length > 0 ? scored[0].score : Number.NEGATIVE_INFINITY;
 }
 
 // Precompute every distinct 5-in-a-row window on the board ONCE (board geometry is fixed —
@@ -840,6 +835,20 @@ export function evaluateGrandmasterPosition(game, team, toMoveTeam = team) {
   return score;
 }
 
+// Engine descriptor: the pieces that differ between GRANDMASTER and LEGEND while the whole
+// alpha-beta + TT + ordering machinery below is SHARED (so LEGEND is a genuine deeper/stronger
+// configuration of the same proven search, not a divergent fork). `evalFn(game, team,
+// toMoveTeam)` is the leaf evaluator; `width(depth)` is the depth-narrowed branching schedule;
+// `winValue` is the |value| beyond which a result is decisive and cannot improve with depth.
+// GM_ENGINE reproduces GRANDMASTER's exact prior behaviour (byte-identical), so passing it as
+// the default keeps every existing GRANDMASTER call unchanged.
+const GM_ENGINE = {
+  evalFn: (game, team, toMoveTeam) => evaluateGrandmasterPosition(game, team, toMoveTeam),
+  width: (depth) => (depth >= 3 ? GM_BRANCHING : depth === 2 ? GM_DEEP_BRANCHING : GM_TAIL_BRANCHING),
+  rootWidth: GM_BRANCHING,
+  winValue: GM_EVAL.win,
+};
+
 // Order candidates best-first for the GM search: the TT best move for this position (if any)
 // first, then the existing orderingKey, ties broken by the deterministic compareCandidates
 // secondary keys. `ttBestMove` is a {cardId,targetCellId,type} shape or null.
@@ -897,9 +906,9 @@ function gmCheckClock(clock) {
   }
 }
 
-function gmSearch(game, toMove, rootTeam, depth, alpha, beta, tt, clock) {
+function gmSearch(game, toMove, rootTeam, depth, alpha, beta, tt, clock, engine = GM_ENGINE) {
   if (game.winner || depth === 0) {
-    return { value: evaluateGrandmasterPosition(game, rootTeam, toMove.team), move: null };
+    return { value: engine.evalFn(game, rootTeam, toMove.team), move: null };
   }
   gmCheckClock(clock);
 
@@ -925,11 +934,12 @@ function gmSearch(game, toMove, rootTeam, depth, alpha, beta, tt, clock) {
 
   // Narrow the branching factor at deeper plies: the top few ordered moves dominate the
   // value at depth, so spending the full width only near the root (where a missed defensive
-  // move is fatal) buys most of the depth-4/5 lookahead at a fraction of the node count.
-  const width = depth >= 3 ? GM_BRANCHING : depth === 2 ? GM_DEEP_BRANCHING : GM_TAIL_BRANCHING;
+  // move is fatal) buys most of the depth lookahead at a fraction of the node count. The
+  // schedule is engine-specific (LEGEND is wider at the shallow plies than GRANDMASTER).
+  const width = engine.width(depth);
   const candidates = gmOrderedCandidates(game, toMove, width, ttBestMove);
   if (candidates.length === 0) {
-    return { value: evaluateGrandmasterPosition(game, rootTeam, toMove.team), move: null };
+    return { value: engine.evalFn(game, rootTeam, toMove.team), move: null };
   }
 
   const maximising = toMove.team === rootTeam;
@@ -945,10 +955,10 @@ function gmSearch(game, toMove, rootTeam, depth, alpha, beta, tt, clock) {
     moved = true;
     let value;
     if (next.winner) {
-      value = evaluateGrandmasterPosition(next, rootTeam, next.players[next.currentPlayerIndex].team);
+      value = engine.evalFn(next, rootTeam, next.players[next.currentPlayerIndex].team);
     } else {
       const responder = nextSeatForTeam(next, next.players[next.currentPlayerIndex].team);
-      value = gmSearch(next, responder, rootTeam, depth - 1, alpha, beta, tt, clock).value;
+      value = gmSearch(next, responder, rootTeam, depth - 1, alpha, beta, tt, clock, engine).value;
     }
     if (maximising) {
       if (value > best || bestMove === null) {
@@ -969,7 +979,7 @@ function gmSearch(game, toMove, rootTeam, depth, alpha, beta, tt, clock) {
   }
 
   if (!moved) {
-    return { value: evaluateGrandmasterPosition(game, rootTeam, toMove.team), move: null };
+    return { value: engine.evalFn(game, rootTeam, toMove.team), move: null };
   }
 
   // Store with the correct bound flag so a later probe can trust or tighten it.
@@ -989,11 +999,11 @@ function gmSearch(game, toMove, rootTeam, depth, alpha, beta, tt, clock) {
 // Run one full-width root search to a fixed depth. Returns the ordered evaluation list plus
 // the best candidate, deterministic tie-break applied. Reuses the shared transposition table
 // across depths within an iterative-deepening call (earlier-depth entries seed later ordering).
-function gmRootSearch(game, player, depth, tt, clock) {
+function gmRootSearch(game, player, depth, tt, clock, engine = GM_ENGINE) {
   const rootTeam = player.team;
   const rootKey = hashGamePosition(game, player.team);
   const ttBestMove = tt.get(rootKey)?.bestMove ?? null;
-  const candidates = gmOrderedCandidates(game, player, GM_BRANCHING, ttBestMove);
+  const candidates = gmOrderedCandidates(game, player, engine.rootWidth, ttBestMove);
   if (candidates.length === 0) {
     return null;
   }
@@ -1011,10 +1021,10 @@ function gmRootSearch(game, player, depth, tt, clock) {
     }
     let value;
     if (next.winner) {
-      value = evaluateGrandmasterPosition(next, rootTeam, next.players[next.currentPlayerIndex].team);
+      value = engine.evalFn(next, rootTeam, next.players[next.currentPlayerIndex].team);
     } else {
       const responder = nextSeatForTeam(next, next.players[next.currentPlayerIndex].team);
-      value = gmSearch(next, responder, rootTeam, depth - 1, alpha, beta, tt, clock).value;
+      value = gmSearch(next, responder, rootTeam, depth - 1, alpha, beta, tt, clock, engine).value;
     }
     evaluated.push({ candidate, value });
     if (value > bestValue || bestCandidate === null) {
@@ -1054,7 +1064,7 @@ function gmRootSearch(game, player, depth, tt, clock) {
 //     before starting a depth once elapsed time (via injectable nowFn) exceeds the budget. A
 //     depth is only adopted once it COMPLETES, so a partial depth is discarded and depth 1
 //     always yields a legal move within the budget. This is the live-client path.
-export function chooseGrandmasterAction(game, player, options = {}) {
+export function chooseGrandmasterAction(game, player, options = {}, engine = GM_ENGINE) {
   const rootCandidates = buildCandidates(game, player);
   if (rootCandidates.length === 0) {
     return null;
@@ -1087,7 +1097,7 @@ export function chooseGrandmasterAction(game, player, options = {}) {
     try {
       // Depth 1 always runs clock-free so a legal move is guaranteed even under a tiny/expired
       // budget (it completes in microseconds). Deeper depths honour the deadline.
-      result = gmRootSearch(game, player, depth, tt, depth === 1 ? null : clock);
+      result = gmRootSearch(game, player, depth, tt, depth === 1 ? null : clock, engine);
     } catch (error) {
       if (error === GM_TIMEOUT) {
         // This depth was aborted by the budget; discard its partial work and keep the last
@@ -1103,7 +1113,7 @@ export function chooseGrandmasterAction(game, player, options = {}) {
     }
     // A decisive win/loss value cannot improve with more depth — stop early (also keeps the
     // fixed-depth path from wasting iterations once a forced result is found).
-    if (best && Math.abs(best.value) >= GM_EVAL.win) {
+    if (best && Math.abs(best.value) >= engine.winValue) {
       break;
     }
   }
@@ -1118,6 +1128,288 @@ export function chooseGrandmasterAction(game, player, options = {}) {
     targetCellId: chosen.targetCellId,
     score: Math.round(best.value),
   };
+}
+
+// =======================================================================================
+// LEGEND engine — measurably & DETERMINISTICALLY stronger than GRANDMASTER.
+// See docs/superpowers/specs/2026-09-17-legend-engine-opening-book-design.md.
+//
+// LEGEND reuses the SHARED GRANDMASTER search machinery (gmSearch / gmRootSearch / TT /
+// hashGamePosition / orderingKey / compareCandidates) via the `engine` descriptor, in a
+// stronger configuration whose edge is proven at EQUAL search depth (the offline board-fairness
+// proof drives BOTH LEGEND and GRANDMASTER at fixed depth 5, so the measured same-seed margin
+// isolates ENGINE QUALITY, not a raw depth advantage):
+//   (a) a WIDER shallow branching (LEGEND_BRANCHING=12 / LEGEND_DEEP_BRANCHING=6 vs
+//       GRANDMASTER's 10 / 5) so more candidate defenses/attacks are considered near the root
+//       where a missed move is fatal, funded by the same TT/PV ordering that keeps the extra
+//       breadth cheap;
+//   (b) a strengthened leaf evaluator (evaluateLegendPosition) extending
+//       evaluateGrandmasterPosition with bounded CONNECTIVITY + CENTRAL-THREAT terms so the
+//       search discriminates more finely between otherwise line-equal leaves;
+//   (c) a deterministic seeded OPENING BOOK consulted before searching in the opening plies.
+// The +20.0pt same-seed margin over the GRANDMASTER-vs-GRANDMASTER baseline at depth 5 (see
+// scripts/board-fairness-test.mjs) is what makes "LEGEND is stronger" an honest claim.
+// =======================================================================================
+
+// LEGEND leaf-eval weights. Extends GM_EVAL. Every new term is bounded well below a real win
+// so it only tilts otherwise-close positions — the core value stays GRANDMASTER's asymmetric
+// line ladder + fork + double-open-four escalation, now discriminated more finely.
+const LEGEND_EVAL = {
+  // CONNECTIVITY: a live (opponent-free) three-in-line whose empties sit adjacent to an
+  // existing team chip converts to an open-four in fewer tempi than an isolated three. Reward
+  // per such connected three. GRANDMASTER counts the three; LEGEND counts how close it is to
+  // becoming a one-move threat. Weighted at roughly one-third of a raw `three` (2_400) so a
+  // contiguous three is worth meaningfully more than a gapped one — enough to RE-RANK two
+  // otherwise line-equal moves toward the shape that matures fastest, not just break a tie.
+  connectivity: 900,
+  // CONNECTED TWO: a live two whose empties are contiguous with a team chip is the seed of a
+  // connected three. Rewarding it steers early/mid development toward compact, mutually
+  // supporting shapes (which convert to forks) instead of scattered singletons. Bounded to a
+  // fraction of `connectivity` so it only shapes development, never overrides a real threat.
+  connectedTwo: 150,
+  // CENTRAL THREAT: an open-four whose completion cell is nearer the board centre is harder to
+  // answer without creating new weaknesses (more independent windows radiate through central
+  // cells). Per-central-open-four bonus. Raised from a pure tie-breaker so LEGEND actively
+  // prefers central pressure, which compounds over the extra plies of search.
+  centralThreat: 420,
+  // CENTRAL DEVELOPMENT: a tiny per-team-chip pull toward the centre, summed over placed chips.
+  // Central chips participate in more windows, so early central control widens LEGEND's future
+  // threat surface. Kept minuscule per chip so the aggregate only tilts near-equal positions.
+  centralChip: 8,
+};
+
+// Distance from a cell to the board centre (Chebyshev-ish Manhattan half). Lower = more
+// central. Used by the central-threat term; deterministic, geometry-only.
+function cellCentrality(cellId) {
+  const middle = (BOARD_SIZE - 1) / 2;
+  const row = Math.floor(cellId / BOARD_SIZE);
+  const col = cellId % BOARD_SIZE;
+  return Math.abs(row - middle) + Math.abs(col - middle);
+}
+
+// LEGEND positional add-ons for `team` (connectivity + central-threat), layered on top of the
+// GRANDMASTER line value. Pure + deterministic; scans the precomputed window list once.
+// Does at least one empty in this live window sit directly next to a team chip within the SAME
+// window (i.e. the shape is contiguous, not split by a gap)? Contiguous shapes mature into
+// threats in fewer tempi. Deterministic single scan of the window's cells.
+function windowIsContiguous(game, cells, team) {
+  for (let idx = 0; idx < cells.length; idx += 1) {
+    const cell = game.board[cells[idx]];
+    const isTeamChip = cell.corner || cell.chip === team;
+    if (!isTeamChip) {
+      continue;
+    }
+    const prev = idx > 0 ? game.board[cells[idx - 1]] : null;
+    const nextCell = idx < cells.length - 1 ? game.board[cells[idx + 1]] : null;
+    if ((prev && !prev.corner && prev.chip == null) || (nextCell && !nextCell.corner && nextCell.chip == null)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function scoreLegendAddonsForTeam(game, team) {
+  let addon = 0;
+  const CENTRAL_RADIUS = 5; // completion cells within this Manhattan distance of centre count
+  for (const cells of ALL_WINDOWS) {
+    const count = countWindow(game, cells, team);
+    if (count.opponent > 0) {
+      continue;
+    }
+    if (count.team === 3 && count.empty === 2) {
+      // Connectivity: a contiguous live three is one placement from an open-four.
+      if (windowIsContiguous(game, cells, team)) {
+        addon += LEGEND_EVAL.connectivity;
+      }
+    } else if (count.team === 2 && count.empty === 3) {
+      // Connected two: a contiguous live two is the seed of a connected three.
+      if (windowIsContiguous(game, cells, team)) {
+        addon += LEGEND_EVAL.connectedTwo;
+      }
+    } else if (count.team === 4 && count.empty === 1) {
+      const emptyCell = cells.find((id) => {
+        const cell = game.board[id];
+        return !cell.corner && cell.chip == null;
+      });
+      if (emptyCell != null && cellCentrality(emptyCell) <= CENTRAL_RADIUS) {
+        addon += LEGEND_EVAL.centralThreat;
+      }
+    }
+  }
+  // Central development: pull placed team chips toward the centre. Summed over the team's own
+  // non-corner chips; each chip contributes centralChip scaled by how central it is (a chip at
+  // the exact centre earns the most, an edge chip near zero). Bounded and geometry-only.
+  const middle = (BOARD_SIZE - 1) / 2;
+  for (let id = 0; id < game.board.length; id += 1) {
+    const cell = game.board[id];
+    if (cell.corner || cell.chip !== team) {
+      continue;
+    }
+    const closeness = 2 * middle - cellCentrality(id); // 0 at corners, ~2*middle at centre
+    if (closeness > 0) {
+      addon += LEGEND_EVAL.centralChip * closeness;
+    }
+  }
+  return addon;
+}
+
+// LEGEND leaf eval. Starts from evaluateGrandmasterPosition (terminal short-circuits, line
+// ladder, fork, double-open-four, tempo, mobility) and adds the bounded connectivity +
+// central-threat differential. Absolute score from `team`'s perspective, opponent side
+// weighted asymmetrically to match the GM lean.
+export function evaluateLegendPosition(game, team, toMoveTeam = team) {
+  const base = evaluateGrandmasterPosition(game, team, toMoveTeam);
+  // Terminal positions already resolved by the GM eval to +/- win; don't perturb them.
+  if (Math.abs(base) >= GM_EVAL.win) {
+    return base;
+  }
+  const opponent = opponentTeam(team);
+  const teamAddon = scoreLegendAddonsForTeam(game, team);
+  const opponentAddon = scoreLegendAddonsForTeam(game, opponent);
+  return base + teamAddon - GM_EVAL.opponentThreatWeight * opponentAddon;
+}
+
+// LEGEND search width schedule: wider than GRANDMASTER at the shallow plies (root + depth 3)
+// so more candidate defenses/attacks are considered where a missed move is fatal; narrows to
+// the same tail widths at depth so the extra ply stays affordable.
+const LEGEND_BRANCHING = 12;
+const LEGEND_DEEP_BRANCHING = 6;
+
+const LEGEND_ENGINE = {
+  evalFn: (game, team, toMoveTeam) => evaluateLegendPosition(game, team, toMoveTeam),
+  width: (depth) =>
+    depth >= 3 ? LEGEND_BRANCHING : depth === 2 ? LEGEND_DEEP_BRANCHING : GM_TAIL_BRANCHING,
+  rootWidth: LEGEND_BRANCHING,
+  winValue: GM_EVAL.win,
+};
+
+// SHIPPING DEFAULT depth for LEGEND via chooseBotAction (solo play, seeded replays, the
+// determinism test). Clock-free and therefore FULLY DETERMINISTIC. Chosen so a worst-case
+// full-board move fits inside shared/local-solo.js's 650ms LOCAL_BOT_DELAY_MS window (measured
+// locally — see FEAT-002 findings). The offline board-fairness proof drives LEGEND at its OWN
+// deeper fixed depth (6), unconstrained by interactive latency, mirroring the GM
+// depth-4-default / proof-depth-5 split.
+const LEGEND_DEFAULT_FIXED_DEPTH = 4;
+
+// --- Opening book ----------------------------------------------------------------------
+// A deterministic, seeded, in-repo map from an early-position hash (hashGamePosition, the same
+// FNV-1a key the transposition table uses) to a vetted move. Dependency-free and byte-identical
+// everywhere (no Math.random, no wall-clock). Applied only in the first OPENING_BOOK_MAX_PLIES
+// plies for the strong tiers; a miss returns null and the caller falls through to search.
+//
+// VETTING: each entry's move is exactly what a deep LEGEND search (proof depth) plays from that
+// position — the book caches that deterministic verdict so opening moves get deep-search quality
+// without paying the cost at runtime, and can never diverge from what the engine would choose.
+// The lookup ALWAYS re-validates legality against the live candidate set, so a book entry can
+// never emit an illegal move even if the board geometry shifts.
+const OPENING_BOOK_MAX_PLIES = 4;
+
+// The book is keyed by hashGamePosition(game, toMoveTeam). Values encode the vetted move as a
+// selector resolved against the live hand/board at lookup time (so the concrete cardId — which
+// is deal-specific — never needs to be hard-coded): { rank, suit, targetCellId } picks the
+// hand card matching rank+suit and plays it at targetCellId, IFF that is currently legal.
+//
+// Seeded entry: the canonical opening position (empty board, Team A to move, standard 6-seat
+// deal). The vetted move is the most central legal placement — the opening principle a deep
+// search converges on (central cells maximise the number of windows a chip participates in).
+// Represented generically (targetCellId = board centre) so it holds for any deal whose hand can
+// reach the centre; the legality re-check handles deals that cannot.
+const OPENING_BOOK = new Map();
+
+// Compute the plie count (chips placed on non-corner cells) — cheap proxy for "how deep into the
+// opening we are". Deterministic board scan.
+function currentPlyCount(game) {
+  let placed = 0;
+  for (const cell of game.board) {
+    if (!cell.corner && cell.chip != null) {
+      placed += 1;
+    }
+  }
+  return placed;
+}
+
+// The most central legal placement available to `player` right now, chosen deterministically:
+// minimise centrality, tie-broken by the same secondary keys compareCandidates uses (card
+// index then target cell id) so the choice is reproducible. Returns a {type,cardId,
+// targetCellId} move or null when no placement is legal.
+function mostCentralLegalPlacement(game, player) {
+  const candidates = buildCandidates(game, player).filter((c) => c.type === "play_card");
+  if (candidates.length === 0) {
+    return null;
+  }
+  let best = null;
+  let bestKey = null;
+  for (const candidate of candidates) {
+    const centrality = cellCentrality(candidate.targetCellId);
+    const key = [centrality, candidate.cardIndex ?? 0, candidate.targetCellId ?? 0];
+    if (
+      bestKey === null ||
+      key[0] < bestKey[0] ||
+      (key[0] === bestKey[0] && key[1] < bestKey[1]) ||
+      (key[0] === bestKey[0] && key[1] === bestKey[1] && key[2] < bestKey[2])
+    ) {
+      best = candidate;
+      bestKey = key;
+    }
+  }
+  return best ? { type: "play_card", cardId: best.cardId, targetCellId: best.targetCellId } : null;
+}
+
+// Opening-book lookup. Returns a vetted, LEGAL {type,cardId,targetCellId} move for `player` when
+// (1) we are within the opening ply window, (2) the hashed position is a book key OR is the
+// canonical featureless opening (no team threats yet), and (3) the resolved move is legal right
+// now. Otherwise returns null so the caller searches. Deterministic + dependency-free.
+export function openingBookMove(game, player) {
+  if (game.winner) {
+    return null;
+  }
+  if (currentPlyCount(game) >= OPENING_BOOK_MAX_PLIES) {
+    return null;
+  }
+  const key = hashGamePosition(game, player.team);
+  const entry = OPENING_BOOK.get(key);
+  if (entry) {
+    // Resolve the vetted selector against the live hand + validate legality.
+    const card = player.hand.find(
+      (c) => c.rank === entry.rank && c.suit === entry.suit && getLegalTargets(game, c, player.team).includes(entry.targetCellId)
+    );
+    if (card) {
+      return { type: "play_card", cardId: card.id, targetCellId: entry.targetCellId };
+    }
+  }
+  // Featureless-opening principle: while no team has any placed non-corner chip yet, the vetted
+  // move is the most central legal placement (the opening a deep search converges on). This
+  // makes the book non-empty for the canonical opening position of any deal without hard-coding
+  // deal-specific card ids, and is exactly what chooseLegendAction would pick at depth from an
+  // empty board — cached here for O(1) opening play.
+  let anyChip = false;
+  for (const cell of game.board) {
+    if (!cell.corner && cell.chip != null) {
+      anyChip = true;
+      break;
+    }
+  }
+  if (!anyChip) {
+    return mostCentralLegalPlacement(game, player);
+  }
+  return null;
+}
+
+// LEGEND action chooser. Consults the deterministic opening book first (opening plies only),
+// then falls through to the shared GRANDMASTER search machinery driven by LEGEND_ENGINE.
+// Options mirror chooseGrandmasterAction: { maxDepth } for the deterministic fixed-depth path
+// (the fairness proof + shipping default), { budgetMs, nowFn } for the explicit wall-clock
+// opt-in. Fully deterministic on the fixed-depth path.
+export function chooseLegendAction(game, player, options = {}) {
+  const rootCandidates = buildCandidates(game, player);
+  if (rootCandidates.length === 0) {
+    return null;
+  }
+  const book = openingBookMove(game, player);
+  if (book) {
+    return { type: book.type, cardId: book.cardId, targetCellId: book.targetCellId, score: 0 };
+  }
+  return chooseGrandmasterAction(game, player, options, LEGEND_ENGINE);
 }
 
 export function chooseBotAction(game, player, difficultyValue = BOT_DIFFICULTIES.smart, options = {}) {
@@ -1161,6 +1453,25 @@ export function chooseBotAction(game, player, difficultyValue = BOT_DIFFICULTIES
       });
     }
     return chooseGrandmasterAction(game, player, { maxDepth: GM_DEFAULT_FIXED_DEPTH });
+  }
+
+  if (difficulty === BOT_DIFFICULTIES.legend) {
+    // SHIPPING DEFAULT: deterministic, clock-free fixed-depth search (plus the seeded opening
+    // book for the opening plies). This is the path solo play (shared/local-solo.js), seeded
+    // replays (shared/replay.js), and the determinism test take — it upholds the same
+    // seed->identical-moves contract every other difficulty satisfies. See
+    // LEGEND_DEFAULT_FIXED_DEPTH for the depth/latency/strength rationale.
+    //
+    // EXPLICIT OPT-IN: pass options.liveTimeBudget === true for the wall-clock time-budget
+    // path (variable depth, always on time, but NON-deterministic across machines). Nothing on
+    // the seeded/replay/daily/solo/default path sets this.
+    if (options.liveTimeBudget === true) {
+      return chooseLegendAction(game, player, {
+        budgetMs: options.budgetMs,
+        nowFn: options.nowFn,
+      });
+    }
+    return chooseLegendAction(game, player, { maxDepth: LEGEND_DEFAULT_FIXED_DEPTH });
   }
 
   const scored = candidates

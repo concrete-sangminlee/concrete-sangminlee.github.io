@@ -71,10 +71,18 @@ import {
   recordSurvival,
   scoreTimeAttack,
   GAUNTLET_TIERS,
+  PUZZLE_RUSH_LENGTH,
+  buildPuzzleRush,
+  advancePuzzleRush,
+  currentRushPuzzle,
+  scorePuzzleRush,
+  CAMPAIGN_CHAPTERS,
+  computeCampaignProgress,
   formatPuzzleShareText,
   formatGauntletShareText,
   formatSurvivalShareText,
   formatTimeAttackShareText,
+  formatPuzzleRushShareText,
 } from "./shared/solo-modes.js";
 import {
   analyzeReplay,
@@ -114,6 +122,12 @@ const STORAGE_KEYS = {
   progression: "sequence-arena-progression",
   puzzleProgress: "sequence-arena-puzzle-progress",
   modeStats: "sequence-arena-mode-stats",
+  campaignProgress: "sequence-arena-campaign-progress",
+  // Client-side offline ranked standing (FEAT-004, Axis C). On the Pages static host — and
+  // whenever no WebSocket server is present — the "ranked" experience degrades to this local
+  // Elo standing computed from the player's own progression rating (vs bot-tier anchors).
+  // Free-tier: NO networked global ladder; this is a personal, offline standing.
+  rankedProfile: "sequence-arena-ranked-profile",
 };
 
 // Cap the stored replay list so localStorage stays bounded (mirrors matchHistory .slice and
@@ -134,11 +148,15 @@ const refs = {
   joinForm: document.getElementById("join-form"),
   createRoomBtn: document.getElementById("create-room-btn"),
   offlineSoloBtn: document.getElementById("offline-solo-btn"),
+  quickMatchBtn: document.getElementById("quick-match-btn"),
+  quickMatchStatus: document.getElementById("quick-match-status"),
+  quickMatchNote: document.getElementById("quick-match-note"),
   dailyChallengeBtn: document.getElementById("daily-challenge-btn"),
   modesBtn: document.getElementById("modes-btn"),
   modesModal: document.getElementById("modes-modal"),
   modesCloseBtn: document.getElementById("modes-close-btn"),
   modesModeList: document.getElementById("modes-mode-list"),
+  modesCampaignList: document.getElementById("modes-campaign-list"),
   modesPuzzleList: document.getElementById("modes-puzzle-list"),
   soloStatsStrip: document.getElementById("solo-stats-strip"),
   homeMetaCard: document.getElementById("home-meta-card"),
@@ -492,10 +510,15 @@ function normalizeModeStats(raw) {
   const medal = typeof source.timeAttackBestMedal === "string" && source.timeAttackBestMedal in TIME_ATTACK_MEDAL_RANK
     ? source.timeAttackBestMedal
     : "none";
+  const rushMedal = typeof source.puzzleRushBestMedal === "string" && source.puzzleRushBestMedal in TIME_ATTACK_MEDAL_RANK
+    ? source.puzzleRushBestMedal
+    : "none";
   return {
     gauntletBestCleared: clampInt(source.gauntletBestCleared),
     survivalBestStreak: clampInt(source.survivalBestStreak),
     timeAttackBestMedal: medal,
+    puzzleRushBestStars: clampInt(source.puzzleRushBestStars),
+    puzzleRushBestMedal: rushMedal,
   };
 }
 
@@ -518,6 +541,25 @@ let storedReplaysCache = loadStoredReplays();
 // serializable localStorage blobs, defensively normalized on load. No server / no gameplay unlock.
 let puzzleProgressCache = loadPuzzleProgress();
 let modeStatsCache = loadModeStats();
+// Campaign progress is DERIVED purely from puzzleProgressCache (clearing a chapter = every puzzle
+// in its pack solved for 1+ star). We keep a cache of the last computed summary so a finished
+// puzzle can detect a NEWLY-cleared chapter / a NEWLY-completed campaign and fire the matching
+// achievement + flash exactly once. The derived summary is also persisted (campaignProgress key)
+// as a convenience snapshot; the puzzle stars remain the single source of truth.
+let campaignProgressCache = computeCampaignProgress(puzzleProgressCache);
+persistCampaignProgress();
+
+// Persist the derived campaign summary (a convenience snapshot; recomputed from puzzle stars).
+function persistCampaignProgress() {
+  try {
+    safeLocalStorage.set(
+      STORAGE_KEYS.campaignProgress,
+      JSON.stringify({ clearedChapters: campaignProgressCache.clearedChapters, completed: campaignProgressCache.completed })
+    );
+  } catch {
+    // ignore: optional persistence only.
+  }
+}
 // The replay record of the most recently finished local game, offered on the victory card.
 let pendingReplayToSave = null;
 let lastRecordedLocalMatchNumber = 0;
@@ -573,6 +615,11 @@ const clientState = {
   socketReady: false,
   localMode: false,
   dailyChallenge: null,
+  // Quick-match queue client state (FEAT-004, Axis C). quickMatchQueued flips true between
+  // queue_join and match_found (or leave); quickMatchStatus mirrors the latest server
+  // queue_status payload for the gateway readout. In-memory only; server-only enhancement.
+  quickMatchQueued: false,
+  quickMatchStatus: null,
   sessionId: safeLocalStorage.get(STORAGE_KEYS.session) || "",
   roomCode: isOfflineOnlyRuntime() ? "" : sanitizeRoomCodeCandidate(normalizedUrlRoomCode || persistedRoomCode || ""),
   hostSessionId: null,
@@ -771,7 +818,7 @@ let localSoloRuntime = null;
 // Localised via i18n t() at call time so a locale toggle re-renders these labels. Kept as a
 // function (not a frozen object) because t() resolves against the active locale each call.
 function botModeLabel(mode) {
-  const key = { easy: "bot.easy", smart: "bot.smart", aggressive: "bot.aggressive", master: "bot.master", grandmaster: "bot.grandmaster" }[mode];
+  const key = { easy: "bot.easy", smart: "bot.smart", aggressive: "bot.aggressive", master: "bot.master", grandmaster: "bot.grandmaster", legend: "bot.legend" }[mode];
   return key ? t(key) : t("bot.smart");
 }
 
@@ -914,7 +961,7 @@ function normalizeTeamSize(value) {
 }
 
 function normalizeBotDifficulty(value) {
-  return value === "easy" || value === "aggressive" || value === "master" || value === "grandmaster" ? value : "smart";
+  return value === "easy" || value === "aggressive" || value === "master" || value === "grandmaster" || value === "legend" ? value : "smart";
 }
 
 function asSafeArray(value) {
@@ -2279,6 +2326,164 @@ function handleCreateRoom(event) {
   });
 }
 
+// --- Quick-match queue + client-side offline ranked standing (FEAT-004, Axis C) ------
+// The client-side offline "ranked profile" degrades the ranked experience for the Pages
+// static host (and any server-less runtime): it simply mirrors the personal, offline Elo
+// rating computed by shared/progression.js against the bot-tier anchors. This is NOT a
+// networked global ladder — the free-tier tradeoff surfaced in the UI copy.
+function loadRankedProfile() {
+  try {
+    const raw = JSON.parse(safeLocalStorage.get(STORAGE_KEYS.rankedProfile) || "null");
+    if (raw && typeof raw === "object" && Number.isFinite(Number(raw.rating))) {
+      return { rating: Math.round(Number(raw.rating)) };
+    }
+  } catch {
+    // fall through to derive from progression
+  }
+  return { rating: Math.round(Number(progressionCache?.rating) || 1200) };
+}
+
+function saveRankedProfile() {
+  const rating = Math.round(Number(progressionCache?.rating) || 1200);
+  safeLocalStorage.set(STORAGE_KEYS.rankedProfile, JSON.stringify({ rating }));
+  return { rating };
+}
+
+function offlineRankedLabel() {
+  const profile = loadRankedProfile();
+  const title = rankTitleForRating(profile.rating);
+  const titleText = activeLocale() === "en" ? title.en : title.ko;
+  return t("quickMatch.offlineStanding", { rating: String(profile.rating), title: titleText });
+}
+
+function handleQuickMatchClick() {
+  if (typeof dismissWelcome === "function") {
+    dismissWelcome();
+  }
+  // Static/offline host: the button is disabled, but guard the handler too so a stray
+  // keyboard activation still explains the degradation and points to offline solo.
+  if (isOfflineOnlyRuntime()) {
+    saveRankedProfile();
+    setFlashMessage(t("quickMatch.staticHint"));
+    render();
+    return;
+  }
+  if (clientState.quickMatchQueued) {
+    sendSocket({ type: "queue_leave" });
+    clientState.quickMatchQueued = false;
+    clientState.quickMatchStatus = null;
+    setFlashMessage(t("quickMatch.left"));
+    render();
+    return;
+  }
+  if (!clientState.socketReady) {
+    setFlashMessage("서버 연결이 끊겼습니다. 잠시 후 자동으로 재연결됩니다.");
+    render();
+    return;
+  }
+  const name = sanitizePlayerName(refs.createName?.value || clientState.lastName || "");
+  if (!name) {
+    setFlashMessage(t("quickMatch.needName"));
+    render();
+    return;
+  }
+  clientState.lastName = name;
+  safeLocalStorage.set(STORAGE_KEYS.name, name);
+  clientState.quickMatchQueued = true;
+  clientState.quickMatchStatus = null;
+  sendSocket({
+    type: "queue_join",
+    name,
+    sessionId: clientState.sessionId,
+    teamSize: normalizeTeamSize(clientState.preferredTeamSize),
+    ranked: true,
+  });
+  setFlashMessage(t("quickMatch.joined"));
+  render();
+}
+
+// Called by the net-client message handler on a server-emitted queue_status.
+function applyQueueStatus(payload) {
+  if (payload.timedOut || payload.position === 0) {
+    clientState.quickMatchQueued = false;
+    clientState.quickMatchStatus = null;
+    if (payload.timedOut) {
+      setFlashMessage(t("quickMatch.timedOut"));
+    }
+  } else {
+    clientState.quickMatchQueued = true;
+    clientState.quickMatchStatus = {
+      position: payload.position,
+      waiting: payload.waiting,
+      needed: payload.needed,
+    };
+  }
+  render();
+}
+
+// Called by the net-client message handler on a server-emitted match_found. The socket is
+// already attached server-side; joining by room code binds the client to the started room.
+function applyMatchFound(payload) {
+  clientState.quickMatchQueued = false;
+  clientState.quickMatchStatus = null;
+  setFlashMessage(t("quickMatch.matchFound"));
+  const name = clientState.lastName || sanitizePlayerName(refs.createName?.value || "");
+  clientState.roomCode = normalizeRoomCode(payload.roomCode || "");
+  saveSessionMeta();
+  updateUrlRoom();
+  sendSocket({
+    type: "join_room",
+    name,
+    roomCode: clientState.roomCode,
+    sessionId: clientState.sessionId,
+    role: "player",
+  });
+  render();
+}
+
+function renderQuickMatch() {
+  const offlineOnlyRuntime = isOfflineOnlyRuntime();
+  if (refs.quickMatchNote) {
+    refs.quickMatchNote.textContent = offlineOnlyRuntime
+      ? `${t("quickMatch.tradeoff")} · ${offlineRankedLabel()}`
+      : t("quickMatch.tradeoff");
+  }
+  if (refs.quickMatchBtn) {
+    if (offlineOnlyRuntime) {
+      refs.quickMatchBtn.disabled = true;
+      refs.quickMatchBtn.dataset.staticDisabled = "true";
+      refs.quickMatchBtn.textContent = t("quickMatch.serverNeeded");
+      refs.quickMatchBtn.title = t("quickMatch.staticHint");
+    } else {
+      if (refs.quickMatchBtn.dataset.staticDisabled === "true") {
+        refs.quickMatchBtn.disabled = false;
+        delete refs.quickMatchBtn.dataset.staticDisabled;
+      }
+      refs.quickMatchBtn.disabled = false;
+      refs.quickMatchBtn.textContent = clientState.quickMatchQueued
+        ? t("quickMatch.cancel")
+        : t("quickMatch.button");
+      refs.quickMatchBtn.title = t("quickMatch.buttonTitle");
+    }
+  }
+  if (refs.quickMatchStatus) {
+    if (!offlineOnlyRuntime && clientState.quickMatchQueued && clientState.quickMatchStatus) {
+      refs.quickMatchStatus.hidden = false;
+      refs.quickMatchStatus.textContent = t("quickMatch.status", {
+        position: String(clientState.quickMatchStatus.position),
+        waiting: String(clientState.quickMatchStatus.waiting),
+        needed: String(clientState.quickMatchStatus.needed),
+      });
+    } else if (!offlineOnlyRuntime && clientState.quickMatchQueued) {
+      refs.quickMatchStatus.hidden = false;
+      refs.quickMatchStatus.textContent = t("quickMatch.searching");
+    } else {
+      refs.quickMatchStatus.hidden = true;
+      refs.quickMatchStatus.textContent = "";
+    }
+  }
+}
+
 function handleJoinRoom(event) {
   event.preventDefault();
   if (refs.joinRoomBtn?.disabled) return;
@@ -3457,6 +3662,10 @@ function recordSoloModeResult(latest, won, difficulty) {
   const kind = typeof mode.kind === "string" ? mode.kind : "";
   let progressionMode = "solo";
   let puzzlePackCompleted = false;
+  let campaignChapterCleared = false;
+  let campaignCompleted = false;
+  let puzzleRushMedal = "none";
+  let queuedRushLaunch = null;
 
   if (kind === "puzzle") {
     const puzzle = loadPuzzle(mode.puzzleId);
@@ -3472,6 +3681,23 @@ function recordSoloModeResult(latest, won, difficulty) {
       }
       progressionMode = "puzzle";
       puzzlePackCompleted = isPuzzlePackComplete(puzzle.packId);
+      // Campaign is derived purely from puzzle stars: recompute and detect a NEWLY-cleared chapter
+      // or a NEWLY-completed campaign so the matching achievement + flash fire exactly once. This is
+      // progress-based (never paid/time-gated) and free-tier (all client-side).
+      const beforeCampaign = campaignProgressCache;
+      campaignProgressCache = computeCampaignProgress(puzzleProgressCache);
+      persistCampaignProgress();
+      campaignChapterCleared = campaignProgressCache.clearedChapters > beforeCampaign.clearedChapters;
+      campaignCompleted = campaignProgressCache.completed && !beforeCampaign.completed;
+      if (campaignChapterCleared) {
+        const clearedChapter = CAMPAIGN_CHAPTERS[campaignProgressCache.clearedChapters - 1];
+        if (clearedChapter) {
+          announcePolite(t("modes.campaignChapterClearFlash", { name: t(`chapter.name.${clearedChapter.packId}`) }));
+        }
+      }
+      if (campaignCompleted) {
+        announcePolite(t("modes.campaignCompleteFlash"));
+      }
       pendingModeShare = {
         kind: "puzzle",
         packKo: packLabel(puzzle.packId, "ko"),
@@ -3486,6 +3712,62 @@ function recordSoloModeResult(latest, won, difficulty) {
           : t("modes.puzzleFailedFlash")
       );
     }
+  } else if (kind === "puzzleRush") {
+    // A puzzle-rush STAGE is one puzzle finish. Score its stars, advance the run state, and (when
+    // the run finishes) record the best medal + fire the puzzle-rush-gold hook. The rush also feeds
+    // the same per-puzzle star progress + campaign derivation as a normal puzzle solve.
+    progressionMode = "puzzle";
+    const rushPuzzle = mode.puzzleId ? loadPuzzle(mode.puzzleId) : null;
+    let stageStars = 0;
+    if (rushPuzzle) {
+      const moves = Array.isArray(latest.replay?.moves) ? latest.replay.moves.length : 0;
+      const scored = scorePuzzleAttempt(rushPuzzle, { moves, won });
+      stageStars = scored.stars;
+      const previousStars = puzzleProgressCache[rushPuzzle.id] || 0;
+      if (scored.stars > previousStars) {
+        puzzleProgressCache = { ...puzzleProgressCache, [rushPuzzle.id]: scored.stars };
+        safeLocalStorage.set(STORAGE_KEYS.puzzleProgress, JSON.stringify(puzzleProgressCache));
+      }
+      const beforeCampaign = campaignProgressCache;
+      campaignProgressCache = computeCampaignProgress(puzzleProgressCache);
+      persistCampaignProgress();
+      campaignChapterCleared = campaignProgressCache.clearedChapters > beforeCampaign.clearedChapters;
+      campaignCompleted = campaignProgressCache.completed && !beforeCampaign.completed;
+    }
+    const advanced = advancePuzzleRush(mode.run, { stars: stageStars, won });
+    if (advanced.finished) {
+      const rushScore = scorePuzzleRush(advanced);
+      if (
+        rushScore.stars > modeStatsCache.puzzleRushBestStars ||
+        TIME_ATTACK_MEDAL_RANK[rushScore.medal] > TIME_ATTACK_MEDAL_RANK[modeStatsCache.puzzleRushBestMedal]
+      ) {
+        modeStatsCache = {
+          ...modeStatsCache,
+          puzzleRushBestStars: Math.max(rushScore.stars, modeStatsCache.puzzleRushBestStars),
+          puzzleRushBestMedal:
+            TIME_ATTACK_MEDAL_RANK[rushScore.medal] > TIME_ATTACK_MEDAL_RANK[modeStatsCache.puzzleRushBestMedal]
+              ? rushScore.medal
+              : modeStatsCache.puzzleRushBestMedal,
+        };
+        safeLocalStorage.set(STORAGE_KEYS.modeStats, JSON.stringify(modeStatsCache));
+      }
+      puzzleRushMedal = rushScore.medal;
+      pendingModeShare = { kind: "puzzleRush", stars: rushScore.stars, maxStars: rushScore.maxStars, medal: rushScore.medal };
+      activeModeContext = null;
+    } else {
+      // Chain straight into the next puzzle in the run (seeded, deterministic order).
+      const nextId = currentRushPuzzle(advanced);
+      const nextPuzzle = nextId ? loadPuzzle(nextId) : null;
+      if (nextPuzzle) {
+        activeModeContext = { kind: "puzzleRush", run: advanced, puzzleId: nextPuzzle.id };
+        pendingModeShare = null;
+        // Defer the launch until after progression is recorded below (see the return-less flow).
+        queuedRushLaunch = { puzzle: nextPuzzle, run: advanced };
+      }
+    }
+    announcePolite(
+      won ? t("modes.puzzleSolvedFlash", { stars: String(stageStars) }) : t("modes.puzzleFailedFlash")
+    );
   } else if (kind === "gauntlet") {
     progressionMode = "gauntlet";
     const cleared = Math.max(0, Math.trunc(Number(mode.stageCleared) || 0));
@@ -3516,7 +3798,15 @@ function recordSoloModeResult(latest, won, difficulty) {
     mode: progressionMode,
     durationMs: latest.durationMs,
     puzzlePackCompleted,
+    campaignChapterCleared,
+    campaignCompleted,
+    puzzleRushMedal,
   });
+
+  // If a puzzle-rush stage chained into the next puzzle, launch it now (after progression recorded).
+  if (queuedRushLaunch) {
+    startRushStage(queuedRushLaunch.puzzle, queuedRushLaunch.run);
+  }
 }
 
 // A puzzle pack is "complete" once every puzzle in it has at least 1 star (solved). Drives the
@@ -3614,6 +3904,8 @@ async function shareModeResult() {
     } else if (share.kind === "timeAttack") {
       const seconds = Math.max(0, Math.round(share.durationMs / 1000));
       text = `Sequence Arena Time Attack · ${medalLabel(share.medal)} · ${seconds}s\n${url}`;
+    } else if (share.kind === "puzzleRush") {
+      text = `Sequence Arena Puzzle Rush · ${medalLabel(share.medal)} · ★${share.stars}/${share.maxStars}\n${url}`;
     }
   } else if (share.kind === "puzzle") {
     text = formatPuzzleShareText({ packKo: share.packKo, puzzleKo: share.puzzleKo, stars: share.stars, par: share.par, moveCount: share.moveCount, url });
@@ -3623,6 +3915,8 @@ async function shareModeResult() {
     text = formatSurvivalShareText({ best: share.best, url });
   } else if (share.kind === "timeAttack") {
     text = formatTimeAttackShareText({ medal: share.medal, durationMs: share.durationMs, url });
+  } else if (share.kind === "puzzleRush") {
+    text = formatPuzzleRushShareText({ stars: share.stars, maxStars: share.maxStars, medal: share.medal, url });
   }
   if (!text) return;
   // Mirrored for ui-regression like the daily share, since clipboard-read is policy-denied.
@@ -4259,6 +4553,7 @@ function renderStatus() {
     }
   }
   refreshJoinFormState();
+  renderQuickMatch();
   if (typeof updateWelcomeModePanel === "function") {
     updateWelcomeModePanel();
   }
@@ -4925,6 +5220,7 @@ if (refs.createRoomBtn) {
   refs.createRoomBtn.setAttribute("aria-describedby", "welcome-mode-banner");
 }
 refs.offlineSoloBtn?.addEventListener("click", () => startOfflineSolo());
+refs.quickMatchBtn?.addEventListener("click", () => handleQuickMatchClick());
 refs.dailyChallengeBtn?.addEventListener("click", () => startOfflineSolo({ daily: true }));
 refs.welcomeDailyBtn?.addEventListener("click", () => startOfflineSolo({ daily: true }));
 refs.shareDailyBtn?.addEventListener("click", () => {
@@ -5541,7 +5837,7 @@ function closeStatsModal() {
 }
 
 function statsDifficultyLabel(key) {
-  const mapped = { easy: "statsDiff.easy", smart: "statsDiff.smart", aggressive: "statsDiff.aggressive", master: "statsDiff.master", grandmaster: "statsDiff.grandmaster" }[key];
+  const mapped = { easy: "statsDiff.easy", smart: "statsDiff.smart", aggressive: "statsDiff.aggressive", master: "statsDiff.master", grandmaster: "statsDiff.grandmaster", legend: "statsDiff.legend" }[key];
   return mapped ? t(mapped) : key;
 }
 
@@ -5582,7 +5878,62 @@ function closeModesModal() {
 // only (SAST forbids innerHTML/inline handlers); actions are wired via addEventListener.
 function renderModesModal() {
   renderModesModeList();
+  renderModesCampaign();
   renderModesPuzzleList();
+}
+
+// Render the campaign chapter list. Progress-based unlock: chapter 0 is always open, later chapters
+// open only once the previous is cleared (every puzzle solved for 1+ star). Locked chapters are
+// non-interactive; unlocked ones jump the picker to the chapter's first unsolved puzzle. DOM built
+// with createElement + textContent/setAttribute only (SAST-clean).
+function renderModesCampaign() {
+  const container = refs.modesCampaignList;
+  if (!container) return;
+  container.replaceChildren();
+  const en = activeLocale() === "en";
+  campaignProgressCache = computeCampaignProgress(puzzleProgressCache);
+  const summary = document.createElement("p");
+  summary.className = "modes-campaign-summary";
+  summary.textContent = t("modes.campaignProgress", {
+    cleared: String(campaignProgressCache.clearedChapters),
+    total: String(campaignProgressCache.totalChapters),
+    stars: String(campaignProgressCache.stars),
+    max: String(campaignProgressCache.maxStars),
+  });
+  container.appendChild(summary);
+  for (const chapter of campaignProgressCache.chapters) {
+    const card = document.createElement("button");
+    card.type = "button";
+    card.className = `modes-card modes-campaign-card${chapter.cleared ? " cleared" : ""}${chapter.unlocked ? "" : " locked"}`;
+    card.disabled = !chapter.unlocked;
+    const title = document.createElement("span");
+    title.className = "modes-card-title";
+    title.textContent = t(`chapter.name.${chapter.packId}`);
+    const state = document.createElement("span");
+    state.className = "modes-card-desc";
+    state.textContent = chapter.cleared
+      ? t("modes.campaignChapterCleared")
+      : chapter.unlocked
+        ? t("modes.campaignChapterUnlocked")
+        : t("modes.campaignChapterLocked");
+    const stars = document.createElement("span");
+    stars.className = "modes-card-best";
+    stars.textContent = t("modes.campaignChapterStars", { stars: String(chapter.stars), max: String(chapter.maxStars) });
+    card.append(title, state, stars);
+    if (chapter.unlocked) {
+      card.addEventListener("click", () => startCampaignChapter(chapter.packId));
+    }
+    container.appendChild(card);
+  }
+}
+
+// Launch the first not-yet-3-starred puzzle of a campaign chapter (or its first puzzle). Reuses
+// the seeded puzzle start path; the finish handler derives campaign progress from puzzle stars.
+function startCampaignChapter(packId) {
+  const chapter = CAMPAIGN_CHAPTERS.find((entry) => entry.packId === packId);
+  if (!chapter) return;
+  const targetId = chapter.puzzleIds.find((id) => (puzzleProgressCache[id] || 0) < 3) || chapter.puzzleIds[0];
+  if (targetId) startPuzzle(targetId);
 }
 
 function renderModesModeList() {
@@ -5593,6 +5944,7 @@ function renderModesModeList() {
     { kind: "gauntlet", title: t("modes.gauntletTitle"), desc: t("modes.gauntletDesc"), best: t("modes.gauntletBest", { cleared: String(modeStatsCache.gauntletBestCleared), total: String(GAUNTLET_TIERS.length) }) },
     { kind: "survival", title: t("modes.survivalTitle"), desc: t("modes.survivalDesc"), best: t("modes.survivalBest", { streak: String(modeStatsCache.survivalBestStreak) }) },
     { kind: "timeAttack", title: t("modes.timeAttackTitle"), desc: t("modes.timeAttackDesc"), best: t("modes.timeAttackBest", { medal: medalLabel(modeStatsCache.timeAttackBestMedal) }) },
+    { kind: "puzzleRush", title: t("modes.puzzleRushTitle"), desc: t("modes.puzzleRushDesc"), best: t("modes.puzzleRushBest", { medal: medalLabel(modeStatsCache.puzzleRushBestMedal), stars: String(modeStatsCache.puzzleRushBestStars), max: String(PUZZLE_RUSH_LENGTH * 3) }) },
   ];
   for (const mode of modes) {
     const card = document.createElement("button");
@@ -5682,10 +6034,33 @@ function startPuzzle(puzzleId) {
   });
 }
 
-// Start a solo mode (gauntlet stage 1 / survival game 1 / a time-attack game). Each is a seeded
-// solo game; the mode's own progress (best cleared / streak / medal) is tracked at finish.
+// Launch one puzzle-rush STAGE (a single puzzle) carrying the run state so finish can advance/chain.
+function startRushStage(puzzle, run) {
+  activeModeContext = { kind: "puzzleRush", run, puzzleId: puzzle.id };
+  startSoloContent({
+    difficulty: puzzle.difficulty,
+    seed: puzzle.seed,
+    setupMoves: puzzle.setupMoves,
+    mode: { kind: "puzzleRush", run, puzzleId: puzzle.id, par: puzzle.par, setupMoves: puzzle.setupMoves },
+    flash: t("modes.puzzleStartFlash", { name: t(`puzzle.name.${puzzle.id}`) }),
+  });
+}
+
+// Start a solo mode (gauntlet stage 1 / survival game 1 / a time-attack game / puzzle-rush run).
+// Each is a seeded solo game; the mode's own progress (best cleared / streak / medal) is tracked
+// at finish.
 function startSoloMode(kind) {
   closeModesModal();
+  if (kind === "puzzleRush") {
+    const run = buildPuzzleRush(`rush-${Date.now().toString(36)}`);
+    const firstId = currentRushPuzzle(run);
+    const firstPuzzle = firstId ? loadPuzzle(firstId) : null;
+    if (firstPuzzle) {
+      announcePolite(t("modes.puzzleRushStartFlash"));
+      startRushStage(firstPuzzle, run);
+    }
+    return;
+  }
   if (kind === "gauntlet") {
     const run = buildGauntletRun(`gauntlet-${Date.now().toString(36)}`);
     const stage = currentGauntletStage(run);
@@ -7449,6 +7824,8 @@ bindNetClientContext({
   applyRoomSnapshot,
   isOfflineOnlyRuntime,
   markPlayerActionTempo,
+  applyQueueStatus,
+  applyMatchFound,
 });
 
 connectSocket();

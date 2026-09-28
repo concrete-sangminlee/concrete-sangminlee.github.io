@@ -727,7 +727,10 @@ input {
 }
 
 button {
-  min-height: 42px;
+  /* WCAG 2.5.5 Target Size (Enhanced), AAA: 44x44 CSS px minimum. Every control inherits this
+     base, so the FEAT-002 LEGEND button and the FEAT-003/004 mode/puzzle/campaign/quick-match
+     controls all clear the enhanced target size without per-element overrides. */
+  min-height: 44px;
   border: 0;
   border-radius: var(--radius);
   cursor: pointer;
@@ -1064,6 +1067,43 @@ a {
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.66), rgba(255, 255, 255, 0.34)),
     rgba(243, 215, 150, 0.14);
+}
+
+/* Quick-match / ranked entry (FEAT-004, Axis C). Reuses the ghost-button base; the note
+   surfaces the free-tier tradeoff copy, and the status line the live queue position. */
+.quick-match-button[data-static-disabled="true"],
+.quick-match-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.quick-match-status {
+  margin: 6px 0 0;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #2f4858;
+}
+
+.quick-match-note {
+  margin: 4px 0 0;
+  font-size: 0.72rem;
+  line-height: 1.35;
+  color: #5a4a2c;
+}
+
+[data-theme="dark"] .quick-match-status {
+  color: #cfe3ef;
+}
+
+[data-theme="dark"] .quick-match-note {
+  color: #cbb98f;
+}
+
+@media (forced-colors: active) {
+  .quick-match-status,
+  .quick-match-note {
+    color: CanvasText;
+  }
 }
 
 .gateway-grid,
@@ -5514,6 +5554,39 @@ body[data-turn-just-arrived="true"] .board-panel {
   animation: metaXpGlow 0.9s ease-out;
 }
 
+/* Campaign chapter list: ordered chapters with locked / available / cleared states. Layout only —
+   the campaign is progress-gated in logic, this just communicates state visually + accessibly. */
+.modes-campaign-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.modes-campaign-summary,
+.modes-campaign-desc {
+  margin: 0 0 4px;
+  font-size: 0.85rem;
+  opacity: 0.85;
+}
+
+.modes-campaign-card.cleared .modes-card-title::after {
+  content: " ✓";
+  color: var(--accent, #4caf50);
+}
+
+.modes-campaign-card.locked {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* Forced-colors: never rely on opacity alone to signal a locked chapter. */
+@media (forced-colors: active) {
+  .modes-campaign-card.locked {
+    opacity: 1;
+    border-style: dashed;
+  }
+}
+
 /* Puzzle-star reveal in the modes/finish UI: each earned star pops in. */
 .modes-card-stars {
   display: inline-flex;
@@ -5589,4 +5662,63 @@ body[data-turn-just-arrived="true"] .board-panel {
 [data-theme="dark"] .home-meta-goals-label,
 [data-theme="dark"] .stats-meta-next-label {
   color: #cbb37f;
+}
+
+/* =====================================================================================
+   Axis D — perf + accessibility-toward-AAA pass (feat/perf-a11y-aaa, sequence-arena-v118)
+   ===================================================================================== */
+
+/* PERF (LCP/INP): the modes / stats / replay dialogs are `hidden` overlays offscreen until
+   opened. `content-visibility: auto` lets the browser skip layout + paint of their large
+   subtrees during the initial render, shrinking main-thread work on load. They are
+   position:fixed overlays, so skipping their intrinsic layout cannot shift the above-the-fold
+   gateway LCP content; `contain-intrinsic-size` gives a placeholder size to avoid scroll jump.
+   Decorative motion is untouched, so the runFastPlayTempoScenario tempo contract is preserved. */
+.modes-dialog .modes-body,
+.stats-dialog .stats-body {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 640px;
+}
+
+/* A11Y forced-colors (Windows High Contrast): every FEAT-002/003/004 control gets a
+   system-colour fallback so state is never conveyed by colour/opacity alone. The base
+   button/icon-button forced-colors border rule (top of the file) already covers focus + generic
+   buttons; these selectors extend it to the new surfaces and to the aria-pressed selected state. */
+@media (forced-colors: active) {
+  /* FEAT-002 LEGEND (and sibling) difficulty buttons: the selected state is signalled by a
+     background gradient that disappears in forced-colors — pin it to Highlight so the pressed
+     control is unmistakable, and give every option a border. */
+  [data-ai-mode] {
+    border: 1px solid ButtonBorder;
+  }
+  [data-ai-mode][aria-pressed="true"],
+  .segmented-control button[aria-pressed="true"] {
+    forced-color-adjust: none;
+    background: Highlight;
+    color: HighlightText;
+    border-color: Highlight;
+  }
+  /* FEAT-003 mode / puzzle / campaign cards: keep every card outlined so the list reads as a set
+     of discrete, focusable targets rather than a wash of Canvas. */
+  .modes-mode-card,
+  .modes-puzzle-card,
+  .modes-campaign-card {
+    border: 1px solid ButtonBorder;
+  }
+  /* Cleared campaign chapters already carry a text ✓ glyph (not colour-only); reinforce with a
+     solid border and the locked dashed border stays from the FEAT-003 rule above. */
+  .modes-campaign-card.cleared {
+    border-color: CanvasText;
+  }
+}
+
+/* A11Y reduced-motion: the new perf/interaction surfaces introduce no new decorative motion, but
+   pin the intent explicitly so a future edit that adds a transition here is neutralized for
+   sensitive viewers (belt-and-braces alongside the global catch-all at the top of the file). */
+@media (prefers-reduced-motion: reduce) {
+  .modes-mode-card,
+  .modes-puzzle-card,
+  .modes-campaign-card {
+    transition: none;
+  }
 }

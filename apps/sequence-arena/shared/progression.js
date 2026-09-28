@@ -25,6 +25,10 @@ export const TIER_RATINGS = {
   [BOT_DIFFICULTIES.aggressive]: 1300,
   [BOT_DIFFICULTIES.master]: 1600,
   [BOT_DIFFICULTIES.grandmaster]: 1900,
+  // LEGEND is the strongest anchor because Axis A proved that tier measurably beats
+  // GRANDMASTER (same-seed head-to-head margin, scripts/board-fairness-test.mjs). Beating
+  // LEGEND therefore raises the personal rating the most.
+  [BOT_DIFFICULTIES.legend]: 2200,
 };
 
 // Standard Elo K-factor. A single match can move the rating at most K points (a full unexpected
@@ -68,6 +72,7 @@ const XP_DIFFICULTY_MULTIPLIER = {
   [BOT_DIFFICULTIES.aggressive]: 1.15,
   [BOT_DIFFICULTIES.master]: 1.5,
   [BOT_DIFFICULTIES.grandmaster]: 2,
+  [BOT_DIFFICULTIES.legend]: 2.5,
 };
 const XP_MODE_MULTIPLIER = {
   solo: 1,
@@ -150,6 +155,13 @@ export const ACHIEVEMENTS = [
     ko: "그랜드마스터 격파",
     en: "Beat GRANDMASTER",
     test: (ctx) => ctx.won && ctx.difficulty === BOT_DIFFICULTIES.grandmaster,
+  },
+  {
+    id: "beat-legend",
+    category: "tier",
+    ko: "레전드 격파",
+    en: "Beat LEGEND",
+    test: (ctx) => ctx.won && ctx.difficulty === BOT_DIFFICULTIES.legend,
   },
   {
     id: "streak-3",
@@ -243,6 +255,30 @@ export const ACHIEVEMENTS = [
     ko: "퍼즐 팩 완료",
     en: "Complete a Puzzle Pack",
     test: (ctx) => ctx.puzzlePackCompleted === true,
+  },
+  {
+    // Phase 3 (Axis B) content hooks. solo-modes.js reports campaign/rush milestones via the
+    // corresponding ctx facts; each is proven REACHABLE by scripts/progression-test.mjs with a
+    // constructed unlocking context. All are cosmetic milestones — free-tier, no gameplay unlocks.
+    id: "campaign-chapter-clear",
+    category: "puzzle",
+    ko: "캠페인 챕터 클리어",
+    en: "Clear a Campaign Chapter",
+    test: (ctx) => ctx.campaignChapterCleared === true,
+  },
+  {
+    id: "campaign-complete",
+    category: "puzzle",
+    ko: "캠페인 완주",
+    en: "Complete the Campaign",
+    test: (ctx) => ctx.campaignCompleted === true,
+  },
+  {
+    id: "puzzle-rush-gold",
+    category: "puzzle",
+    ko: "퍼즐 러시 금메달",
+    en: "Puzzle Rush Gold",
+    test: (ctx) => ctx.puzzleRushMedal === "gold",
   },
 ];
 
@@ -420,6 +456,9 @@ export function buildAchievementContext(progression, facts = {}) {
     winStreak: Number.isFinite(Number(facts.winStreak)) ? Math.trunc(Number(facts.winStreak)) : normalized.streak.current,
     dailyStreak: Number.isFinite(Number(facts.dailyStreak)) ? Math.trunc(Number(facts.dailyStreak)) : 0,
     puzzlePackCompleted: facts.puzzlePackCompleted === true,
+    campaignChapterCleared: facts.campaignChapterCleared === true,
+    campaignCompleted: facts.campaignCompleted === true,
+    puzzleRushMedal: typeof facts.puzzleRushMedal === "string" ? facts.puzzleRushMedal : "none",
   };
 }
 

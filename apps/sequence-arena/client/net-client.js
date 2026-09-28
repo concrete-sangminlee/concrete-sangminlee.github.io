@@ -160,6 +160,8 @@ export function connectSocket() {
     saveSessionMeta,
     applyRoomSnapshot,
     isOfflineOnlyRuntime,
+    applyQueueStatus,
+    applyMatchFound,
   } = host;
   if (clientState.localMode) {
     return;
@@ -333,6 +335,22 @@ export function connectSocket() {
         updateUrlRoom();
       }
       render();
+      return;
+    }
+
+    // Quick-match queue (FEAT-004, Axis C): the server emits queue_status while the socket
+    // waits and match_found once a pair forms. Both route into app.js peer handlers.
+    if (payload.type === "queue_status") {
+      if (typeof applyQueueStatus === "function") {
+        applyQueueStatus(payload);
+      }
+      return;
+    }
+
+    if (payload.type === "match_found") {
+      if (typeof applyMatchFound === "function") {
+        applyMatchFound(payload);
+      }
       return;
     }
 

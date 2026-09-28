@@ -233,6 +233,249 @@ export const PUZZLE_PACKS = [
         },
     ],
   },
+  {
+    id: "midgame-tactics",
+    ko: "미드게임 전술",
+    en: "Midgame Tactics",
+    ko_desc: "중반 위협을 엮어 승기를 잡는 전술 팩입니다.",
+    en_desc: "A midgame pack about weaving threats into a winning initiative.",
+    puzzles: [
+        {
+          id: "mt-1",
+          seed: "midgame-3001",
+          difficulty: "aggressive",
+          par: 3,
+          ko: "미드게임 콤보 1",
+          en: "Midgame Combo 1",
+          setupMoves: [{ type: "play", cardId: 82, targetCellId: 44 }, { type: "play", cardId: 64, targetCellId: 63 }, { type: "play", cardId: 37, targetCellId: 43 }, { type: "play", cardId: 42, targetCellId: 41 }, { type: "play", cardId: 67, targetCellId: 54 }, { type: "play", cardId: 25, targetCellId: 32 }, { type: "play", cardId: 13, targetCellId: 84 }, { type: "play", cardId: 24, targetCellId: 44 }, { type: "play", cardId: 99, targetCellId: 52 }, { type: "play", cardId: 35, targetCellId: 23 }, { type: "play", cardId: 58, targetCellId: 34 }, { type: "play", cardId: 11, targetCellId: 34 }, { type: "play", cardId: 73, targetCellId: 70 }, { type: "play", cardId: 53, targetCellId: 50 }, { type: "play", cardId: 56, targetCellId: 76 }, { type: "play", cardId: 95, targetCellId: 62 }, { type: "play", cardId: 27, targetCellId: 65 }, { type: "play", cardId: 69, targetCellId: 22 }, { type: "play", cardId: 49, targetCellId: 45 }, { type: "play", cardId: 28, targetCellId: 94 }, { type: "play", cardId: 70, targetCellId: 27 }, { type: "play", cardId: 59, targetCellId: 85 }, { type: "play", cardId: 97, targetCellId: 35 }, { type: "play", cardId: 48, targetCellId: 4 }, { type: "play", cardId: 20, targetCellId: 87 }, { type: "play", cardId: 12, targetCellId: 3 }, { type: "play", cardId: 63, targetCellId: 32 }, { type: "play", cardId: 6, targetCellId: 34 }, { type: "play", cardId: 5, targetCellId: 91 }, { type: "play", cardId: 80, targetCellId: 93 }, { type: "play", cardId: 71, targetCellId: 14 }, { type: "play", cardId: 91, targetCellId: 74 }, { type: "play", cardId: 50, targetCellId: 55 }, { type: "play", cardId: 62, targetCellId: 7 }, { type: "play", cardId: 77, targetCellId: 32 }, { type: "play", cardId: 4, targetCellId: 29 }, { type: "play", cardId: 51, targetCellId: 36 }, { type: "play", cardId: 29, targetCellId: 15 }, { type: "play", cardId: 96, targetCellId: 83 }, { type: "play", cardId: 40, targetCellId: 19 }, { type: "play", cardId: 47, targetCellId: 88 }, { type: "play", cardId: 76, targetCellId: 45 }, { type: "play", cardId: 33, targetCellId: 25 }, { type: "play", cardId: 41, targetCellId: 77 }, { type: "play", cardId: 84, targetCellId: 5 }, { type: "play", cardId: 9, targetCellId: 75 }, { type: "play", cardId: 88, targetCellId: 1 }, { type: "play", cardId: 44, targetCellId: 72 }, { type: "play", cardId: 52, targetCellId: 67 }, { type: "play", cardId: 61, targetCellId: 33 }, { type: "play", cardId: 54, targetCellId: 10 }, { type: "play", cardId: 102, targetCellId: 21 }, { type: "play", cardId: 78, targetCellId: 12 }, { type: "play", cardId: 39, targetCellId: 39 }, { type: "play", cardId: 46, targetCellId: 95 }, { type: "play", cardId: 1, targetCellId: 68 }, { type: "play", cardId: 94, targetCellId: 31 }, { type: "play", cardId: 74, targetCellId: 47 }, { type: "play", cardId: 26, targetCellId: 48 }, { type: "play", cardId: 65, targetCellId: 38 }, { type: "play", cardId: 98, targetCellId: 60 }, { type: "play", cardId: 68, targetCellId: 57 }, { type: "play", cardId: 83, targetCellId: 56 }, { type: "play", cardId: 93, targetCellId: 71 }, { type: "play", cardId: 15, targetCellId: 49 }, { type: "play", cardId: 34, targetCellId: 53 }, { type: "play", cardId: 104, targetCellId: 89 }, { type: "play", cardId: 90, targetCellId: 11 }, { type: "play", cardId: 23, targetCellId: 73 }, { type: "play", cardId: 21, targetCellId: 78 }, { type: "play", cardId: 18, targetCellId: 69 }, { type: "play", cardId: 8, targetCellId: 59 }, { type: "play", cardId: 60, targetCellId: 97 }, { type: "play", cardId: 89, targetCellId: 44 }, { type: "play", cardId: 38, targetCellId: 64 }, { type: "play", cardId: 45, targetCellId: 96 }, { type: "play", cardId: 66, targetCellId: 80 }, { type: "play", cardId: 10, targetCellId: 81 }, { type: "play", cardId: 86, targetCellId: 30 }, { type: "play", cardId: 30, targetCellId: 98 }, { type: "play", cardId: 16, targetCellId: 40 }, { type: "play", cardId: 36, targetCellId: 61 }],
+        },
+        {
+          id: "mt-2",
+          seed: "midgame-3002",
+          difficulty: "aggressive",
+          par: 3,
+          ko: "미드게임 콤보 2",
+          en: "Midgame Combo 2",
+          setupMoves: [{ type: "play", cardId: 17, targetCellId: 88 }, { type: "play", cardId: 85, targetCellId: 22 }, { type: "play", cardId: 62, targetCellId: 58 }, { type: "play", cardId: 87, targetCellId: 25 }, { type: "play", cardId: 43, targetCellId: 48 }, { type: "play", cardId: 9, targetCellId: 34 }, { type: "play", cardId: 36, targetCellId: 77 }, { type: "play", cardId: 32, targetCellId: 30 }, { type: "play", cardId: 5, targetCellId: 26 }, { type: "play", cardId: 31, targetCellId: 54 }, { type: "play", cardId: 40, targetCellId: 16 }, { type: "play", cardId: 19, targetCellId: 68 }, { type: "play", cardId: 73, targetCellId: 17 }, { type: "play", cardId: 81, targetCellId: 24 }, { type: "play", cardId: 48, targetCellId: 27 }, { type: "play", cardId: 15, targetCellId: 47 }, { type: "play", cardId: 63, targetCellId: 24 }, { type: "play", cardId: 53, targetCellId: 36 }, { type: "play", cardId: 90, targetCellId: 70 }, { type: "play", cardId: 22, targetCellId: 43 }, { type: "play", cardId: 4, targetCellId: 4 }, { type: "play", cardId: 37, targetCellId: 37 }, { type: "play", cardId: 82, targetCellId: 66 }, { type: "play", cardId: 77, targetCellId: 39 }, { type: "play", cardId: 11, targetCellId: 36 }, { type: "play", cardId: 33, targetCellId: 19 }, { type: "play", cardId: 41, targetCellId: 6 }, { type: "play", cardId: 3, targetCellId: 28 }, { type: "play", cardId: 71, targetCellId: 2 }, { type: "play", cardId: 66, targetCellId: 15 }, { type: "play", cardId: 76, targetCellId: 19 }, { type: "play", cardId: 65, targetCellId: 32 }, { type: "play", cardId: 45, targetCellId: 57 }, { type: "play", cardId: 79, targetCellId: 87 }, { type: "play", cardId: 58, targetCellId: 55 }, { type: "play", cardId: 91, targetCellId: 5 }, { type: "play", cardId: 83, targetCellId: 93 }, { type: "play", cardId: 44, targetCellId: 81 }, { type: "play", cardId: 34, targetCellId: 52 }, { type: "play", cardId: 6, targetCellId: 56 }, { type: "play", cardId: 68, targetCellId: 75 }, { type: "play", cardId: 46, targetCellId: 64 }, { type: "play", cardId: 35, targetCellId: 74 }, { type: "play", cardId: 96, targetCellId: 69 }, { type: "play", cardId: 92, targetCellId: 3 }, { type: "play", cardId: 42, targetCellId: 78 }, { type: "play", cardId: 2, targetCellId: 71 }, { type: "play", cardId: 8, targetCellId: 31 }, { type: "play", cardId: 16, targetCellId: 33 }, { type: "play", cardId: 52, targetCellId: 14 }],
+        },
+        {
+          id: "mt-3",
+          seed: "midgame-3003",
+          difficulty: "aggressive",
+          par: 3,
+          ko: "미드게임 콤보 3",
+          en: "Midgame Combo 3",
+          setupMoves: [{ type: "play", cardId: 19, targetCellId: 27 }, { type: "play", cardId: 40, targetCellId: 50 }, { type: "play", cardId: 53, targetCellId: 10 }, { type: "play", cardId: 28, targetCellId: 30 }, { type: "play", cardId: 17, targetCellId: 49 }, { type: "play", cardId: 86, targetCellId: 39 }, { type: "play", cardId: 58, targetCellId: 28 }, { type: "play", cardId: 26, targetCellId: 75 }, { type: "play", cardId: 60, targetCellId: 58 }, { type: "play", cardId: 5, targetCellId: 77 }, { type: "play", cardId: 82, targetCellId: 74 }, { type: "play", cardId: 18, targetCellId: 79 }, { type: "play", cardId: 24, targetCellId: 30 }, { type: "play", cardId: 50, targetCellId: 76 }, { type: "play", cardId: 21, targetCellId: 16 }, { type: "play", cardId: 11, targetCellId: 16 }, { type: "play", cardId: 52, targetCellId: 64 }, { type: "play", cardId: 56, targetCellId: 57 }, { type: "play", cardId: 42, targetCellId: 26 }, { type: "play", cardId: 33, targetCellId: 48 }, { type: "play", cardId: 83, targetCellId: 62 }, { type: "play", cardId: 68, targetCellId: 67 }, { type: "play", cardId: 95, targetCellId: 93 }, { type: "play", cardId: 10, targetCellId: 56 }, { type: "play", cardId: 37, targetCellId: 66 }, { type: "play", cardId: 90, targetCellId: 86 }, { type: "play", cardId: 9, targetCellId: 72 }, { type: "play", cardId: 36, targetCellId: 38 }, { type: "play", cardId: 100, targetCellId: 97 }, { type: "play", cardId: 29, targetCellId: 73 }, { type: "play", cardId: 59, targetCellId: 78 }, { type: "play", cardId: 25, targetCellId: 23 }, { type: "play", cardId: 34, targetCellId: 24 }, { type: "play", cardId: 35, targetCellId: 20 }, { type: "play", cardId: 72, targetCellId: 63 }, { type: "play", cardId: 43, targetCellId: 81 }, { type: "play", cardId: 65, targetCellId: 65 }, { type: "play", cardId: 84, targetCellId: 47 }, { type: "play", cardId: 67, targetCellId: 34 }, { type: "play", cardId: 39, targetCellId: 53 }, { type: "play", cardId: 27, targetCellId: 92 }, { type: "play", cardId: 88, targetCellId: 91 }, { type: "play", cardId: 92, targetCellId: 85 }, { type: "play", cardId: 80, targetCellId: 30 }, { type: "play", cardId: 98, targetCellId: 41 }, { type: "play", cardId: 44, targetCellId: 71 }, { type: "play", cardId: 55, targetCellId: 36 }, { type: "play", cardId: 8, targetCellId: 89 }],
+        },
+        {
+          id: "mt-4",
+          seed: "midgame-3005",
+          difficulty: "aggressive",
+          par: 3,
+          ko: "미드게임 콤보 4",
+          en: "Midgame Combo 4",
+          setupMoves: [{ type: "play", cardId: 7, targetCellId: 77 }, { type: "play", cardId: 12, targetCellId: 88 }, { type: "play", cardId: 101, targetCellId: 74 }, { type: "play", cardId: 16, targetCellId: 78 }, { type: "play", cardId: 99, targetCellId: 52 }, { type: "play", cardId: 26, targetCellId: 89 }, { type: "play", cardId: 64, targetCellId: 63 }, { type: "play", cardId: 39, targetCellId: 41 }, { type: "play", cardId: 50, targetCellId: 85 }, { type: "play", cardId: 34, targetCellId: 45 }, { type: "play", cardId: 27, targetCellId: 81 }, { type: "play", cardId: 40, targetCellId: 23 }, { type: "play", cardId: 9, targetCellId: 65 }, { type: "play", cardId: 74, targetCellId: 5 }, { type: "play", cardId: 87, targetCellId: 56 }, { type: "play", cardId: 48, targetCellId: 92 }, { type: "play", cardId: 45, targetCellId: 96 }, { type: "play", cardId: 89, targetCellId: 47 }, { type: "play", cardId: 23, targetCellId: 66 }, { type: "play", cardId: 58, targetCellId: 67 }, { type: "play", cardId: 42, targetCellId: 53 }, { type: "play", cardId: 79, targetCellId: 55 }, { type: "play", cardId: 17, targetCellId: 76 }, { type: "play", cardId: 54, targetCellId: 49 }, { type: "play", cardId: 15, targetCellId: 26 }, { type: "play", cardId: 1, targetCellId: 93 }, { type: "play", cardId: 75, targetCellId: 94 }, { type: "play", cardId: 62, targetCellId: 57 }, { type: "play", cardId: 55, targetCellId: 97 }, { type: "play", cardId: 70, targetCellId: 86 }, { type: "play", cardId: 29, targetCellId: 64 }, { type: "play", cardId: 95, targetCellId: 75 }, { type: "play", cardId: 24, targetCellId: 67 }, { type: "play", cardId: 2, targetCellId: 61 }],
+        },
+        {
+          id: "mt-5",
+          seed: "midgame-3006",
+          difficulty: "aggressive",
+          par: 3,
+          ko: "미드게임 콤보 5",
+          en: "Midgame Combo 5",
+          setupMoves: [{ type: "play", cardId: 80, targetCellId: 55 }, { type: "play", cardId: 51, targetCellId: 60 }, { type: "play", cardId: 102, targetCellId: 66 }, { type: "play", cardId: 33, targetCellId: 93 }, { type: "play", cardId: 17, targetCellId: 44 }, { type: "play", cardId: 79, targetCellId: 97 }, { type: "play", cardId: 91, targetCellId: 77 }, { type: "play", cardId: 97, targetCellId: 62 }, { type: "play", cardId: 11, targetCellId: 93 }, { type: "play", cardId: 48, targetCellId: 84 }, { type: "play", cardId: 39, targetCellId: 53 }, { type: "play", cardId: 62, targetCellId: 30 }, { type: "play", cardId: 5, targetCellId: 57 }, { type: "play", cardId: 65, targetCellId: 87 }, { type: "play", cardId: 56, targetCellId: 85 }, { type: "play", cardId: 3, targetCellId: 92 }, { type: "play", cardId: 46, targetCellId: 58 }, { type: "play", cardId: 96, targetCellId: 54 }, { type: "play", cardId: 58, targetCellId: 68 }, { type: "play", cardId: 45, targetCellId: 81 }, { type: "play", cardId: 104, targetCellId: 78 }, { type: "play", cardId: 75, targetCellId: 48 }, { type: "play", cardId: 90, targetCellId: 24 }, { type: "play", cardId: 101, targetCellId: 33 }, { type: "play", cardId: 61, targetCellId: 69 }, { type: "play", cardId: 57, targetCellId: 46 }, { type: "play", cardId: 41, targetCellId: 98 }, { type: "play", cardId: 25, targetCellId: 56 }, { type: "play", cardId: 78, targetCellId: 25 }, { type: "play", cardId: 99, targetCellId: 94 }, { type: "play", cardId: 22, targetCellId: 26 }, { type: "play", cardId: 30, targetCellId: 64 }, { type: "play", cardId: 20, targetCellId: 23 }, { type: "play", cardId: 40, targetCellId: 91 }, { type: "play", cardId: 24, targetCellId: 94 }, { type: "play", cardId: 98, targetCellId: 36 }],
+        },
+        {
+          id: "mt-6",
+          seed: "midgame-3009",
+          difficulty: "aggressive",
+          par: 3,
+          ko: "미드게임 콤보 6",
+          en: "Midgame Combo 6",
+          setupMoves: [{ type: "play", cardId: 91, targetCellId: 54 }, { type: "play", cardId: 51, targetCellId: 72 }, { type: "play", cardId: 32, targetCellId: 45 }, { type: "play", cardId: 57, targetCellId: 73 }, { type: "play", cardId: 34, targetCellId: 74 }, { type: "play", cardId: 6, targetCellId: 64 }, { type: "play", cardId: 60, targetCellId: 42 }, { type: "play", cardId: 104, targetCellId: 55 }, { type: "play", cardId: 78, targetCellId: 34 }, { type: "play", cardId: 19, targetCellId: 88 }, { type: "play", cardId: 52, targetCellId: 44 }, { type: "play", cardId: 59, targetCellId: 53 }, { type: "play", cardId: 98, targetCellId: 30 }, { type: "play", cardId: 41, targetCellId: 4 }, { type: "play", cardId: 18, targetCellId: 46 }, { type: "play", cardId: 24, targetCellId: 44 }, { type: "play", cardId: 73, targetCellId: 57 }, { type: "play", cardId: 97, targetCellId: 2 }, { type: "play", cardId: 69, targetCellId: 24 }, { type: "play", cardId: 14, targetCellId: 67 }, { type: "play", cardId: 77, targetCellId: 36 }, { type: "play", cardId: 26, targetCellId: 76 }, { type: "play", cardId: 90, targetCellId: 13 }, { type: "play", cardId: 33, targetCellId: 48 }, { type: "play", cardId: 50, targetCellId: 35 }, { type: "play", cardId: 11, targetCellId: 36 }, { type: "play", cardId: 27, targetCellId: 32 }, { type: "play", cardId: 40, targetCellId: 78 }, { type: "play", cardId: 71, targetCellId: 79 }, { type: "play", cardId: 65, targetCellId: 14 }, { type: "play", cardId: 100, targetCellId: 27 }, { type: "play", cardId: 13, targetCellId: 65 }, { type: "play", cardId: 67, targetCellId: 58 }, { type: "play", cardId: 4, targetCellId: 52 }, { type: "play", cardId: 48, targetCellId: 56 }, { type: "play", cardId: 12, targetCellId: 18 }, { type: "play", cardId: 35, targetCellId: 93 }, { type: "play", cardId: 31, targetCellId: 17 }, { type: "play", cardId: 58, targetCellId: 12 }, { type: "play", cardId: 22, targetCellId: 8 }, { type: "play", cardId: 101, targetCellId: 86 }, { type: "play", cardId: 66, targetCellId: 59 }, { type: "play", cardId: 46, targetCellId: 20 }, { type: "play", cardId: 7, targetCellId: 40 }, { type: "play", cardId: 84, targetCellId: 37 }, { type: "play", cardId: 23, targetCellId: 16 }, { type: "play", cardId: 95, targetCellId: 26 }, { type: "play", cardId: 79, targetCellId: 39 }, { type: "play", cardId: 85, targetCellId: 29 }, { type: "play", cardId: 39, targetCellId: 25 }, { type: "play", cardId: 54, targetCellId: 1 }, { type: "play", cardId: 63, targetCellId: 34 }, { type: "play", cardId: 64, targetCellId: 38 }, { type: "play", cardId: 92, targetCellId: 50 }, { type: "play", cardId: 16, targetCellId: 43 }, { type: "play", cardId: 83, targetCellId: 60 }, { type: "play", cardId: 56, targetCellId: 41 }, { type: "play", cardId: 89, targetCellId: 15 }, { type: "play", cardId: 20, targetCellId: 63 }, { type: "play", cardId: 61, targetCellId: 47 }, { type: "play", cardId: 28, targetCellId: 7 }, { type: "play", cardId: 2, targetCellId: 5 }, { type: "play", cardId: 43, targetCellId: 75 }, { type: "play", cardId: 76, targetCellId: 45 }, { type: "play", cardId: 37, targetCellId: 36 }, { type: "play", cardId: 9, targetCellId: 10 }],
+        },
+    ],
+  },
+  {
+    id: "defensive-holds",
+    ko: "수비 반격",
+    en: "Defensive Holds",
+    ko_desc: "강한 봇의 공격을 막고 반격하는 수비 팩입니다.",
+    en_desc: "A defensive pack about holding a strong bot off and countering.",
+    puzzles: [
+        {
+          id: "dh-1",
+          seed: "defense-4000",
+          difficulty: "master",
+          par: 4,
+          ko: "수비 반격 1",
+          en: "Defensive Counter 1",
+          setupMoves: [{ type: "play", cardId: 98, targetCellId: 55 }, { type: "play", cardId: 35, targetCellId: 44 }, { type: "play", cardId: 63, targetCellId: 44 }, { type: "play", cardId: 67, targetCellId: 66 }, { type: "play", cardId: 76, targetCellId: 66 }, { type: "play", cardId: 77, targetCellId: 22 }, { type: "play", cardId: 6, targetCellId: 25 }, { type: "play", cardId: 51, targetCellId: 35 }, { type: "play", cardId: 29, targetCellId: 59 }, { type: "play", cardId: 88, targetCellId: 37 }, { type: "play", cardId: 26, targetCellId: 61 }, { type: "play", cardId: 97, targetCellId: 62 }, { type: "play", cardId: 83, targetCellId: 36 }, { type: "play", cardId: 89, targetCellId: 44 }, { type: "play", cardId: 66, targetCellId: 68 }, { type: "play", cardId: 19, targetCellId: 4 }, { type: "play", cardId: 81, targetCellId: 2 }, { type: "play", cardId: 53, targetCellId: 32 }, { type: "play", cardId: 48, targetCellId: 54 }, { type: "play", cardId: 74, targetCellId: 56 }, { type: "play", cardId: 50, targetCellId: 69 }, { type: "play", cardId: 11, targetCellId: 69 }, { type: "play", cardId: 99, targetCellId: 18 }, { type: "play", cardId: 47, targetCellId: 12 }, { type: "play", cardId: 21, targetCellId: 51 }, { type: "play", cardId: 92, targetCellId: 80 }, { type: "play", cardId: 15, targetCellId: 63 }, { type: "play", cardId: 78, targetCellId: 17 }, { type: "play", cardId: 100, targetCellId: 8 }, { type: "play", cardId: 90, targetCellId: 45 }, { type: "play", cardId: 96, targetCellId: 6 }, { type: "play", cardId: 7, targetCellId: 40 }, { type: "play", cardId: 27, targetCellId: 7 }, { type: "play", cardId: 33, targetCellId: 46 }, { type: "play", cardId: 44, targetCellId: 5 }, { type: "play", cardId: 23, targetCellId: 60 }, { type: "play", cardId: 41, targetCellId: 47 }, { type: "play", cardId: 36, targetCellId: 58 }, { type: "play", cardId: 52, targetCellId: 50 }, { type: "play", cardId: 102, targetCellId: 53 }, { type: "play", cardId: 38, targetCellId: 23 }, { type: "play", cardId: 93, targetCellId: 86 }, { type: "play", cardId: 75, targetCellId: 76 }, { type: "play", cardId: 61, targetCellId: 75 }, { type: "play", cardId: 79, targetCellId: 16 }, { type: "play", cardId: 40, targetCellId: 97 }, { type: "play", cardId: 101, targetCellId: 71 }, { type: "play", cardId: 5, targetCellId: 41 }, { type: "play", cardId: 65, targetCellId: 43 }, { type: "play", cardId: 60, targetCellId: 52 }],
+        },
+        {
+          id: "dh-2",
+          seed: "defense-4001",
+          difficulty: "master",
+          par: 4,
+          ko: "수비 반격 2",
+          en: "Defensive Counter 2",
+          setupMoves: [{ type: "play", cardId: 4, targetCellId: 49 }, { type: "play", cardId: 85, targetCellId: 39 }, { type: "play", cardId: 5, targetCellId: 69 }, { type: "play", cardId: 16, targetCellId: 55 }, { type: "play", cardId: 30, targetCellId: 36 }, { type: "play", cardId: 51, targetCellId: 77 }, { type: "play", cardId: 77, targetCellId: 4 }, { type: "play", cardId: 35, targetCellId: 79 }, { type: "play", cardId: 2, targetCellId: 25 }, { type: "play", cardId: 94, targetCellId: 47 }, { type: "play", cardId: 69, targetCellId: 1 }, { type: "play", cardId: 9, targetCellId: 2 }, { type: "play", cardId: 65, targetCellId: 45 }, { type: "play", cardId: 87, targetCellId: 27 }, { type: "play", cardId: 39, targetCellId: 16 }, { type: "play", cardId: 46, targetCellId: 67 }, { type: "play", cardId: 88, targetCellId: 66 }, { type: "play", cardId: 79, targetCellId: 57 }, { type: "play", cardId: 43, targetCellId: 41 }, { type: "play", cardId: 3, targetCellId: 87 }, { type: "play", cardId: 10, targetCellId: 23 }, { type: "play", cardId: 28, targetCellId: 17 }, { type: "play", cardId: 86, targetCellId: 53 }, { type: "play", cardId: 34, targetCellId: 86 }, { type: "play", cardId: 84, targetCellId: 64 }, { type: "play", cardId: 98, targetCellId: 76 }, { type: "play", cardId: 12, targetCellId: 43 }, { type: "play", cardId: 73, targetCellId: 42 }, { type: "play", cardId: 44, targetCellId: 62 }, { type: "play", cardId: 62, targetCellId: 73 }, { type: "play", cardId: 81, targetCellId: 5 }, { type: "play", cardId: 18, targetCellId: 7 }, { type: "play", cardId: 76, targetCellId: 27 }, { type: "play", cardId: 53, targetCellId: 44 }, { type: "play", cardId: 19, targetCellId: 34 }, { type: "play", cardId: 31, targetCellId: 52 }, { type: "play", cardId: 23, targetCellId: 22 }, { type: "play", cardId: 71, targetCellId: 21 }, { type: "play", cardId: 100, targetCellId: 94 }, { type: "play", cardId: 14, targetCellId: 26 }, { type: "play", cardId: 82, targetCellId: 12 }, { type: "play", cardId: 96, targetCellId: 15 }, { type: "play", cardId: 58, targetCellId: 93 }, { type: "play", cardId: 78, targetCellId: 37 }, { type: "play", cardId: 104, targetCellId: 60 }, { type: "play", cardId: 13, targetCellId: 56 }],
+        },
+        {
+          id: "dh-3",
+          seed: "defense-4002",
+          difficulty: "master",
+          par: 4,
+          ko: "수비 반격 3",
+          en: "Defensive Counter 3",
+          setupMoves: [{ type: "play", cardId: 102, targetCellId: 4 }, { type: "play", cardId: 34, targetCellId: 69 }, { type: "play", cardId: 63, targetCellId: 69 }, { type: "play", cardId: 51, targetCellId: 7 }, { type: "play", cardId: 23, targetCellId: 22 }, { type: "play", cardId: 64, targetCellId: 8 }, { type: "play", cardId: 92, targetCellId: 63 }, { type: "play", cardId: 13, targetCellId: 13 }, { type: "play", cardId: 8, targetCellId: 73 }, { type: "play", cardId: 74, targetCellId: 53 }, { type: "play", cardId: 72, targetCellId: 64 }, { type: "play", cardId: 18, targetCellId: 65 }, { type: "play", cardId: 88, targetCellId: 46 }, { type: "play", cardId: 73, targetCellId: 11 }, { type: "play", cardId: 38, targetCellId: 43 }, { type: "play", cardId: 10, targetCellId: 54 }, { type: "play", cardId: 47, targetCellId: 56 }, { type: "play", cardId: 50, targetCellId: 55 }, { type: "play", cardId: 28, targetCellId: 23 }, { type: "play", cardId: 25, targetCellId: 15 }, { type: "play", cardId: 39, targetCellId: 21 }, { type: "play", cardId: 33, targetCellId: 20 }, { type: "play", cardId: 90, targetCellId: 50 }, { type: "play", cardId: 3, targetCellId: 77 }, { type: "play", cardId: 94, targetCellId: 96 }, { type: "play", cardId: 59, targetCellId: 24 }, { type: "play", cardId: 36, targetCellId: 14 }, { type: "play", cardId: 62, targetCellId: 60 }, { type: "play", cardId: 26, targetCellId: 51 }, { type: "play", cardId: 82, targetCellId: 27 }, { type: "play", cardId: 96, targetCellId: 78 }, { type: "play", cardId: 37, targetCellId: 66 }, { type: "play", cardId: 9, targetCellId: 87 }, { type: "play", cardId: 99, targetCellId: 57 }, { type: "play", cardId: 44, targetCellId: 58 }, { type: "play", cardId: 104, targetCellId: 84 }, { type: "play", cardId: 15, targetCellId: 44 }, { type: "play", cardId: 29, targetCellId: 42 }, { type: "play", cardId: 31, targetCellId: 26 }, { type: "play", cardId: 24, targetCellId: 56 }, { type: "play", cardId: 56, targetCellId: 45 }, { type: "play", cardId: 97, targetCellId: 39 }, { type: "play", cardId: 45, targetCellId: 49 }, { type: "play", cardId: 103, targetCellId: 74 }, { type: "play", cardId: 58, targetCellId: 31 }, { type: "play", cardId: 77, targetCellId: 61 }, { type: "play", cardId: 48, targetCellId: 17 }, { type: "play", cardId: 98, targetCellId: 52 }, { type: "play", cardId: 2, targetCellId: 75 }, { type: "play", cardId: 49, targetCellId: 5 }, { type: "play", cardId: 19, targetCellId: 3 }, { type: "play", cardId: 30, targetCellId: 2 }, { type: "play", cardId: 67, targetCellId: 6 }, { type: "play", cardId: 57, targetCellId: 67 }, { type: "play", cardId: 76, targetCellId: 55 }, { type: "play", cardId: 86, targetCellId: 69 }, { type: "play", cardId: 32, targetCellId: 55 }, { type: "play", cardId: 16, targetCellId: 62 }, { type: "play", cardId: 89, targetCellId: 36 }, { type: "play", cardId: 52, targetCellId: 38 }],
+        },
+        {
+          id: "dh-4",
+          seed: "defense-4006",
+          difficulty: "master",
+          par: 4,
+          ko: "수비 반격 4",
+          en: "Defensive Counter 4",
+          setupMoves: [{ type: "play", cardId: 14, targetCellId: 44 }, { type: "play", cardId: 28, targetCellId: 94 }, { type: "play", cardId: 69, targetCellId: 45 }, { type: "play", cardId: 75, targetCellId: 95 }, { type: "play", cardId: 102, targetCellId: 43 }, { type: "play", cardId: 9, targetCellId: 50 }, { type: "play", cardId: 17, targetCellId: 97 }, { type: "play", cardId: 100, targetCellId: 60 }, { type: "play", cardId: 51, targetCellId: 61 }, { type: "play", cardId: 92, targetCellId: 36 }, { type: "play", cardId: 63, targetCellId: 50 }, { type: "play", cardId: 91, targetCellId: 30 }, { type: "play", cardId: 61, targetCellId: 50 }, { type: "play", cardId: 12, targetCellId: 10 }, { type: "play", cardId: 5, targetCellId: 64 }, { type: "play", cardId: 26, targetCellId: 84 }, { type: "play", cardId: 79, targetCellId: 63 }, { type: "play", cardId: 72, targetCellId: 33 }, { type: "play", cardId: 55, targetCellId: 81 }, { type: "play", cardId: 82, targetCellId: 85 }, { type: "play", cardId: 34, targetCellId: 72 }, { type: "play", cardId: 81, targetCellId: 86 }, { type: "play", cardId: 39, targetCellId: 62 }, { type: "play", cardId: 3, targetCellId: 87 }, { type: "play", cardId: 98, targetCellId: 65 }, { type: "play", cardId: 53, targetCellId: 96 }, { type: "play", cardId: 11, targetCellId: 85 }, { type: "play", cardId: 73, targetCellId: 91 }, { type: "play", cardId: 54, targetCellId: 40 }, { type: "play", cardId: 87, targetCellId: 53 }, { type: "play", cardId: 47, targetCellId: 92 }, { type: "play", cardId: 7, targetCellId: 75 }, { type: "play", cardId: 66, targetCellId: 82 }, { type: "play", cardId: 58, targetCellId: 48 }, { type: "play", cardId: 24, targetCellId: 60 }, { type: "play", cardId: 83, targetCellId: 59 }],
+        },
+        {
+          id: "dh-5",
+          seed: "defense-4011",
+          difficulty: "master",
+          par: 4,
+          ko: "수비 반격 5",
+          en: "Defensive Counter 5",
+          setupMoves: [{ type: "play", cardId: 12, targetCellId: 33 }, { type: "play", cardId: 85, targetCellId: 63 }, { type: "play", cardId: 36, targetCellId: 35 }, { type: "play", cardId: 21, targetCellId: 83 }, { type: "play", cardId: 65, targetCellId: 13 }, { type: "play", cardId: 30, targetCellId: 74 }, { type: "play", cardId: 14, targetCellId: 44 }, { type: "play", cardId: 1, targetCellId: 92 }, { type: "play", cardId: 70, targetCellId: 26 }, { type: "play", cardId: 75, targetCellId: 94 }, { type: "play", cardId: 95, targetCellId: 8 }, { type: "play", cardId: 88, targetCellId: 41 }, { type: "play", cardId: 63, targetCellId: 63 }, { type: "play", cardId: 15, targetCellId: 23 }, { type: "play", cardId: 18, targetCellId: 16 }, { type: "play", cardId: 89, targetCellId: 17 }, { type: "play", cardId: 93, targetCellId: 62 }, { type: "play", cardId: 17, targetCellId: 24 }, { type: "play", cardId: 76, targetCellId: 17 }, { type: "play", cardId: 3, targetCellId: 55 }, { type: "play", cardId: 16, targetCellId: 64 }, { type: "play", cardId: 92, targetCellId: 53 }, { type: "play", cardId: 35, targetCellId: 17 }, { type: "play", cardId: 82, targetCellId: 45 }, { type: "play", cardId: 29, targetCellId: 66 }, { type: "play", cardId: 91, targetCellId: 81 }, { type: "play", cardId: 44, targetCellId: 75 }, { type: "play", cardId: 94, targetCellId: 71 }, { type: "play", cardId: 5, targetCellId: 27 }, { type: "play", cardId: 11, targetCellId: 64 }, { type: "play", cardId: 28, targetCellId: 57 }, { type: "play", cardId: 48, targetCellId: 37 }, { type: "play", cardId: 45, targetCellId: 93 }, { type: "play", cardId: 68, targetCellId: 39 }, { type: "play", cardId: 24, targetCellId: 53 }, { type: "play", cardId: 90, targetCellId: 31 }, { type: "play", cardId: 61, targetCellId: 14 }, { type: "play", cardId: 41, targetCellId: 20 }, { type: "play", cardId: 49, targetCellId: 46 }, { type: "play", cardId: 71, targetCellId: 42 }, { type: "play", cardId: 96, targetCellId: 49 }, { type: "play", cardId: 22, targetCellId: 38 }, { type: "play", cardId: 66, targetCellId: 51 }, { type: "play", cardId: 26, targetCellId: 52 }],
+        },
+        {
+          id: "dh-6",
+          seed: "defense-4014",
+          difficulty: "master",
+          par: 4,
+          ko: "수비 반격 6",
+          en: "Defensive Counter 6",
+          setupMoves: [{ type: "play", cardId: 43, targetCellId: 95 }, { type: "play", cardId: 40, targetCellId: 98 }, { type: "play", cardId: 50, targetCellId: 94 }, { type: "play", cardId: 6, targetCellId: 88 }, { type: "play", cardId: 98, targetCellId: 68 }, { type: "play", cardId: 70, targetCellId: 66 }, { type: "play", cardId: 17, targetCellId: 56 }, { type: "play", cardId: 31, targetCellId: 64 }, { type: "play", cardId: 13, targetCellId: 86 }, { type: "play", cardId: 14, targetCellId: 46 }, { type: "play", cardId: 73, targetCellId: 55 }, { type: "play", cardId: 81, targetCellId: 59 }, { type: "play", cardId: 64, targetCellId: 53 }, { type: "play", cardId: 33, targetCellId: 49 }, { type: "play", cardId: 90, targetCellId: 65 }, { type: "play", cardId: 53, targetCellId: 4 }, { type: "play", cardId: 27, targetCellId: 39 }, { type: "play", cardId: 37, targetCellId: 54 }, { type: "play", cardId: 93, targetCellId: 74 }, { type: "play", cardId: 99, targetCellId: 44 }, { type: "play", cardId: 97, targetCellId: 47 }, { type: "play", cardId: 21, targetCellId: 26 }, { type: "play", cardId: 10, targetCellId: 34 }, { type: "play", cardId: 2, targetCellId: 15 }, { type: "play", cardId: 69, targetCellId: 37 }, { type: "play", cardId: 67, targetCellId: 8 }, { type: "play", cardId: 46, targetCellId: 45 }, { type: "play", cardId: 38, targetCellId: 12 }, { type: "play", cardId: 89, targetCellId: 35 }, { type: "play", cardId: 1, targetCellId: 40 }, { type: "play", cardId: 77, targetCellId: 89 }, { type: "play", cardId: 20, targetCellId: 31 }, { type: "play", cardId: 80, targetCellId: 17 }, { type: "play", cardId: 34, targetCellId: 3 }, { type: "play", cardId: 84, targetCellId: 32 }, { type: "play", cardId: 83, targetCellId: 23 }, { type: "play", cardId: 79, targetCellId: 29 }, { type: "play", cardId: 26, targetCellId: 92 }, { type: "play", cardId: 86, targetCellId: 63 }, { type: "play", cardId: 57, targetCellId: 22 }, { type: "play", cardId: 35, targetCellId: 24 }, { type: "play", cardId: 22, targetCellId: 85 }, { type: "play", cardId: 56, targetCellId: 30 }, { type: "play", cardId: 8, targetCellId: 52 }, { type: "play", cardId: 63, targetCellId: 31 }, { type: "play", cardId: 52, targetCellId: 75 }],
+        },
+    ],
+  },
+  {
+    id: "sprint-finishes",
+    ko: "스프린트 마무리",
+    en: "Sprint Finishes",
+    ko_desc: "두 수 안에 끝내는 초고속 마무리 팩입니다.",
+    en_desc: "A rapid pack about closing the game in just two moves.",
+    puzzles: [
+        {
+          id: "sf-1",
+          seed: "sprint-5004",
+          difficulty: "smart",
+          par: 2,
+          ko: "스프린트 마무리 1",
+          en: "Sprint Finish 1",
+          setupMoves: [{ type: "play", cardId: 61, targetCellId: 72 }, { type: "play", cardId: 52, targetCellId: 54 }, { type: "play", cardId: 19, targetCellId: 55 }, { type: "play", cardId: 45, targetCellId: 50 }, { type: "play", cardId: 33, targetCellId: 70 }, { type: "play", cardId: 82, targetCellId: 18 }, { type: "play", cardId: 3, targetCellId: 64 }, { type: "play", cardId: 23, targetCellId: 10 }, { type: "play", cardId: 80, targetCellId: 21 }, { type: "play", cardId: 32, targetCellId: 28 }, { type: "play", cardId: 67, targetCellId: 65 }, { type: "play", cardId: 17, targetCellId: 68 }, { type: "play", cardId: 30, targetCellId: 66 }, { type: "play", cardId: 76, targetCellId: 66 }, { type: "play", cardId: 86, targetCellId: 56 }, { type: "play", cardId: 83, targetCellId: 20 }, { type: "play", cardId: 44, targetCellId: 95 }, { type: "play", cardId: 89, targetCellId: 40 }, { type: "play", cardId: 28, targetCellId: 33 }, { type: "play", cardId: 24, targetCellId: 55 }, { type: "play", cardId: 93, targetCellId: 34 }, { type: "play", cardId: 16, targetCellId: 29 }, { type: "play", cardId: 84, targetCellId: 43 }, { type: "play", cardId: 100, targetCellId: 30 }, { type: "play", cardId: 22, targetCellId: 16 }, { type: "play", cardId: 11, targetCellId: 34 }, { type: "play", cardId: 68, targetCellId: 73 }, { type: "play", cardId: 18, targetCellId: 71 }, { type: "play", cardId: 43, targetCellId: 76 }, { type: "play", cardId: 71, targetCellId: 55 }, { type: "play", cardId: 59, targetCellId: 26 }, { type: "play", cardId: 39, targetCellId: 88 }, { type: "play", cardId: 56, targetCellId: 27 }, { type: "play", cardId: 26, targetCellId: 62 }, { type: "play", cardId: 12, targetCellId: 44 }, { type: "play", cardId: 50, targetCellId: 60 }, { type: "play", cardId: 2, targetCellId: 23 }, { type: "play", cardId: 36, targetCellId: 45 }, { type: "play", cardId: 13, targetCellId: 74 }, { type: "play", cardId: 62, targetCellId: 63 }, { type: "play", cardId: 98, targetCellId: 36 }, { type: "play", cardId: 87, targetCellId: 98 }, { type: "play", cardId: 72, targetCellId: 35 }, { type: "play", cardId: 101, targetCellId: 83 }, { type: "play", cardId: 97, targetCellId: 31 }, { type: "play", cardId: 48, targetCellId: 86 }, { type: "play", cardId: 42, targetCellId: 49 }, { type: "play", cardId: 37, targetCellId: 46 }, { type: "play", cardId: 69, targetCellId: 5 }, { type: "play", cardId: 9, targetCellId: 24 }, { type: "play", cardId: 47, targetCellId: 14 }, { type: "play", cardId: 66, targetCellId: 52 }, { type: "play", cardId: 20, targetCellId: 17 }, { type: "play", cardId: 40, targetCellId: 3 }, { type: "play", cardId: 10, targetCellId: 15 }, { type: "play", cardId: 88, targetCellId: 12 }, { type: "play", cardId: 46, targetCellId: 51 }, { type: "play", cardId: 103, targetCellId: 53 }, { type: "play", cardId: 91, targetCellId: 7 }, { type: "play", cardId: 65, targetCellId: 77 }, { type: "play", cardId: 27, targetCellId: 25 }, { type: "play", cardId: 64, targetCellId: 61 }, { type: "play", cardId: 8, targetCellId: 58 }, { type: "play", cardId: 25, targetCellId: 69 }, { type: "play", cardId: 34, targetCellId: 84 }, { type: "play", cardId: 95, targetCellId: 8 }, { type: "play", cardId: 81, targetCellId: 85 }, { type: "play", cardId: 21, targetCellId: 94 }, { type: "play", cardId: 7, targetCellId: 79 }, { type: "play", cardId: 38, targetCellId: 11 }, { type: "play", cardId: 57, targetCellId: 91 }, { type: "play", cardId: 41, targetCellId: 34 }],
+        },
+        {
+          id: "sf-2",
+          seed: "sprint-5007",
+          difficulty: "smart",
+          par: 2,
+          ko: "스프린트 마무리 2",
+          en: "Sprint Finish 2",
+          setupMoves: [{ type: "play", cardId: 50, targetCellId: 4 }, { type: "play", cardId: 34, targetCellId: 72 }, { type: "play", cardId: 47, targetCellId: 1 }, { type: "play", cardId: 93, targetCellId: 45 }, { type: "play", cardId: 19, targetCellId: 55 }, { type: "play", cardId: 38, targetCellId: 43 }, { type: "play", cardId: 40, targetCellId: 44 }, { type: "play", cardId: 97, targetCellId: 3 }, { type: "play", cardId: 46, targetCellId: 33 }, { type: "play", cardId: 80, targetCellId: 34 }, { type: "play", cardId: 31, targetCellId: 53 }, { type: "play", cardId: 91, targetCellId: 75 }, { type: "play", cardId: 14, targetCellId: 62 }, { type: "play", cardId: 86, targetCellId: 56 }, { type: "play", cardId: 67, targetCellId: 73 }, { type: "play", cardId: 59, targetCellId: 84 }, { type: "play", cardId: 82, targetCellId: 88 }, { type: "play", cardId: 95, targetCellId: 64 }, { type: "play", cardId: 61, targetCellId: 93 }, { type: "play", cardId: 72, targetCellId: 85 }, { type: "play", cardId: 5, targetCellId: 65 }, { type: "play", cardId: 70, targetCellId: 63 }, { type: "play", cardId: 94, targetCellId: 25 }, { type: "play", cardId: 85, targetCellId: 49 }, { type: "play", cardId: 54, targetCellId: 35 }, { type: "play", cardId: 60, targetCellId: 17 }, { type: "play", cardId: 58, targetCellId: 87 }, { type: "play", cardId: 6, targetCellId: 69 }, { type: "play", cardId: 65, targetCellId: 23 }, { type: "play", cardId: 102, targetCellId: 71 }, { type: "play", cardId: 99, targetCellId: 26 }, { type: "play", cardId: 87, targetCellId: 66 }, { type: "play", cardId: 1, targetCellId: 28 }, { type: "play", cardId: 68, targetCellId: 91 }, { type: "play", cardId: 89, targetCellId: 24 }, { type: "play", cardId: 7, targetCellId: 13 }, { type: "play", cardId: 32, targetCellId: 42 }, { type: "play", cardId: 64, targetCellId: 61 }, { type: "play", cardId: 3, targetCellId: 48 }, { type: "play", cardId: 74, targetCellId: 32 }, { type: "play", cardId: 43, targetCellId: 37 }, { type: "play", cardId: 103, targetCellId: 39 }],
+        },
+        {
+          id: "sf-3",
+          seed: "sprint-5009",
+          difficulty: "smart",
+          par: 2,
+          ko: "스프린트 마무리 3",
+          en: "Sprint Finish 3",
+          setupMoves: [{ type: "play", cardId: 5, targetCellId: 44 }, { type: "play", cardId: 81, targetCellId: 94 }, { type: "play", cardId: 77, targetCellId: 64 }, { type: "play", cardId: 50, targetCellId: 93 }, { type: "play", cardId: 7, targetCellId: 84 }, { type: "play", cardId: 93, targetCellId: 98 }, { type: "play", cardId: 10, targetCellId: 33 }, { type: "play", cardId: 72, targetCellId: 92 }, { type: "play", cardId: 74, targetCellId: 11 }, { type: "play", cardId: 49, targetCellId: 67 }, { type: "play", cardId: 35, targetCellId: 97 }, { type: "play", cardId: 1, targetCellId: 57 }, { type: "play", cardId: 29, targetCellId: 74 }, { type: "play", cardId: 94, targetCellId: 75 }, { type: "play", cardId: 37, targetCellId: 54 }, { type: "play", cardId: 86, targetCellId: 65 }, { type: "play", cardId: 64, targetCellId: 45 }, { type: "play", cardId: 98, targetCellId: 72 }, { type: "play", cardId: 9, targetCellId: 41 }, { type: "play", cardId: 82, targetCellId: 69 }, { type: "play", cardId: 53, targetCellId: 21 }, { type: "play", cardId: 19, targetCellId: 66 }, { type: "play", cardId: 97, targetCellId: 88 }, { type: "play", cardId: 100, targetCellId: 29 }, { type: "play", cardId: 20, targetCellId: 91 }, { type: "play", cardId: 56, targetCellId: 96 }, { type: "play", cardId: 63, targetCellId: 94 }, { type: "play", cardId: 4, targetCellId: 63 }, { type: "play", cardId: 52, targetCellId: 10 }, { type: "play", cardId: 40, targetCellId: 79 }, { type: "play", cardId: 12, targetCellId: 61 }, { type: "play", cardId: 87, targetCellId: 36 }, { type: "play", cardId: 3, targetCellId: 71 }, { type: "play", cardId: 76, targetCellId: 41 }, { type: "play", cardId: 36, targetCellId: 47 }, { type: "play", cardId: 31, targetCellId: 26 }, { type: "play", cardId: 84, targetCellId: 49 }, { type: "play", cardId: 67, targetCellId: 53 }, { type: "play", cardId: 70, targetCellId: 34 }, { type: "play", cardId: 25, targetCellId: 52 }, { type: "play", cardId: 44, targetCellId: 32 }, { type: "play", cardId: 58, targetCellId: 43 }, { type: "play", cardId: 71, targetCellId: 86 }, { type: "play", cardId: 2, targetCellId: 46 }, { type: "play", cardId: 79, targetCellId: 89 }, { type: "play", cardId: 83, targetCellId: 16 }, { type: "play", cardId: 88, targetCellId: 78 }, { type: "play", cardId: 33, targetCellId: 76 }],
+        },
+        {
+          id: "sf-4",
+          seed: "sprint-5011",
+          difficulty: "smart",
+          par: 2,
+          ko: "스프린트 마무리 4",
+          en: "Sprint Finish 4",
+          setupMoves: [{ type: "play", cardId: 58, targetCellId: 45 }, { type: "play", cardId: 43, targetCellId: 54 }, { type: "play", cardId: 67, targetCellId: 53 }, { type: "play", cardId: 86, targetCellId: 76 }, { type: "play", cardId: 93, targetCellId: 43 }, { type: "play", cardId: 31, targetCellId: 98 }, { type: "play", cardId: 65, targetCellId: 27 }, { type: "play", cardId: 11, targetCellId: 45 }, { type: "play", cardId: 99, targetCellId: 7 }, { type: "play", cardId: 6, targetCellId: 87 }, { type: "play", cardId: 53, targetCellId: 6 }, { type: "play", cardId: 10, targetCellId: 95 }, { type: "play", cardId: 5, targetCellId: 4 }, { type: "play", cardId: 64, targetCellId: 23 }, { type: "play", cardId: 20, targetCellId: 3 }, { type: "play", cardId: 88, targetCellId: 12 }, { type: "play", cardId: 50, targetCellId: 5 }, { type: "play", cardId: 44, targetCellId: 66 }, { type: "play", cardId: 82, targetCellId: 36 }, { type: "play", cardId: 23, targetCellId: 18 }, { type: "play", cardId: 85, targetCellId: 14 }, { type: "play", cardId: 73, targetCellId: 68 }, { type: "play", cardId: 35, targetCellId: 58 }, { type: "play", cardId: 60, targetCellId: 34 }, { type: "play", cardId: 27, targetCellId: 56 }, { type: "play", cardId: 19, targetCellId: 73 }, { type: "play", cardId: 79, targetCellId: 44 }, { type: "play", cardId: 100, targetCellId: 67 }, { type: "play", cardId: 12, targetCellId: 26 }, { type: "play", cardId: 55, targetCellId: 37 }, { type: "play", cardId: 101, targetCellId: 29 }, { type: "play", cardId: 54, targetCellId: 2 }, { type: "play", cardId: 32, targetCellId: 96 }, { type: "play", cardId: 42, targetCellId: 55 }, { type: "play", cardId: 80, targetCellId: 28 }, { type: "play", cardId: 94, targetCellId: 42 }, { type: "play", cardId: 74, targetCellId: 88 }, { type: "play", cardId: 68, targetCellId: 77 }, { type: "play", cardId: 92, targetCellId: 35 }, { type: "play", cardId: 104, targetCellId: 51 }, { type: "play", cardId: 28, targetCellId: 97 }, { type: "play", cardId: 2, targetCellId: 25 }, { type: "play", cardId: 69, targetCellId: 69 }, { type: "play", cardId: 47, targetCellId: 57 }, { type: "play", cardId: 8, targetCellId: 22 }, { type: "play", cardId: 45, targetCellId: 40 }, { type: "play", cardId: 13, targetCellId: 74 }, { type: "play", cardId: 56, targetCellId: 79 }, { type: "play", cardId: 33, targetCellId: 86 }, { type: "play", cardId: 78, targetCellId: 78 }, { type: "play", cardId: 81, targetCellId: 82 }, { type: "play", cardId: 36, targetCellId: 50 }, { type: "play", cardId: 96, targetCellId: 60 }, { type: "play", cardId: 83, targetCellId: 20 }, { type: "play", cardId: 46, targetCellId: 72 }, { type: "play", cardId: 57, targetCellId: 62 }],
+        },
+        {
+          id: "sf-5",
+          seed: "sprint-5017",
+          difficulty: "smart",
+          par: 2,
+          ko: "스프린트 마무리 5",
+          en: "Sprint Finish 5",
+          setupMoves: [{ type: "play", cardId: 68, targetCellId: 44 }, { type: "play", cardId: 50, targetCellId: 33 }, { type: "play", cardId: 63, targetCellId: 33 }, { type: "play", cardId: 94, targetCellId: 63 }, { type: "play", cardId: 82, targetCellId: 24 }, { type: "play", cardId: 90, targetCellId: 41 }, { type: "play", cardId: 93, targetCellId: 42 }, { type: "play", cardId: 58, targetCellId: 60 }, { type: "play", cardId: 14, targetCellId: 62 }, { type: "play", cardId: 41, targetCellId: 82 }, { type: "play", cardId: 9, targetCellId: 35 }, { type: "play", cardId: 11, targetCellId: 44 }, { type: "play", cardId: 51, targetCellId: 26 }, { type: "play", cardId: 24, targetCellId: 35 }, { type: "play", cardId: 81, targetCellId: 52 }, { type: "play", cardId: 83, targetCellId: 55 }, { type: "play", cardId: 97, targetCellId: 72 }, { type: "play", cardId: 100, targetCellId: 33 }, { type: "play", cardId: 86, targetCellId: 64 }, { type: "play", cardId: 43, targetCellId: 75 }, { type: "play", cardId: 53, targetCellId: 28 }, { type: "play", cardId: 12, targetCellId: 31 }, { type: "play", cardId: 59, targetCellId: 84 }, { type: "play", cardId: 84, targetCellId: 45 }, { type: "play", cardId: 57, targetCellId: 54 }, { type: "play", cardId: 13, targetCellId: 1 }, { type: "play", cardId: 54, targetCellId: 95 }, { type: "play", cardId: 91, targetCellId: 3 }, { type: "play", cardId: 47, targetCellId: 4 }, { type: "play", cardId: 3, targetCellId: 73 }, { type: "play", cardId: 31, targetCellId: 34 }, { type: "play", cardId: 49, targetCellId: 94 }, { type: "play", cardId: 18, targetCellId: 76 }, { type: "play", cardId: 64, targetCellId: 51 }, { type: "play", cardId: 39, targetCellId: 8 }, { type: "play", cardId: 102, targetCellId: 44 }, { type: "play", cardId: 96, targetCellId: 65 }, { type: "play", cardId: 79, targetCellId: 71 }, { type: "play", cardId: 104, targetCellId: 87 }, { type: "play", cardId: 55, targetCellId: 77 }, { type: "play", cardId: 76, targetCellId: 44 }, { type: "play", cardId: 60, targetCellId: 5 }, { type: "play", cardId: 25, targetCellId: 11 }, { type: "play", cardId: 4, targetCellId: 74 }, { type: "play", cardId: 45, targetCellId: 21 }, { type: "play", cardId: 23, targetCellId: 86 }, { type: "play", cardId: 17, targetCellId: 81 }, { type: "play", cardId: 32, targetCellId: 61 }, { type: "play", cardId: 85, targetCellId: 53 }, { type: "play", cardId: 78, targetCellId: 16 }, { type: "play", cardId: 30, targetCellId: 12 }, { type: "play", cardId: 77, targetCellId: 23 }, { type: "play", cardId: 67, targetCellId: 67 }, { type: "play", cardId: 80, targetCellId: 38 }, { type: "play", cardId: 37, targetCellId: 44 }, { type: "play", cardId: 62, targetCellId: 36 }, { type: "play", cardId: 52, targetCellId: 39 }, { type: "play", cardId: 103, targetCellId: 88 }],
+        },
+        {
+          id: "sf-6",
+          seed: "sprint-5018",
+          difficulty: "smart",
+          par: 2,
+          ko: "스프린트 마무리 6",
+          en: "Sprint Finish 6",
+          setupMoves: [{ type: "play", cardId: 16, targetCellId: 45 }, { type: "play", cardId: 37, targetCellId: 36 }, { type: "play", cardId: 41, targetCellId: 26 }, { type: "play", cardId: 67, targetCellId: 66 }, { type: "play", cardId: 76, targetCellId: 66 }, { type: "play", cardId: 86, targetCellId: 29 }, { type: "play", cardId: 51, targetCellId: 37 }, { type: "play", cardId: 52, targetCellId: 92 }, { type: "play", cardId: 98, targetCellId: 44 }, { type: "play", cardId: 85, targetCellId: 83 }, { type: "play", cardId: 15, targetCellId: 66 }, { type: "play", cardId: 73, targetCellId: 46 }, { type: "play", cardId: 91, targetCellId: 33 }, { type: "play", cardId: 24, targetCellId: 44 }, { type: "play", cardId: 89, targetCellId: 55 }, { type: "play", cardId: 82, targetCellId: 93 }, { type: "play", cardId: 81, targetCellId: 77 }, { type: "play", cardId: 17, targetCellId: 22 }, { type: "play", cardId: 21, targetCellId: 4 }, { type: "play", cardId: 53, targetCellId: 56 }, { type: "play", cardId: 56, targetCellId: 53 }, { type: "play", cardId: 10, targetCellId: 95 }, { type: "play", cardId: 55, targetCellId: 43 }, { type: "play", cardId: 45, targetCellId: 23 }, { type: "play", cardId: 42, targetCellId: 52 }, { type: "play", cardId: 32, targetCellId: 51 }, { type: "play", cardId: 48, targetCellId: 15 }, { type: "play", cardId: 60, targetCellId: 47 }, { type: "play", cardId: 40, targetCellId: 91 }, { type: "play", cardId: 75, targetCellId: 84 }, { type: "play", cardId: 79, targetCellId: 34 }, { type: "play", cardId: 94, targetCellId: 88 }, { type: "play", cardId: 5, targetCellId: 7 }, { type: "play", cardId: 99, targetCellId: 35 }],
+        },
+    ],
+  },
+  {
+    id: "grand-combinations",
+    ko: "그랜드 콤비네이션",
+    en: "Grand Combinations",
+    ko_desc: "그랜드마스터를 상대로 다섯 수 대장정을 완성하는 팩입니다.",
+    en_desc: "A pack about completing a five-move journey against the grandmaster.",
+    puzzles: [
+        {
+          id: "gc-1",
+          seed: "grand-6005",
+          difficulty: "grandmaster",
+          par: 5,
+          ko: "그랜드 콤비네이션 1",
+          en: "Grand Combination 1",
+          setupMoves: [{ type: "play", cardId: 66, targetCellId: 55 }, { type: "play", cardId: 102, targetCellId: 66 }, { type: "play", cardId: 29, targetCellId: 56 }, { type: "play", cardId: 71, targetCellId: 64 }, { type: "play", cardId: 8, targetCellId: 47 }, { type: "play", cardId: 26, targetCellId: 59 }, { type: "play", cardId: 51, targetCellId: 45 }, { type: "play", cardId: 38, targetCellId: 79 }, { type: "play", cardId: 5, targetCellId: 49 }, { type: "play", cardId: 16, targetCellId: 89 }, { type: "play", cardId: 93, targetCellId: 67 }, { type: "play", cardId: 61, targetCellId: 75 }, { type: "play", cardId: 80, targetCellId: 19 }, { type: "play", cardId: 48, targetCellId: 29 }, { type: "play", cardId: 63, targetCellId: 89 }, { type: "play", cardId: 99, targetCellId: 57 }, { type: "play", cardId: 27, targetCellId: 84 }, { type: "play", cardId: 77, targetCellId: 35 }, { type: "play", cardId: 58, targetCellId: 74 }, { type: "play", cardId: 94, targetCellId: 83 }, { type: "play", cardId: 13, targetCellId: 97 }, { type: "play", cardId: 10, targetCellId: 31 }, { type: "play", cardId: 103, targetCellId: 27 }, { type: "play", cardId: 64, targetCellId: 53 }, { type: "play", cardId: 39, targetCellId: 46 }, { type: "play", cardId: 62, targetCellId: 37 }, { type: "play", cardId: 24, targetCellId: 53 }, { type: "play", cardId: 68, targetCellId: 89 }, { type: "play", cardId: 60, targetCellId: 23 }, { type: "play", cardId: 56, targetCellId: 78 }, { type: "play", cardId: 17, targetCellId: 26 }, { type: "play", cardId: 32, targetCellId: 42 }, { type: "play", cardId: 98, targetCellId: 22 }, { type: "play", cardId: 33, targetCellId: 20 }, { type: "play", cardId: 97, targetCellId: 25 }, { type: "play", cardId: 47, targetCellId: 63 }, { type: "play", cardId: 82, targetCellId: 18 }, { type: "play", cardId: 75, targetCellId: 12 }, { type: "play", cardId: 3, targetCellId: 61 }, { type: "play", cardId: 78, targetCellId: 32 }, { type: "play", cardId: 11, targetCellId: 64 }, { type: "play", cardId: 79, targetCellId: 41 }, { type: "play", cardId: 7, targetCellId: 82 }, { type: "play", cardId: 89, targetCellId: 69 }, { type: "play", cardId: 14, targetCellId: 91 }, { type: "play", cardId: 46, targetCellId: 60 }, { type: "play", cardId: 43, targetCellId: 21 }, { type: "play", cardId: 42, targetCellId: 81 }, { type: "play", cardId: 52, targetCellId: 33 }, { type: "play", cardId: 65, targetCellId: 5 }, { type: "play", cardId: 100, targetCellId: 3 }, { type: "play", cardId: 88, targetCellId: 11 }, { type: "play", cardId: 12, targetCellId: 53 }, { type: "play", cardId: 31, targetCellId: 44 }, { type: "play", cardId: 92, targetCellId: 51 }, { type: "play", cardId: 36, targetCellId: 80 }, { type: "play", cardId: 19, targetCellId: 64 }, { type: "play", cardId: 76, targetCellId: 23 }, { type: "play", cardId: 2, targetCellId: 94 }, { type: "play", cardId: 83, targetCellId: 68 }, { type: "play", cardId: 6, targetCellId: 50 }, { type: "play", cardId: 23, targetCellId: 76 }],
+        },
+        {
+          id: "gc-2",
+          seed: "grand-6006",
+          difficulty: "grandmaster",
+          par: 5,
+          ko: "그랜드 콤비네이션 2",
+          en: "Grand Combination 2",
+          setupMoves: [{ type: "play", cardId: 22, targetCellId: 33 }, { type: "play", cardId: 50, targetCellId: 44 }, { type: "play", cardId: 61, targetCellId: 31 }, { type: "play", cardId: 72, targetCellId: 64 }, { type: "play", cardId: 23, targetCellId: 63 }, { type: "play", cardId: 81, targetCellId: 75 }, { type: "play", cardId: 52, targetCellId: 36 }, { type: "play", cardId: 82, targetCellId: 76 }, { type: "play", cardId: 21, targetCellId: 45 }, { type: "play", cardId: 97, targetCellId: 18 }, { type: "play", cardId: 65, targetCellId: 73 }, { type: "play", cardId: 27, targetCellId: 72 }, { type: "play", cardId: 62, targetCellId: 77 }, { type: "play", cardId: 99, targetCellId: 32 }, { type: "play", cardId: 48, targetCellId: 21 }, { type: "play", cardId: 2, targetCellId: 42 }, { type: "play", cardId: 45, targetCellId: 11 }, { type: "play", cardId: 70, targetCellId: 55 }, { type: "play", cardId: 95, targetCellId: 61 }, { type: "play", cardId: 90, targetCellId: 74 }, { type: "play", cardId: 98, targetCellId: 94 }, { type: "play", cardId: 6, targetCellId: 92 }, { type: "play", cardId: 71, targetCellId: 54 }, { type: "play", cardId: 11, targetCellId: 63 }, { type: "play", cardId: 12, targetCellId: 12 }, { type: "play", cardId: 7, targetCellId: 97 }, { type: "play", cardId: 42, targetCellId: 86 }, { type: "play", cardId: 36, targetCellId: 47 }, { type: "play", cardId: 16, targetCellId: 16 }, { type: "play", cardId: 51, targetCellId: 53 }, { type: "play", cardId: 94, targetCellId: 15 }, { type: "play", cardId: 77, targetCellId: 17 }, { type: "play", cardId: 43, targetCellId: 34 }, { type: "play", cardId: 69, targetCellId: 48 }, { type: "play", cardId: 29, targetCellId: 58 }, { type: "play", cardId: 20, targetCellId: 38 }, { type: "play", cardId: 75, targetCellId: 63 }, { type: "play", cardId: 49, targetCellId: 49 }, { type: "play", cardId: 73, targetCellId: 78 }, { type: "play", cardId: 8, targetCellId: 66 }, { type: "play", cardId: 100, targetCellId: 5 }, { type: "play", cardId: 58, targetCellId: 89 }, { type: "play", cardId: 91, targetCellId: 1 }, { type: "play", cardId: 63, targetCellId: 45 }, { type: "play", cardId: 24, targetCellId: 48 }, { type: "play", cardId: 18, targetCellId: 98 }, { type: "play", cardId: 57, targetCellId: 62 }, { type: "play", cardId: 64, targetCellId: 4 }, { type: "play", cardId: 17, targetCellId: 48 }, { type: "play", cardId: 39, targetCellId: 84 }],
+        },
+        {
+          id: "gc-3",
+          seed: "grand-6007",
+          difficulty: "grandmaster",
+          par: 5,
+          ko: "그랜드 콤비네이션 3",
+          en: "Grand Combination 3",
+          setupMoves: [{ type: "play", cardId: 3, targetCellId: 36 }, { type: "play", cardId: 92, targetCellId: 45 }, { type: "play", cardId: 89, targetCellId: 25 }, { type: "play", cardId: 96, targetCellId: 35 }, { type: "play", cardId: 43, targetCellId: 3 }, { type: "play", cardId: 41, targetCellId: 2 }, { type: "play", cardId: 71, targetCellId: 69 }, { type: "play", cardId: 66, targetCellId: 33 }, { type: "play", cardId: 70, targetCellId: 5 }, { type: "play", cardId: 38, targetCellId: 8 }, { type: "play", cardId: 8, targetCellId: 4 }, { type: "play", cardId: 17, targetCellId: 72 }, { type: "play", cardId: 42, targetCellId: 24 }, { type: "play", cardId: 34, targetCellId: 31 }, { type: "play", cardId: 36, targetCellId: 22 }, { type: "play", cardId: 98, targetCellId: 27 }, { type: "play", cardId: 58, targetCellId: 21 }, { type: "play", cardId: 39, targetCellId: 7 }, { type: "play", cardId: 12, targetCellId: 12 }, { type: "play", cardId: 72, targetCellId: 23 }, { type: "play", cardId: 15, targetCellId: 15 }, { type: "play", cardId: 29, targetCellId: 64 }, { type: "play", cardId: 48, targetCellId: 75 }, { type: "play", cardId: 6, targetCellId: 53 }, { type: "play", cardId: 14, targetCellId: 32 }, { type: "play", cardId: 102, targetCellId: 47 }, { type: "play", cardId: 61, targetCellId: 74 }, { type: "play", cardId: 90, targetCellId: 28 }, { type: "play", cardId: 62, targetCellId: 67 }, { type: "play", cardId: 78, targetCellId: 55 }, { type: "play", cardId: 64, targetCellId: 11 }, { type: "play", cardId: 10, targetCellId: 82 }, { type: "play", cardId: 30, targetCellId: 68 }, { type: "play", cardId: 44, targetCellId: 77 }, { type: "play", cardId: 13, targetCellId: 17 }, { type: "play", cardId: 18, targetCellId: 81 }, { type: "play", cardId: 91, targetCellId: 89 }, { type: "play", cardId: 2, targetCellId: 65 }, { type: "play", cardId: 47, targetCellId: 29 }, { type: "play", cardId: 35, targetCellId: 92 }, { type: "play", cardId: 11, targetCellId: 55 }, { type: "play", cardId: 16, targetCellId: 54 }, { type: "play", cardId: 85, targetCellId: 76 }, { type: "play", cardId: 67, targetCellId: 73 }, { type: "play", cardId: 95, targetCellId: 43 }, { type: "play", cardId: 46, targetCellId: 40 }, { type: "play", cardId: 45, targetCellId: 83 }, { type: "play", cardId: 104, targetCellId: 48 }, { type: "play", cardId: 87, targetCellId: 39 }, { type: "play", cardId: 40, targetCellId: 20 }, { type: "play", cardId: 56, targetCellId: 46 }, { type: "play", cardId: 60, targetCellId: 60 }, { type: "play", cardId: 32, targetCellId: 42 }, { type: "play", cardId: 5, targetCellId: 51 }, { type: "play", cardId: 53, targetCellId: 62 }, { type: "play", cardId: 7, targetCellId: 79 }, { type: "play", cardId: 28, targetCellId: 30 }, { type: "play", cardId: 79, targetCellId: 34 }, { type: "play", cardId: 101, targetCellId: 86 }, { type: "play", cardId: 25, targetCellId: 52 }, { type: "play", cardId: 24, targetCellId: 52 }, { type: "play", cardId: 80, targetCellId: 88 }, { type: "play", cardId: 88, targetCellId: 96 }, { type: "play", cardId: 84, targetCellId: 26 }, { type: "play", cardId: 50, targetCellId: 49 }, { type: "play", cardId: 99, targetCellId: 87 }, { type: "play", cardId: 4, targetCellId: 56 }, { type: "play", cardId: 65, targetCellId: 91 }, { type: "play", cardId: 22, targetCellId: 13 }, { type: "play", cardId: 86, targetCellId: 10 }, { type: "play", cardId: 68, targetCellId: 85 }, { type: "play", cardId: 27, targetCellId: 95 }, { type: "play", cardId: 94, targetCellId: 70 }, { type: "play", cardId: 63, targetCellId: 76 }, { type: "play", cardId: 52, targetCellId: 38 }, { type: "play", cardId: 77, targetCellId: 52 }, { type: "play", cardId: 76, targetCellId: 54 }, { type: "play", cardId: 97, targetCellId: 50 }],
+        },
+        {
+          id: "gc-4",
+          seed: "grand-6008",
+          difficulty: "grandmaster",
+          par: 5,
+          ko: "그랜드 콤비네이션 4",
+          en: "Grand Combination 4",
+          setupMoves: [{ type: "play", cardId: 91, targetCellId: 49 }, { type: "play", cardId: 47, targetCellId: 36 }, { type: "play", cardId: 61, targetCellId: 26 }, { type: "play", cardId: 7, targetCellId: 46 }, { type: "play", cardId: 8, targetCellId: 6 }, { type: "play", cardId: 12, targetCellId: 79 }, { type: "play", cardId: 21, targetCellId: 29 }, { type: "play", cardId: 11, targetCellId: 49 }, { type: "play", cardId: 80, targetCellId: 24 }, { type: "play", cardId: 32, targetCellId: 23 }, { type: "play", cardId: 104, targetCellId: 15 }, { type: "play", cardId: 101, targetCellId: 43 }, { type: "play", cardId: 66, targetCellId: 48 }, { type: "play", cardId: 51, targetCellId: 3 }, { type: "play", cardId: 30, targetCellId: 14 }, { type: "play", cardId: 85, targetCellId: 27 }, { type: "play", cardId: 38, targetCellId: 34 }, { type: "play", cardId: 77, targetCellId: 16 }, { type: "play", cardId: 1, targetCellId: 38 }, { type: "play", cardId: 63, targetCellId: 24 }, { type: "play", cardId: 72, targetCellId: 65 }, { type: "play", cardId: 57, targetCellId: 42 }, { type: "play", cardId: 78, targetCellId: 41 }, { type: "play", cardId: 86, targetCellId: 57 }, { type: "play", cardId: 68, targetCellId: 37 }, { type: "play", cardId: 44, targetCellId: 68 }, { type: "play", cardId: 90, targetCellId: 55 }, { type: "play", cardId: 33, targetCellId: 12 }, { type: "play", cardId: 24, targetCellId: 46 }, { type: "play", cardId: 45, targetCellId: 8 }, { type: "play", cardId: 76, targetCellId: 23 }, { type: "play", cardId: 60, targetCellId: 62 }, { type: "play", cardId: 46, targetCellId: 35 }, { type: "play", cardId: 36, targetCellId: 64 }, { type: "play", cardId: 23, targetCellId: 95 }, { type: "play", cardId: 26, targetCellId: 20 }, { type: "play", cardId: 22, targetCellId: 25 }, { type: "play", cardId: 16, targetCellId: 18 }, { type: "play", cardId: 49, targetCellId: 53 }, { type: "play", cardId: 2, targetCellId: 30 }, { type: "play", cardId: 50, targetCellId: 45 }, { type: "play", cardId: 99, targetCellId: 50 }, { type: "play", cardId: 93, targetCellId: 96 }, { type: "play", cardId: 10, targetCellId: 94 }, { type: "play", cardId: 31, targetCellId: 77 }, { type: "play", cardId: 75, targetCellId: 22 }, { type: "play", cardId: 5, targetCellId: 39 }, { type: "play", cardId: 27, targetCellId: 75 }],
+        },
+        {
+          id: "gc-5",
+          seed: "grand-6009",
+          difficulty: "grandmaster",
+          par: 5,
+          ko: "그랜드 콤비네이션 5",
+          en: "Grand Combination 5",
+          setupMoves: [{ type: "play", cardId: 5, targetCellId: 66 }, { type: "play", cardId: 36, targetCellId: 50 }, { type: "play", cardId: 35, targetCellId: 77 }, { type: "play", cardId: 20, targetCellId: 81 }, { type: "play", cardId: 14, targetCellId: 56 }, { type: "play", cardId: 61, targetCellId: 84 }, { type: "play", cardId: 19, targetCellId: 86 }, { type: "play", cardId: 95, targetCellId: 85 }, { type: "play", cardId: 78, targetCellId: 67 }, { type: "play", cardId: 12, targetCellId: 34 }, { type: "play", cardId: 23, targetCellId: 82 }, { type: "play", cardId: 75, targetCellId: 95 }, { type: "play", cardId: 73, targetCellId: 65 }, { type: "play", cardId: 90, targetCellId: 47 }, { type: "play", cardId: 48, targetCellId: 74 }, { type: "play", cardId: 37, targetCellId: 76 }, { type: "play", cardId: 28, targetCellId: 78 }, { type: "play", cardId: 53, targetCellId: 64 }, { type: "play", cardId: 10, targetCellId: 97 }, { type: "play", cardId: 44, targetCellId: 87 }, { type: "play", cardId: 104, targetCellId: 53 }, { type: "play", cardId: 98, targetCellId: 43 }, { type: "play", cardId: 25, targetCellId: 45 }, { type: "play", cardId: 41, targetCellId: 40 }, { type: "play", cardId: 33, targetCellId: 33 }, { type: "play", cardId: 54, targetCellId: 93 }, { type: "play", cardId: 47, targetCellId: 94 }, { type: "play", cardId: 60, targetCellId: 60 }, { type: "play", cardId: 102, targetCellId: 55 }, { type: "play", cardId: 9, targetCellId: 58 }, { type: "play", cardId: 97, targetCellId: 22 }, { type: "play", cardId: 79, targetCellId: 63 }, { type: "play", cardId: 52, targetCellId: 80 }, { type: "play", cardId: 58, targetCellId: 30 }, { type: "play", cardId: 50, targetCellId: 54 }, { type: "play", cardId: 49, targetCellId: 25 }, { type: "play", cardId: 100, targetCellId: 10 }, { type: "play", cardId: 11, targetCellId: 55 }, { type: "play", cardId: 88, targetCellId: 69 }, { type: "play", cardId: 55, targetCellId: 35 }, { type: "play", cardId: 92, targetCellId: 20 }, { type: "play", cardId: 69, targetCellId: 52 }, { type: "play", cardId: 18, targetCellId: 7 }, { type: "play", cardId: 91, targetCellId: 16 }, { type: "play", cardId: 38, targetCellId: 89 }, { type: "play", cardId: 66, targetCellId: 68 }, { type: "play", cardId: 7, targetCellId: 24 }, { type: "play", cardId: 103, targetCellId: 55 }, { type: "play", cardId: 39, targetCellId: 79 }, { type: "play", cardId: 80, targetCellId: 21 }, { type: "play", cardId: 15, targetCellId: 39 }, { type: "play", cardId: 64, targetCellId: 31 }, { type: "play", cardId: 31, targetCellId: 44 }, { type: "play", cardId: 82, targetCellId: 92 }, { type: "play", cardId: 56, targetCellId: 19 }, { type: "play", cardId: 99, targetCellId: 13 }],
+        },
+    ],
+  },
 ];
 
 // Flattened id→puzzle index built once. Every puzzle carries its packId for scoring/progression.
@@ -431,6 +674,211 @@ export function scoreTimeAttack({ won = false, durationMs = 0 } = {}) {
   return { won: Boolean(won), durationMs: duration, medal };
 }
 
+// --- PUZZLE RUSH ------------------------------------------------------------------------
+
+// PUZZLE RUSH is the fourth seeded solo mode alongside GAUNTLET/SURVIVAL/TIME-ATTACK. A run is a
+// seeded ORDERED sequence of puzzle ids drawn deterministically from the shipped catalog; the
+// player solves them back-to-back and the run accumulates the stars scored on each. Like the other
+// modes it is a plain serializable object (localStorage-friendly) and fully reproducible from its
+// seed (createSeededRng picks the same puzzle order every time). It NEVER grants gameplay-affecting
+// unlocks — the earned medal is a cosmetic milestone that feeds progression at the UI layer.
+
+// Default number of puzzles in a rush run. Kept small so a run is a tight sprint, not a marathon.
+export const PUZZLE_RUSH_LENGTH = 5;
+
+// Medal thresholds by TOTAL stars accumulated across the run (documented + tested at boundaries).
+// Max stars = 3 * length. A run always finishes (each puzzle is attempted); the medal reflects how
+// cleanly the player solved the sequence.
+//   gold   — >= 90% of the maximum stars
+//   silver — >= 70%
+//   bronze — >= 50%
+//   none   — below half of the maximum
+export const PUZZLE_RUSH_MEDAL_RATIOS = { gold: 0.9, silver: 0.7, bronze: 0.5 };
+
+// Deterministically pick an ordered, non-repeating sequence of puzzle ids from the catalog for a
+// given seed. Uses a seeded Fisher–Yates over the flattened puzzle list so a seed reproduces the
+// exact order; falls back gracefully when the catalog is smaller than the requested length.
+function pickRushPuzzleIds(seed, length) {
+  const rng = createSeededRng(`rush:${String(seed ?? "")}`);
+  const pool = ALL_PUZZLES.map((puzzle) => puzzle.id);
+  for (let i = pool.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(rng() * (i + 1));
+    const tmp = pool[i];
+    pool[i] = pool[j];
+    pool[j] = tmp;
+  }
+  const wanted = Math.max(1, Math.min(Math.trunc(Number(length) || PUZZLE_RUSH_LENGTH), pool.length));
+  return pool.slice(0, wanted);
+}
+
+// Build a seeded puzzle-rush run. Pure; a given seed reproduces the exact puzzle order. Returns a
+// serializable run-state object mirroring the gauntlet/survival shape.
+export function buildPuzzleRush(seed, { length = PUZZLE_RUSH_LENGTH } = {}) {
+  const puzzleIds = pickRushPuzzleIds(seed, length);
+  return {
+    seed: String(seed ?? ""),
+    puzzleIds,
+    index: 0,
+    stars: 0,
+    solved: 0,
+    finished: false,
+  };
+}
+
+function normalizePuzzleRush(state) {
+  if (!state || typeof state !== "object" || !Array.isArray(state.puzzleIds) || state.puzzleIds.length === 0) {
+    return buildPuzzleRush("");
+  }
+  const clamp = (value) => Math.max(0, Math.trunc(Number(value) || 0));
+  const puzzleIds = state.puzzleIds.map((id) => String(id));
+  return {
+    seed: String(state.seed ?? ""),
+    puzzleIds,
+    index: Math.min(clamp(state.index), puzzleIds.length),
+    stars: clamp(state.stars),
+    solved: Math.min(clamp(state.solved), puzzleIds.length),
+    finished: state.finished === true,
+  };
+}
+
+// The puzzle id the current rush stage should launch (or null once the run is finished).
+export function currentRushPuzzle(state) {
+  const base = normalizePuzzleRush(state);
+  if (base.finished || base.index >= base.puzzleIds.length) return null;
+  return base.puzzleIds[base.index];
+}
+
+// Pure puzzle-rush transition: record one puzzle's star result (0-3) and advance. Unlike the
+// gauntlet, a rush NEVER ends early on a poor result — every puzzle in the sequence is attempted;
+// the run finishes when the last puzzle is recorded. Never mutates its input.
+export function advancePuzzleRush(state, { stars = 0, won = false } = {}) {
+  const base = normalizePuzzleRush(state);
+  if (base.finished) return base;
+  const gained = Math.max(0, Math.min(3, Math.trunc(Number(stars) || 0)));
+  const index = base.index + 1;
+  const finished = index >= base.puzzleIds.length;
+  return {
+    ...base,
+    index: finished ? base.puzzleIds.length : index,
+    stars: base.stars + gained,
+    solved: base.solved + (won || gained > 0 ? 1 : 0),
+    finished,
+  };
+}
+
+// Pure puzzle-rush scoring: map a run's accumulated stars to a medal tier by ratio of the maximum
+// possible stars. Returns { stars, maxStars, medal }. A run must be finished to earn a medal.
+export function scorePuzzleRush(state) {
+  const base = normalizePuzzleRush(state);
+  const maxStars = base.puzzleIds.length * 3;
+  let medal = "none";
+  if (base.finished && maxStars > 0) {
+    const ratio = base.stars / maxStars;
+    if (ratio >= PUZZLE_RUSH_MEDAL_RATIOS.gold) medal = "gold";
+    else if (ratio >= PUZZLE_RUSH_MEDAL_RATIOS.silver) medal = "silver";
+    else if (ratio >= PUZZLE_RUSH_MEDAL_RATIOS.bronze) medal = "bronze";
+    else medal = "none";
+  }
+  return { stars: base.stars, maxStars, medal };
+}
+
+// --- CAMPAIGN ---------------------------------------------------------------------------
+
+// The CAMPAIGN meta sequences the puzzle packs into ordered CHAPTERS. It is a pure structure with
+// PROGRESS-based unlock: chapter 0 is always unlocked; chapter N+1 unlocks only once chapter N is
+// CLEARED (every puzzle in it solved for at least 1 star). Unlock is NEVER time- or payment-gated —
+// purely a function of the player's puzzleProgress map, so the whole thing is free-tier + offline.
+// Completion feeds progression at the UI layer (achievements for clearing a chapter / the campaign).
+
+// Chapter order = pack order in PUZZLE_PACKS. Each chapter carries its pack id + the ordered puzzle
+// ids it contains, so campaign progress is computed purely from a puzzleProgress map.
+export const CAMPAIGN_CHAPTERS = PUZZLE_PACKS.map((pack, order) => ({
+  order,
+  packId: pack.id,
+  ko: pack.ko,
+  en: pack.en,
+  puzzleIds: pack.puzzles.map((puzzle) => puzzle.id),
+}));
+
+// Normalize an arbitrary puzzleProgress map to { [puzzleId]: stars(0-3) }. Tolerant of the client
+// shape { [id]: { stars } } as well as a bare { [id]: stars } map. Pure.
+function normalizePuzzleProgress(puzzleProgress) {
+  const out = {};
+  if (!puzzleProgress || typeof puzzleProgress !== "object") return out;
+  for (const [id, value] of Object.entries(puzzleProgress)) {
+    let stars = 0;
+    if (typeof value === "number") stars = value;
+    else if (value && typeof value === "object") stars = Number(value.stars) || 0;
+    out[String(id)] = Math.max(0, Math.min(3, Math.trunc(stars)));
+  }
+  return out;
+}
+
+// True when every puzzle in the chapter has been solved for at least 1 star. Pure.
+export function isChapterCleared(chapter, puzzleProgress) {
+  if (!chapter || !Array.isArray(chapter.puzzleIds) || chapter.puzzleIds.length === 0) return false;
+  const stars = normalizePuzzleProgress(puzzleProgress);
+  return chapter.puzzleIds.every((id) => (stars[id] || 0) >= 1);
+}
+
+// True when the chapter at `order` is unlocked: chapter 0 is always open; a later chapter is open
+// only once the PREVIOUS chapter is cleared. Progress-based, never paid. Pure.
+export function isChapterUnlocked(order, puzzleProgress) {
+  const index = Math.trunc(Number(order) || 0);
+  if (index <= 0) return true;
+  const prev = CAMPAIGN_CHAPTERS[index - 1];
+  if (!prev) return false;
+  return isChapterCleared(prev, puzzleProgress);
+}
+
+// Aggregate campaign progress from a puzzleProgress map. Returns a serializable summary with a
+// per-chapter breakdown (unlocked / cleared / stars / maxStars) plus campaign totals and a
+// completion flag. Pure — the single source of truth the UI + achievements read.
+export function computeCampaignProgress(puzzleProgress) {
+  const stars = normalizePuzzleProgress(puzzleProgress);
+  let totalStars = 0;
+  let totalMax = 0;
+  let clearedChapters = 0;
+  const chapters = CAMPAIGN_CHAPTERS.map((chapter) => {
+    const chapterStars = chapter.puzzleIds.reduce((sum, id) => sum + (stars[id] || 0), 0);
+    const chapterMax = chapter.puzzleIds.length * 3;
+    const cleared = chapter.puzzleIds.every((id) => (stars[id] || 0) >= 1);
+    const unlocked = isChapterUnlocked(chapter.order, puzzleProgress);
+    totalStars += chapterStars;
+    totalMax += chapterMax;
+    if (cleared) clearedChapters += 1;
+    return {
+      order: chapter.order,
+      packId: chapter.packId,
+      ko: chapter.ko,
+      en: chapter.en,
+      puzzleIds: chapter.puzzleIds.slice(),
+      unlocked,
+      cleared,
+      stars: chapterStars,
+      maxStars: chapterMax,
+    };
+  });
+  return {
+    chapters,
+    clearedChapters,
+    totalChapters: CAMPAIGN_CHAPTERS.length,
+    stars: totalStars,
+    maxStars: totalMax,
+    completed: clearedChapters === CAMPAIGN_CHAPTERS.length && CAMPAIGN_CHAPTERS.length > 0,
+  };
+}
+
+// The next chapter the player should tackle: the lowest-order UNLOCKED chapter that is not yet
+// cleared, or null when the whole campaign is complete. Pure.
+export function nextCampaignChapter(puzzleProgress) {
+  const progress = computeCampaignProgress(puzzleProgress);
+  for (const chapter of progress.chapters) {
+    if (chapter.unlocked && !chapter.cleared) return chapter;
+  }
+  return null;
+}
+
 // --- share text (ko) --------------------------------------------------------------------
 
 // Compact Korean share summaries, mirroring formatDailyShareText/formatProgressionShareText.
@@ -458,6 +906,22 @@ export function formatTimeAttackShareText({ medal = "none", durationMs = 0, url 
   const seconds = Math.max(0, Math.round(durationMs / 1000));
   const medalKo = { gold: "금메달", silver: "은메달", bronze: "동메달", none: "완주" }[medal] || "완주";
   const lines = [`Sequence Arena 타임어택 · ${medalKo} · ${seconds}초`];
+  if (url) lines.push(url);
+  return lines.join("\n");
+}
+
+export function formatPuzzleRushShareText({ stars = 0, maxStars = 0, medal = "none", url = "" } = {}) {
+  const medalKo = { gold: "금메달", silver: "은메달", bronze: "동메달", none: "완주" }[medal] || "완주";
+  const lines = [`Sequence Arena 퍼즐 러시 · ${medalKo} · ★${Math.max(0, Math.trunc(stars))}/${Math.max(0, Math.trunc(maxStars))}`];
+  if (url) lines.push(url);
+  return lines.join("\n");
+}
+
+export function formatCampaignShareText({ clearedChapters = 0, totalChapters = 0, stars = 0, maxStars = 0, url = "" } = {}) {
+  const lines = [
+    `Sequence Arena 캠페인 · ${Math.max(0, Math.trunc(clearedChapters))}/${Math.max(0, Math.trunc(totalChapters))} 챕터`,
+    `★ ${Math.max(0, Math.trunc(stars))}/${Math.max(0, Math.trunc(maxStars))}`,
+  ];
   if (url) lines.push(url);
   return lines.join("\n");
 }

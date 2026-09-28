@@ -66,7 +66,7 @@
         "accessibilityControl": ["fullKeyboardControl", "fullMouseControl", "fullTouchControl"],
         "accessibilityFeature": ["ARIA", "alternativeText", "highContrastDisplay", "readingOrder", "structuralNavigation", "tableOfContents"],
         "accessibilityHazard": ["noFlashingHazard", "noMotionSimulationHazard", "noSoundHazard"],
-        "accessibilitySummary": "Full keyboard navigation with skip link, ARIA live regions for status updates, prefers-reduced-motion honoured, no flashing or motion-simulation hazards, sound effects toggleable."
+        "accessibilitySummary": "Full keyboard navigation with skip link, ARIA live regions for status updates, all controls meet the 44px enhanced target size (WCAG 2.5.5 AAA), forced-colors (Windows High Contrast) and prefers-reduced-motion honoured on every surface, no flashing or motion-simulation hazards, sound effects toggleable. Colour contrast is retained at AA 4.5:1 (the brand palette is not uniformly AAA 7:1)."
       }
     </script>
   </head>
@@ -220,6 +220,9 @@
                 </div>
               </div>
               <button id="create-room-btn" class="primary-button" type="submit" data-i18n="gateway.createRoom">방 만들기</button>
+              <button id="quick-match-btn" class="ghost-button quick-match-button" type="button" data-i18n="quickMatch.button" title="상시 서버가 있을 때만 실시간 랭크 대전이 가능합니다." data-i18n-attr="title:quickMatch.buttonTitle">빠른 대전</button>
+              <p id="quick-match-status" class="quick-match-status" role="status" aria-live="polite" aria-atomic="true" hidden></p>
+              <p id="quick-match-note" class="quick-match-note" data-i18n="quickMatch.tradeoff">개인 기록 기반, 상시 서버가 있을 때만 실시간 랭크 대전</p>
               <button id="offline-solo-btn" class="ghost-button" type="button" data-i18n="gateway.offlineSolo">오프라인 솔로</button>
               <button id="daily-challenge-btn" class="ghost-button daily-challenge-button" type="button" data-i18n="gateway.dailyChallenge">오늘의 챌린지</button>
               <button id="modes-btn" class="ghost-button modes-button" type="button" aria-haspopup="dialog" aria-controls="modes-modal" aria-expanded="false" data-i18n="gateway.modes">모드 / 퍼즐</button>
@@ -358,6 +361,7 @@
                   <button type="button" data-ai-mode="aggressive" data-i18n="host.aiAggressive">공격</button>
                   <button type="button" data-ai-mode="master" data-i18n="host.aiMaster">마스터</button>
                   <button type="button" data-ai-mode="grandmaster" data-i18n="host.aiGrandmaster">그랜드마스터</button>
+                  <button type="button" data-ai-mode="legend" data-i18n="host.aiLegend">레전드</button>
                 </div>
               </div>
               <div class="host-setting">
@@ -605,6 +609,11 @@
           <section class="modes-section" aria-label="솔로 모드" data-i18n-attr="aria-label:modes.modesAria">
             <h3 data-i18n="modes.modesHeading">솔로 모드</h3>
             <div id="modes-mode-list" class="modes-mode-list"></div>
+          </section>
+          <section class="modes-section" aria-label="캠페인 챕터" data-i18n-attr="aria-label:modes.campaignAria">
+            <h3 data-i18n="modes.campaignHeading">캠페인</h3>
+            <p class="modes-campaign-desc" data-i18n="modes.campaignDesc">퍼즐 팩을 챕터로 이어 풀며 진행하세요. 이전 챕터를 클리어하면 다음이 열립니다.</p>
+            <div id="modes-campaign-list" class="modes-campaign-list"></div>
           </section>
           <section class="modes-section" aria-label="퍼즐 팩" data-i18n-attr="aria-label:modes.puzzlesAria">
             <h3 data-i18n="modes.puzzlesHeading">퍼즐 팩</h3>
