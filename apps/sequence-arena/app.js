@@ -351,7 +351,21 @@ const refs = {
   clearHistoryBtn: document.getElementById("clear-history-btn"),
   livePolite: document.getElementById("live-polite"),
   liveAssertive: document.getElementById("live-assertive"),
+  gatewayPanel: document.getElementById("gateway-panel"),
+  gameSettingsBtn: document.getElementById("game-settings-btn"),
+  gameSheetCloseBtn: document.getElementById("game-sheet-close-btn"),
+  gamePanelsBtn: document.getElementById("game-panels-btn"),
+  gamePanelsCloseBtn: document.getElementById("game-panels-close-btn"),
+  gameSidePanels: document.getElementById("game-side-panels"),
+  sideTabList: document.querySelector("#game-side-panels .side-tabs"),
+  sideTabs: [...document.querySelectorAll("#game-side-panels [data-side-tab]")],
+  turnSteps: [...document.querySelectorAll("#turn-steps [data-turn-step]")],
+  gameToast: document.getElementById("game-toast"),
 };
+
+// P3a in-game chrome state (presentation only; see syncGameChrome). Declared up here, next to
+// refs, because setFlashMessage() can run during boot before the controller code below.
+const gameChrome = { sheetOpen: false, drawerOpen: false, tab: "chat", tabChosen: false, toastTimer: 0, seenChat: 0 };
 
 // Draw the SVG glyph for every static `[data-icon]` slot (top bar, settings popover). State
 // toggles below swap glyphs via setToggleIcon so icons never depend on emoji/system fonts.
@@ -1241,7 +1255,11 @@ function ensureMediaFeedbackUnlocked() {
 }
 
 function setFlashMessage(message) {
+  const changed = message !== clientState.flashMessage;
   clientState.flashMessage = message;
+  if (changed) {
+    showGameToast(message);
+  }
   refs.flashMessage.textContent = message;
   syncFlashIdle();
 }
@@ -4412,6 +4430,23 @@ function renderChat() {
     refs.chatLog.appendChild(item);
   }
   refs.chatLog.scrollTop = refs.chatLog.scrollHeight;
+  syncChatUnread();
+}
+
+// Unread dot on the chat drawer trigger (only visible where chat lives in a drawer).
+function syncChatUnread() {
+  const count = clientState.chatMessages.length;
+  // The panels are on screen either in the drawer or, on tall desktop windows, in the HUD
+  // column (then the drawer trigger itself is display:none).
+  const panelsVisible =
+    gameChrome.drawerOpen || (refs.gamePanelsBtn != null && getComputedStyle(refs.gamePanelsBtn).display === "none");
+  const seeing = !isGameChromeActive() || (panelsVisible && gameChrome.tab === "chat");
+  if (seeing || count <= gameChrome.seenChat) {
+    gameChrome.seenChat = Math.max(gameChrome.seenChat, seeing ? count : gameChrome.seenChat);
+    if (seeing) refs.gamePanelsBtn?.removeAttribute("data-unread");
+    return;
+  }
+  refs.gamePanelsBtn?.setAttribute("data-unread", "true");
 }
 
 function getChatSendCooldownMs() {
@@ -5022,6 +5057,7 @@ function renderStatus() {
     refs.logList.appendChild(item);
   }
   renderHistory();
+  syncGameChrome();
 }
 
 const BASE_TITLE = "Sequence Arena · 실시간 시퀀스 팀전";
@@ -5547,6 +5583,261 @@ document.addEventListener("pointerdown", (event) => {
   const wrapper = refs.settingsMenuBtn?.parentElement;
   if (wrapper && event.target instanceof Node && !wrapper.contains(event.target)) {
     closeSettingsMenu();
+  }
+});
+
+// ---- P3a — viewport-locked game layout: in-game chrome controller ------------------------
+// Presentation only (no game state). During play/finished the page is locked to the viewport
+// (styles.css "P3a"), so:
+//   - the room/host settings (.gateway-panel: team size, AI level, spectators, rematch mode,
+//     invite/copy/share/leave) become a sheet opened from #game-settings-btn;
+//   - chat / game log / spectators / match history share one tabbed panel in the side column,
+//     which becomes a drawer (#game-panels-btn) where the side column does not fit;
+//   - #turn-steps tracks select -> place -> discard -> draw for the local player;
+//   - flash messages also surface as a short-lived board toast (#flash-message stays the
+//     aria-live region, so the toast is aria-hidden).
+// Every moved control keeps its id, aria contract, and existing handler.
+const GAME_SIDE_TABS = ["chat", "log", "spectators", "history"];
+const GAME_SIDE_TAB_PANELS = {
+  chat: "chat-panel",
+  log: "log-panel",
+  spectators: "spectator-panel",
+  history: "history-panel",
+};
+const TURN_STEP_ORDER = ["select", "place", "discard", "draw"];
+const GAME_TOAST_MS = 3600;
+
+function isGameChromeActive() {
+  const phase = clientState.game?.phase;
+  return Boolean(clientState.roomCode) && (phase === "playing" || phase === "finished");
+}
+
+function isFocusInGameOverlay(element) {
+  if (!(element instanceof Element)) return false;
+  return (
+    (gameChrome.sheetOpen && Boolean(refs.gatewayPanel?.contains(element))) ||
+    (gameChrome.drawerOpen && Boolean(refs.gameSidePanels?.contains(element)))
+  );
+}
+
+function setDialogSemantics(element, open, labelledBy) {
+  if (!element) return;
+  if (open) {
+    element.setAttribute("role", "dialog");
+    element.setAttribute("aria-modal", "false");
+    element.setAttribute("aria-labelledby", labelledBy);
+  } else {
+    element.removeAttribute("role");
+    element.removeAttribute("aria-modal");
+    element.removeAttribute("aria-labelledby");
+  }
+}
+
+function setGameSheetOpen(open, { restoreFocus = false } = {}) {
+  const next = Boolean(open) && isGameChromeActive();
+  if (next === gameChrome.sheetOpen) return;
+  if (next && gameChrome.drawerOpen) {
+    setGamePanelsOpen(false);
+  }
+  gameChrome.sheetOpen = next;
+  document.body.dataset.gameSheet = next ? "open" : "closed";
+  refs.gameSettingsBtn?.setAttribute("aria-expanded", String(next));
+  setDialogSemantics(refs.gatewayPanel, next, "game-sheet-title");
+  if (next) {
+    if (refs.gatewayPanel) refs.gatewayPanel.scrollTop = 0;
+    refs.gameSheetCloseBtn?.focus();
+  } else if (restoreFocus) {
+    refs.gameSettingsBtn?.focus();
+  }
+}
+
+function setGamePanelsOpen(open, { restoreFocus = false } = {}) {
+  const next = Boolean(open) && isGameChromeActive();
+  if (next === gameChrome.drawerOpen) return;
+  if (next && gameChrome.sheetOpen) {
+    setGameSheetOpen(false);
+  }
+  gameChrome.drawerOpen = next;
+  document.body.dataset.sideDrawer = next ? "open" : "closed";
+  refs.gamePanelsBtn?.setAttribute("aria-expanded", String(next));
+  setDialogSemantics(refs.gameSidePanels, next, "game-side-title");
+  syncChatUnread();
+  if (next) {
+    refs.sideTabs.find((tab) => tab.dataset.sideTab === gameChrome.tab)?.focus();
+  } else if (restoreFocus) {
+    refs.gamePanelsBtn?.focus();
+  }
+}
+
+function setGameSideTab(tab, { focus = false } = {}) {
+  if (!GAME_SIDE_TABS.includes(tab)) return;
+  gameChrome.tab = tab;
+  document.body.dataset.sideTab = tab;
+  for (const button of refs.sideTabs) {
+    const selected = button.dataset.sideTab === tab;
+    button.setAttribute("aria-selected", String(selected));
+    button.tabIndex = selected ? 0 : -1;
+    if (selected && focus) button.focus();
+  }
+  if (tab === "chat" && refs.chatLog) {
+    refs.chatLog.scrollTop = refs.chatLog.scrollHeight;
+    syncChatUnread();
+  }
+}
+
+function currentTurnStep() {
+  if (clientState.game?.phase !== "playing" || clientState.yourRole === "spectator" || !isYourTurn()) {
+    return null;
+  }
+  const pending = clientState.pendingStep?.type;
+  if (pending === "discard" || pending === "draw") return pending;
+  return clientState.selectedCardId != null ? "place" : "select";
+}
+
+function syncTurnSteps() {
+  const step = currentTurnStep();
+  const currentIndex = step ? TURN_STEP_ORDER.indexOf(step) : -1;
+  document.body.dataset.turnStep = step || "none";
+  for (const item of refs.turnSteps) {
+    const index = TURN_STEP_ORDER.indexOf(item.dataset.turnStep);
+    const state = currentIndex < 0 ? "todo" : index < currentIndex ? "done" : index === currentIndex ? "current" : "todo";
+    if (item.dataset.state !== state) item.dataset.state = state;
+    if (state === "current") {
+      item.setAttribute("aria-current", "step");
+    } else {
+      item.removeAttribute("aria-current");
+    }
+  }
+}
+
+function syncGameChrome() {
+  const active = isGameChromeActive();
+  const wasActive = document.body.dataset.gameChrome === "on";
+  document.body.dataset.gameChrome = active ? "on" : "off";
+  if (active && !wasActive && (window.scrollY || window.scrollX)) {
+    // The locked game shell cannot be scrolled, so never enter it part-way down the page.
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  }
+  if (active && !wasActive && !gameChrome.tabChosen) {
+    // Offline solo has nobody to chat with: open on the game log until the player picks a tab.
+    setGameSideTab(clientState.localMode ? "log" : "chat");
+  }
+  if (!active) {
+    setGameSheetOpen(false);
+    setGamePanelsOpen(false);
+  }
+  if (!document.body.dataset.sideTab) {
+    setGameSideTab(gameChrome.tab);
+  }
+  // Tabpanel semantics only while the tabs are the way to reach the panels.
+  for (const [tab, panelId] of Object.entries(GAME_SIDE_TAB_PANELS)) {
+    const panel = document.getElementById(panelId);
+    if (!panel) continue;
+    if (active) {
+      if (panel.getAttribute("role") !== "tabpanel") {
+        panel.setAttribute("role", "tabpanel");
+        panel.setAttribute("aria-labelledby", `side-tab-${tab}`);
+      }
+    } else if (panel.hasAttribute("role")) {
+      panel.removeAttribute("role");
+      panel.removeAttribute("aria-labelledby");
+    }
+  }
+  syncTurnSteps();
+}
+
+function showGameToast(message) {
+  const toast = refs.gameToast;
+  if (!toast || !message || !isGameChromeActive() || IDLE_FLASH_MESSAGES.has(message)) return;
+  toast.textContent = message;
+  toast.hidden = false;
+  toast.dataset.visible = "true";
+  window.clearTimeout(gameChrome.toastTimer);
+  gameChrome.toastTimer = window.setTimeout(() => {
+    toast.dataset.visible = "false";
+    toast.hidden = true;
+  }, GAME_TOAST_MS);
+}
+
+refs.gameSettingsBtn?.addEventListener("click", () => {
+  if (gameChrome.sheetOpen) {
+    setGameSheetOpen(false, { restoreFocus: true });
+  } else {
+    setGameSheetOpen(true);
+  }
+});
+refs.gameSheetCloseBtn?.addEventListener("click", () => setGameSheetOpen(false, { restoreFocus: true }));
+refs.gamePanelsBtn?.addEventListener("click", () => {
+  if (gameChrome.drawerOpen) {
+    setGamePanelsOpen(false, { restoreFocus: true });
+  } else {
+    setGamePanelsOpen(true);
+  }
+});
+refs.gamePanelsCloseBtn?.addEventListener("click", () => setGamePanelsOpen(false, { restoreFocus: true }));
+
+for (const button of refs.sideTabs) {
+  button.addEventListener("click", () => {
+    gameChrome.tabChosen = true;
+    setGameSideTab(button.dataset.sideTab);
+  });
+}
+
+refs.sideTabList?.addEventListener("keydown", (event) => {
+  const keys = ["ArrowLeft", "ArrowRight", "Home", "End"];
+  if (!keys.includes(event.key)) return;
+  event.preventDefault();
+  event.stopPropagation();
+  const index = GAME_SIDE_TABS.indexOf(gameChrome.tab);
+  const last = GAME_SIDE_TABS.length - 1;
+  const nextIndex =
+    event.key === "Home" ? 0 : event.key === "End" ? last : event.key === "ArrowRight" ? (index + 1) % (last + 1) : (index + last) % (last + 1);
+  gameChrome.tabChosen = true;
+  setGameSideTab(GAME_SIDE_TABS[nextIndex], { focus: true });
+});
+
+document.addEventListener(
+  "keydown",
+  (event) => {
+    if (event.key !== "Escape" || event.defaultPrevented || isSettingsMenuOpen()) return;
+    const modalOpen = [refs.helpModal, refs.statsModal, refs.modesModal, refs.replayModal].some(
+      (modal) => modal && !modal.hidden
+    );
+    if (modalOpen) return;
+    if (gameChrome.sheetOpen) {
+      event.preventDefault();
+      event.stopPropagation();
+      setGameSheetOpen(false, { restoreFocus: true });
+    } else if (gameChrome.drawerOpen) {
+      event.preventDefault();
+      event.stopPropagation();
+      setGamePanelsOpen(false, { restoreFocus: true });
+    }
+  },
+  true
+);
+
+// Tabbing out of the sheet/drawer closes it (same contract as the top-bar settings popover), so
+// keyboard focus never ends up behind the scrim.
+refs.gatewayPanel?.addEventListener("focusout", (event) => {
+  const next = event.relatedTarget;
+  if (!gameChrome.sheetOpen || !(next instanceof Node)) return;
+  if (!refs.gatewayPanel.contains(next) && !refs.gameSettingsBtn?.contains(next)) setGameSheetOpen(false);
+});
+refs.gameSidePanels?.addEventListener("focusout", (event) => {
+  const next = event.relatedTarget;
+  if (!gameChrome.drawerOpen || !(next instanceof Node)) return;
+  if (!refs.gameSidePanels.contains(next) && !refs.gamePanelsBtn?.contains(next)) setGamePanelsOpen(false);
+});
+
+// Outside pointerdown closes the sheet/drawer (the trigger's own click toggles it).
+document.addEventListener("pointerdown", (event) => {
+  if (!(event.target instanceof Node)) return;
+  if (gameChrome.sheetOpen && !refs.gatewayPanel?.contains(event.target) && !refs.gameSettingsBtn?.contains(event.target)) {
+    setGameSheetOpen(false);
+  }
+  if (gameChrome.drawerOpen && !refs.gameSidePanels?.contains(event.target) && !refs.gamePanelsBtn?.contains(event.target)) {
+    setGamePanelsOpen(false);
   }
 });
 
@@ -7310,6 +7601,12 @@ document.addEventListener("keydown", (event) => {
     (activeElement && activeElement.isContentEditable);
 
   if (isTypingTarget) {
+    return;
+  }
+
+  // Focus inside the in-game settings sheet / chat drawer: let its own controls own the keys
+  // (Escape is handled by the capture listener in the P3a controller).
+  if (isFocusInGameOverlay(activeElement)) {
     return;
   }
 

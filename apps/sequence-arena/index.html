@@ -142,7 +142,11 @@
       </header>
 
       <main id="main-content" class="main-grid">
-        <section class="panel gateway-panel">
+        <section id="gateway-panel" class="panel gateway-panel">
+          <div class="game-sheet-head">
+            <h2 id="game-sheet-title" class="game-sheet-title" data-i18n="game.settings">게임 설정</h2>
+            <button id="game-sheet-close-btn" class="btn-icon game-sheet-close" type="button" aria-label="게임 설정 닫기" title="닫기" data-i18n-attr="aria-label:game.settings.close;title:common.close"><span class="icon-slot" data-icon="close" aria-hidden="true"></span></button>
+          </div>
           <div class="panel-head">
             <h2 data-i18n="gateway.heading">방</h2>
             <p id="gateway-subtitle">방을 만들거나 받은 코드로 입장하세요. 같은 브라우저에서는 좌석이 복구됩니다.</p>
@@ -515,6 +519,7 @@
               aria-describedby="board-state-summary"
             ></canvas>
             <p id="board-state-summary" class="sr-only" aria-live="polite"></p>
+            <p id="game-toast" class="game-toast" aria-hidden="true" hidden></p>
           </div>
 
           <aside class="sidebar">
@@ -523,6 +528,10 @@
                 <h2 data-i18n="status.heading">현재 상태</h2>
                 <p id="turn-subtitle">게임 시작 전입니다.</p>
                 <span id="daily-badge" class="daily-badge" hidden></span>
+                <span class="game-hud-actions">
+                  <button id="game-panels-btn" class="btn-icon game-hud-btn game-panels-btn" type="button" aria-label="채팅 · 게임 로그 열기" title="채팅 · 게임 로그" aria-haspopup="dialog" aria-controls="game-side-panels" aria-expanded="false" data-i18n-attr="aria-label:game.panels.aria;title:game.panels.title"><span class="icon-slot" data-icon="message" aria-hidden="true"></span></button>
+                  <button id="game-settings-btn" class="btn btn--secondary game-hud-btn game-settings-btn" type="button" aria-label="게임 설정 열기" title="게임 설정 (대결 방식 · AI 난이도 · 관전 · 리매치 · 초대 · 나가기)" aria-haspopup="dialog" aria-controls="gateway-panel" aria-expanded="false" data-i18n-attr="aria-label:game.settings.aria;title:game.settings.title"><span class="icon-slot" data-icon="cog" aria-hidden="true"></span><span class="game-hud-btn-label" data-i18n="game.settings">게임 설정</span></button>
+                </span>
               </div>
               <div id="turn-banner" class="turn-banner">
                 <strong id="turn-player">대기 중</strong>
@@ -531,6 +540,12 @@
                   <span id="turn-thinking-timer" class="turn-thinking-timer" hidden aria-live="polite" aria-atomic="true"></span>
                 </span>
               </div>
+              <ol id="turn-steps" class="turn-steps" aria-label="이번 차례 단계" data-i18n-attr="aria-label:game.steps.aria">
+                <li data-turn-step="select" data-state="todo"><span class="turn-step-dot" aria-hidden="true"></span><span data-i18n="game.step.select">카드 선택</span></li>
+                <li data-turn-step="place" data-state="todo"><span class="turn-step-dot" aria-hidden="true"></span><span data-i18n="game.step.place">칩 놓기</span></li>
+                <li data-turn-step="discard" data-state="todo"><span class="turn-step-dot" aria-hidden="true"></span><span data-i18n="game.step.discard">버리기</span></li>
+                <li data-turn-step="draw" data-state="todo"><span class="turn-step-dot" aria-hidden="true"></span><span data-i18n="game.step.draw">뽑기</span></li>
+              </ol>
               <div id="lobby-progress-card" class="lobby-progress-card">
                 <div>
                   <span>입장 현황</span>
@@ -580,53 +595,6 @@
               </div>
             </section>
 
-            <section class="panel spectator-panel">
-              <div class="panel-head compact">
-                <h2>관전자</h2>
-                <p id="spectator-summary">현재 관전자 없음</p>
-              </div>
-              <div id="spectator-list" class="spectator-list"></div>
-            </section>
-
-            <section class="panel chat-panel">
-              <div class="panel-head compact">
-                <h2 data-i18n="chat.heading">채팅</h2>
-                <p data-i18n="chat.subtitle">같은 방 사람들과 대화하세요.</p>
-              </div>
-              <div id="chat-log" class="chat-log" aria-live="polite"></div>
-              <div class="chat-emoji-row" aria-label="이모지 빠른 전송" data-i18n-attr="aria-label:chat.emojiRow.aria">
-                <button class="emoji-btn" type="button" data-chat-emoji="👍">👍</button>
-                <button class="emoji-btn" type="button" data-chat-emoji="👏">👏</button>
-                <button class="emoji-btn" type="button" data-chat-emoji="😂">😂</button>
-                <button class="emoji-btn" type="button" data-chat-emoji="🔥">🔥</button>
-                <button class="emoji-btn" type="button" data-chat-emoji="😭">😭</button>
-                <button class="emoji-btn" type="button" data-chat-emoji="🎉">🎉</button>
-                <button class="emoji-btn" type="button" data-chat-emoji="😮">😮</button>
-                <button class="emoji-btn" type="button" data-chat-emoji="🤝">🤝</button>
-              </div>
-              <div class="chat-phrase-row" aria-label="빠른 문구 전송">
-                <button class="chat-phrase-btn" type="button" data-chat-phrase="좋은 수!">좋은 수!</button>
-                <button class="chat-phrase-btn" type="button" data-chat-phrase="잘했어요">잘했어요</button>
-                <button class="chat-phrase-btn" type="button" data-chat-phrase="GG">GG</button>
-                <button class="chat-phrase-btn" type="button" data-chat-phrase="한 판 더">한 판 더</button>
-                <button class="chat-phrase-btn" type="button" data-chat-phrase="아깝다">아깝다</button>
-              </div>
-              <form id="chat-form" class="chat-form">
-                <input
-                  id="chat-input"
-                  type="text"
-                  maxlength="140"
-                  placeholder="메시지 입력"
-                  aria-label="메시지 입력"
-                  autocomplete="off"
-                  data-i18n-attr="placeholder:chat.inputPlaceholder;aria-label:chat.inputAria"
-                />
-                <button id="chat-send-btn" class="primary-button" type="submit" data-i18n="chat.send">전송</button>
-              </form>
-              <small id="chat-char-count" class="chat-char-count" aria-live="polite" aria-atomic="true">0 / 140</small>
-              <small id="chat-feedback" class="chat-feedback" aria-live="polite" aria-atomic="true" data-status="hidden"></small>
-            </section>
-
             <section class="panel hand-panel">
               <div class="panel-head compact">
                 <h2 data-i18n="hand.heading">내 손패</h2>
@@ -641,26 +609,87 @@
               <p id="selection-hint" class="selection-hint">카드를 고르면 놓을 수 있는 칸이 보드에 초록색으로 표시됩니다.</p>
             </section>
 
-            <section class="panel log-panel">
-              <div class="panel-head compact">
-                <h2 data-i18n="log.heading">게임 로그</h2>
-                <p data-i18n="log.subtitle">방 전체에 공유되는 최근 액션입니다.</p>
+            <div id="game-side-panels" class="game-side-panels">
+              <div class="game-side-head">
+                <h2 id="game-side-title" class="game-side-title" data-i18n="game.panels.title">채팅 · 게임 로그</h2>
+                <button id="game-panels-close-btn" class="btn-icon game-side-close" type="button" aria-label="채팅 · 게임 로그 닫기" title="닫기" data-i18n-attr="aria-label:game.panels.close;title:common.close"><span class="icon-slot" data-icon="close" aria-hidden="true"></span></button>
               </div>
-              <ol id="log-list" class="log-list"></ol>
-            </section>
-
-            <section class="panel history-panel">
-              <div class="panel-head compact panel-head-with-actions">
-                <div class="panel-head-copy">
-                  <h2 data-i18n="history.heading">경기 기록</h2>
-                  <p data-i18n="history.subtitle">이 방에서 끝난 최근 결과입니다.</p>
+              <div class="side-tabs" role="tablist" aria-label="채팅 · 게임 로그 · 관전자 · 경기 기록" data-i18n-attr="aria-label:game.tabs.aria">
+                <button id="side-tab-chat" class="side-tab" type="button" role="tab" aria-selected="true" aria-controls="chat-panel" data-side-tab="chat" data-i18n="game.tab.chat">채팅</button>
+                <button id="side-tab-log" class="side-tab" type="button" role="tab" aria-selected="false" aria-controls="log-panel" data-side-tab="log" tabindex="-1" data-i18n="game.tab.log">로그</button>
+                <button id="side-tab-spectators" class="side-tab" type="button" role="tab" aria-selected="false" aria-controls="spectator-panel" data-side-tab="spectators" tabindex="-1" data-i18n="game.tab.spectators">관전자</button>
+                <button id="side-tab-history" class="side-tab" type="button" role="tab" aria-selected="false" aria-controls="history-panel" data-side-tab="history" tabindex="-1" data-i18n="game.tab.history">기록</button>
+              </div>
+              <section id="spectator-panel" class="panel spectator-panel">
+                <div class="panel-head compact">
+                  <h2>관전자</h2>
+                  <p id="spectator-summary">현재 관전자 없음</p>
                 </div>
-                <button id="clear-history-btn" class="ghost-button warning-action" type="button" hidden>경기 기록 없음</button>
-              </div>
-              <div id="history-summary" class="history-summary">Ruby 0% · Cobalt 0%</div>
-              <div id="history-policy" class="history-policy">최신 경기 보존 정책: 최대 50경기</div>
-              <ol id="history-list" class="history-list"></ol>
-            </section>
+                <div id="spectator-list" class="spectator-list"></div>
+              </section>
+
+              <section id="chat-panel" class="panel chat-panel">
+                <div class="panel-head compact">
+                  <h2 data-i18n="chat.heading">채팅</h2>
+                  <p data-i18n="chat.subtitle">같은 방 사람들과 대화하세요.</p>
+                </div>
+                <div id="chat-log" class="chat-log" aria-live="polite"></div>
+                <div class="chat-quick">
+                  <div class="chat-emoji-row" aria-label="이모지 빠른 전송" data-i18n-attr="aria-label:chat.emojiRow.aria">
+                    <button class="emoji-btn" type="button" data-chat-emoji="👍">👍</button>
+                    <button class="emoji-btn" type="button" data-chat-emoji="👏">👏</button>
+                    <button class="emoji-btn" type="button" data-chat-emoji="😂">😂</button>
+                    <button class="emoji-btn" type="button" data-chat-emoji="🔥">🔥</button>
+                    <button class="emoji-btn" type="button" data-chat-emoji="😭">😭</button>
+                    <button class="emoji-btn" type="button" data-chat-emoji="🎉">🎉</button>
+                    <button class="emoji-btn" type="button" data-chat-emoji="😮">😮</button>
+                    <button class="emoji-btn" type="button" data-chat-emoji="🤝">🤝</button>
+                  </div>
+                  <div class="chat-phrase-row" aria-label="빠른 문구 전송">
+                    <button class="chat-phrase-btn" type="button" data-chat-phrase="좋은 수!">좋은 수!</button>
+                    <button class="chat-phrase-btn" type="button" data-chat-phrase="잘했어요">잘했어요</button>
+                    <button class="chat-phrase-btn" type="button" data-chat-phrase="GG">GG</button>
+                    <button class="chat-phrase-btn" type="button" data-chat-phrase="한 판 더">한 판 더</button>
+                    <button class="chat-phrase-btn" type="button" data-chat-phrase="아깝다">아깝다</button>
+                  </div>
+                </div>
+                <form id="chat-form" class="chat-form">
+                  <input
+                    id="chat-input"
+                    type="text"
+                    maxlength="140"
+                    placeholder="메시지 입력"
+                    aria-label="메시지 입력"
+                    autocomplete="off"
+                    data-i18n-attr="placeholder:chat.inputPlaceholder;aria-label:chat.inputAria"
+                  />
+                  <button id="chat-send-btn" class="primary-button" type="submit" data-i18n="chat.send">전송</button>
+                </form>
+                <small id="chat-char-count" class="chat-char-count" aria-live="polite" aria-atomic="true">0 / 140</small>
+                <small id="chat-feedback" class="chat-feedback" aria-live="polite" aria-atomic="true" data-status="hidden"></small>
+              </section>
+
+              <section id="log-panel" class="panel log-panel">
+                <div class="panel-head compact">
+                  <h2 data-i18n="log.heading">게임 로그</h2>
+                  <p data-i18n="log.subtitle">방 전체에 공유되는 최근 액션입니다.</p>
+                </div>
+                <ol id="log-list" class="log-list"></ol>
+              </section>
+
+              <section id="history-panel" class="panel history-panel">
+                <div class="panel-head compact panel-head-with-actions">
+                  <div class="panel-head-copy">
+                    <h2 data-i18n="history.heading">경기 기록</h2>
+                    <p data-i18n="history.subtitle">이 방에서 끝난 최근 결과입니다.</p>
+                  </div>
+                  <button id="clear-history-btn" class="ghost-button warning-action" type="button" hidden>경기 기록 없음</button>
+                </div>
+                <div id="history-summary" class="history-summary">Ruby 0% · Cobalt 0%</div>
+                <div id="history-policy" class="history-policy">최신 경기 보존 정책: 최대 50경기</div>
+                <ol id="history-list" class="history-list"></ol>
+              </section>
+            </div>
           </aside>
         </section>
       </main>

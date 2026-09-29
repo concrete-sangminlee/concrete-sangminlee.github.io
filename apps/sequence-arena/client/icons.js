@@ -62,6 +62,19 @@ const ICONS = {
     ["circle", { cx: "15", cy: "7", r: "2" }],
     ["circle", { cx: "9", cy: "17", r: "2" }],
   ],
+  // P3a: in-game "게임 설정" (a cog, so it never reads as the top bar's sliders) and the
+  // chat/log drawer toggle.
+  cog: [
+    ["circle", { cx: "12", cy: "12", r: "3" }],
+    [
+      "path",
+      {
+        d: "M12 3.5v2.2M12 18.3v2.2M20.5 12h-2.2M5.7 12H3.5M18 6l-1.6 1.6M7.6 16.4 6 18M18 18l-1.6-1.6M7.6 7.6 6 6",
+      },
+    ],
+    ["circle", { cx: "12", cy: "12", r: "6.3" }],
+  ],
+  message: [["path", { d: "M4.5 6.5A2 2 0 0 1 6.5 4.5h11a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H10l-4.5 3.5v-3.5h0a2 2 0 0 1-1-1.7z" }]],
   close: [["path", { d: "M6 6l12 12M18 6 6 18" }]],
   menu: [["path", { d: "M4 7h16M4 12h16M4 17h16" }]],
   more: [
