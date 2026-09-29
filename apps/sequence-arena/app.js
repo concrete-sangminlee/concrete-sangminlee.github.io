@@ -35,7 +35,7 @@ import {
 } from "./client/net-client.js";
 import { bindReplayControllerContext, closeReplayModal, wireReplayControllerEvents } from "./client/replay-controller.js";
 import { HAPTIC, playSoundPattern } from "./client/sound-bank.js";
-import { mountIcons, setIcon } from "./client/icons.js";
+import { createIcon, mountIcons, setIcon } from "./client/icons.js";
 import { TUTORIAL_SEED, TUTORIAL_STEPS, createTutorialMachine } from "./client/tutorial.js";
 import {
   buildDailyCalendar,
@@ -148,7 +148,6 @@ const refs = {
   createForm: document.getElementById("create-form"),
   joinForm: document.getElementById("join-form"),
   createRoomBtn: document.getElementById("create-room-btn"),
-  offlineSoloBtn: document.getElementById("offline-solo-btn"),
   quickMatchBtn: document.getElementById("quick-match-btn"),
   quickMatchStatus: document.getElementById("quick-match-status"),
   quickMatchNote: document.getElementById("quick-match-note"),
@@ -166,8 +165,7 @@ const refs = {
   homeMetaXp: document.getElementById("home-meta-xp"),
   homeMetaXpFill: document.getElementById("home-meta-xp-fill"),
   homeMetaGoalsList: document.getElementById("home-meta-goals-list"),
-  homeMetaDailyBtn: document.getElementById("home-meta-daily-btn"),
-  homeMetaModesBtn: document.getElementById("home-meta-modes-btn"),
+  homeMetaEmpty: document.getElementById("home-meta-empty"),
   homeMetaStatsBtn: document.getElementById("home-meta-stats-btn"),
   homeMetaShareBtn: document.getElementById("home-meta-share-btn"),
   homeMetaLive: document.getElementById("home-meta-live"),
@@ -229,7 +227,11 @@ const refs = {
   welcomeCreateBtn: document.getElementById("welcome-create-btn"),
   welcomeRejoinBtn: document.getElementById("welcome-rejoin-btn"),
   welcomeHelpBtn: document.getElementById("welcome-help-btn"),
-  welcomeDailyBtn: document.getElementById("welcome-daily-btn"),
+  welcomeCreateLabel: document.getElementById("welcome-create-label"),
+  homeDifficultySelect: document.getElementById("home-difficulty-select"),
+  dailyChallengeLabel: document.getElementById("daily-challenge-label"),
+  homeDailyStreak: document.getElementById("home-daily-streak"),
+  homeFriendsStatus: document.getElementById("home-friends-status"),
   welcomeTutorialBtn: document.getElementById("welcome-tutorial-btn"),
   helpTutorialBtn: document.getElementById("help-tutorial-btn"),
   tutorialBubble: document.getElementById("tutorial-bubble"),
@@ -1241,6 +1243,20 @@ function ensureMediaFeedbackUnlocked() {
 function setFlashMessage(message) {
   clientState.flashMessage = message;
   refs.flashMessage.textContent = message;
+  syncFlashIdle();
+}
+
+// The boot-time prompt is redundant on the home screen (the hero already says what to do), so
+// the home layout hides the flash line until a real message arrives. Presentation-only flag.
+// Boot-time prompts only: the initial gateway prompt and the static-host notice from
+// client/net-client.js (the home's "친구와 플레이" line already says the same thing).
+const IDLE_FLASH_MESSAGES = new Set([
+  initialFlashMessage,
+  "서버가 없는 정적 실행 환경입니다. 오프라인 솔로로 바로 플레이할 수 있습니다.",
+]);
+
+function syncFlashIdle() {
+  refs.flashMessage.dataset.idle = String(IDLE_FLASH_MESSAGES.has(clientState.flashMessage));
 }
 
 function updateSoundButton() {
@@ -3980,13 +3996,14 @@ function renderDailySurfaces() {
     ? `오늘 기록: ${todayEntry.won ? "승리" : "패배"} · 같은 퍼즐로 다시 도전할 수 있습니다 (기록은 첫 판 기준)`
     : "매일 모두에게 같은 보드·같은 손패가 주어지는 시드 퍼즐. 봇은 SMART 고정.";
   if (refs.dailyChallengeBtn) {
-    refs.dailyChallengeBtn.textContent = dailyLabel;
+    // The home entry card keeps its icon/description; only the title span carries the label.
+    (refs.dailyChallengeLabel || refs.dailyChallengeBtn).textContent = dailyLabel;
     refs.dailyChallengeBtn.title = dailyTitle;
     refs.dailyChallengeBtn.setAttribute("aria-label", `${dailyLabel} 시작`);
   }
-  if (refs.welcomeDailyBtn) {
-    refs.welcomeDailyBtn.textContent = dailyLabel;
-    refs.welcomeDailyBtn.title = dailyTitle;
+  if (refs.homeDailyStreak) {
+    refs.homeDailyStreak.hidden = streak.current <= 0;
+    refs.homeDailyStreak.textContent = streak.current > 0 ? t("home.daily.streak", { count: String(streak.current) }) : "";
   }
   if (refs.soloStatsStrip) {
     const parts = [];
@@ -4519,6 +4536,10 @@ function renderStatus() {
               })
               : t("conn.waiting");
   refs.currentOrigin.textContent = window.location.origin;
+  if (refs.homeFriendsStatus) {
+    refs.homeFriendsStatus.textContent = refs.connectionIndicator.textContent;
+    refs.homeFriendsStatus.dataset.live = String(Boolean(clientState.socketReady && !clientState.localMode));
+  }
   if (refs.gatewaySubtitle) {
     refs.gatewaySubtitle.textContent = offlineOnlyRuntime
       ? "바로 솔로 플레이하세요."
@@ -5089,6 +5110,7 @@ function render() {
   try {
     refs.activeRoomCode.textContent = clientState.roomCode || "미접속";
     refs.flashMessage.textContent = clientState.flashMessage;
+    syncFlashIdle();
     updateSoundButton();
     updateHapticsButton();
     updateFeedbackControls();
@@ -5229,10 +5251,8 @@ refs.createForm.addEventListener("submit", handleCreateRoom);
 if (refs.createRoomBtn) {
   refs.createRoomBtn.setAttribute("aria-describedby", "welcome-mode-banner");
 }
-refs.offlineSoloBtn?.addEventListener("click", () => startOfflineSolo());
 refs.quickMatchBtn?.addEventListener("click", () => handleQuickMatchClick());
 refs.dailyChallengeBtn?.addEventListener("click", () => startOfflineSolo({ daily: true }));
-refs.welcomeDailyBtn?.addEventListener("click", () => startOfflineSolo({ daily: true }));
 refs.shareDailyBtn?.addEventListener("click", () => {
   shareDailyResult();
 });
@@ -6550,6 +6570,10 @@ function renderHomeMetaCard() {
   const view = currentHomeMetaView();
   const hasFootprint = view.games > 0 || view.dailyStreak.best > 0 || view.solvedPuzzles > 0;
   refs.homeMetaCard.hidden = !hasFootprint;
+  if (refs.homeMetaEmpty) {
+    // Empty state for brand-new players: explains what will appear here instead of a blank rail.
+    refs.homeMetaEmpty.hidden = hasFootprint;
+  }
   if (!hasFootprint) return;
 
   if (refs.homeMetaRank) {
@@ -6590,7 +6614,9 @@ function renderHomeMetaCard() {
       const icon = document.createElement("span");
       icon.className = "home-meta-goal-icon";
       icon.setAttribute("aria-hidden", "true");
-      icon.textContent = goal.done ? "✅" : "▫️";
+      // SVG check (font-independent) for done goals; an empty CSS ring marks open ones.
+      const check = goal.done ? createIcon("check", { size: 14 }) : null;
+      if (check) icon.appendChild(check);
       const label = document.createElement("span");
       label.className = "home-meta-goal-label";
       label.textContent = metaGoalLabel(goal);
@@ -6703,8 +6729,6 @@ refs.statsWeeklyShareBtn?.addEventListener("click", shareWeeklyResult);
 refs.statsProgressionShareBtn?.addEventListener("click", shareProgressionResult);
 refs.statsMetaShareBtn?.addEventListener("click", shareMetaProfile);
 refs.homeMetaShareBtn?.addEventListener("click", shareMetaProfile);
-refs.homeMetaDailyBtn?.addEventListener("click", () => startOfflineSolo({ daily: true }));
-refs.homeMetaModesBtn?.addEventListener("click", openModesModal);
 refs.homeMetaStatsBtn?.addEventListener("click", openStatsModal);
 applyCosmeticSelection();
 
@@ -6860,9 +6884,11 @@ function focusGatewayPrimaryInput() {
   if (typeof focusTarget.setSelectionRange === "function") {
     focusTarget.setSelectionRange(0, focusTarget.value.length);
   }
-  const formTarget = focusTarget === refs.createName ? refs.createForm : refs.joinForm;
+  // #create-name lives in the home hero (associated with #create-form via form=); scroll the
+  // field's own card into view rather than the (secondary) room form.
+  const formTarget = focusTarget.closest(".home-hero, form");
   if (formTarget && typeof formTarget.scrollIntoView === "function") {
-    formTarget.scrollIntoView({ behavior: "smooth", block: "center" });
+    formTarget.scrollIntoView({ behavior: "smooth", block: "nearest" });
   }
 }
 
@@ -6874,7 +6900,11 @@ function maybeShowWelcome() {
 
 function updateWelcomeCreateLabel() {
   if (!refs.welcomeCreateBtn) return;
-  refs.welcomeCreateBtn.textContent = isOfflineOnlyRuntime() ? "바로 솔로 플레이" : "바로 방 만들기";
+  (refs.welcomeCreateLabel || refs.welcomeCreateBtn).textContent = t("welcome.soloPlay");
+  if (refs.homeDifficultySelect) {
+    const mode = clientState.botDifficulty || "smart";
+    if (refs.homeDifficultySelect.value !== mode) refs.homeDifficultySelect.value = mode;
+  }
 }
 
 function updateWelcomeModePanel() {
@@ -6907,18 +6937,17 @@ function updateWelcomeModePanel() {
 }
 
 refs.welcomeDismissBtn?.addEventListener("click", dismissWelcome);
-refs.welcomeCreateBtn?.addEventListener("click", () => {
-  if (isOfflineOnlyRuntime()) {
-    startOfflineSolo();
-    return;
-  }
-
-  if (clientState.socketReady) {
-    dismissWelcome();
-  }
-  // Keep welcome card visible when socket is unavailable so users keep the onboarding
-  // context and can retry with a new state hint from the flash message.
-  handleCreateRoom({ preventDefault() {} });
+// The home hero's ONE primary action is solo play on every host (design system P2); rooms
+// live in the secondary "친구와 플레이" section (#create-form / #join-form).
+refs.welcomeCreateBtn?.addEventListener("click", () => startOfflineSolo());
+refs.homeDifficultySelect?.addEventListener("change", () => {
+  // Pre-game only: the next solo game reads clientState.botDifficulty at start. Inside a room
+  // the host-settings control (server-authoritative) owns difficulty.
+  if (clientState.roomCode) return;
+  clientState.botDifficulty = normalizeBotDifficulty(refs.homeDifficultySelect.value);
+  saveSessionMeta();
+  playSound("tap");
+  render();
 });
 refs.welcomeRejoinBtn?.addEventListener("click", () => {
   const rejoinCode = getWelcomeRejoinRoomCode();

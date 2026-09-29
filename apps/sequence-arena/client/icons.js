@@ -87,6 +87,13 @@ const ICONS = {
   user: [["circle", { cx: "12", cy: "8.5", r: "3.5" }], ["path", { d: "M5 20a7 7 0 0 1 14 0" }]],
   check: [["path", { d: "M5 12.5 9.5 17 19 7.5" }]],
   chevronDown: [["path", { d: "M6 9.5l6 6 6-6" }]],
+  chevronRight: [["path", { d: "M9.5 6l6 6-6 6" }]],
+  compass: [["circle", { cx: "12", cy: "12", r: "9" }], ["path", { d: "M15.5 8.5l-2 5-5 2 2-5z" }]],
+  users: [
+    ["circle", { cx: "9", cy: "8.5", r: "3.25" }],
+    ["path", { d: "M3 19.5a6 6 0 0 1 12 0" }],
+    ["path", { d: "M15.5 5.6a3.25 3.25 0 0 1 0 5.8M17.5 14.2a6 6 0 0 1 3.5 5.3" }],
+  ],
 };
 
 export const ICON_NAMES = Object.freeze(Object.keys(ICONS));
