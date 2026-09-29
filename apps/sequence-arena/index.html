@@ -22,6 +22,7 @@
     <link rel="stylesheet" href="./styles.css" />
     <link rel="modulepreload" href="./app.js" />
     <link rel="modulepreload" href="./client/i18n.js" />
+    <link rel="modulepreload" href="./client/icons.js" />
     <link rel="modulepreload" href="./shared/game-core.js" />
     <link rel="modulepreload" href="./shared/replay.js" />
     <link rel="modulepreload" href="./shared/progression.js" />
@@ -118,15 +119,25 @@
             <span id="ruby-seat-legend" class="legend-chip ruby">루비 1 · 3 · 5</span>
             <span id="cobalt-seat-legend" class="legend-chip cobalt">코발트 2 · 4 · 6</span>
           </div>
-          <button id="locale-toggle-btn" class="icon-button locale-toggle" type="button" aria-label="영어로 전환" title="English">EN</button>
-          <button id="theme-toggle-btn" class="icon-button theme-toggle" type="button" aria-label="다크 모드 켜기" title="다크 모드 켜기">☾</button>
-          <button id="stats-btn" class="icon-button stats-toggle" type="button" aria-label="내 기록 보기" aria-haspopup="dialog" aria-controls="stats-modal" aria-expanded="false" title="내 기록 (데일리 캘린더 · 전적)" data-i18n-attr="aria-label:topbar.stats.aria;title:topbar.stats.title">📊</button>
-          <button id="replay-btn" class="icon-button replay-toggle" type="button" aria-label="리플레이 보기" aria-haspopup="dialog" aria-controls="replay-modal" aria-expanded="false" title="리플레이 (저장된 경기 재생 · 공유)">🎬</button>
-          <button id="help-btn" class="icon-button help-toggle" type="button" aria-label="게임 규칙과 단축키 보기" aria-keyshortcuts="?" aria-haspopup="dialog" aria-controls="help-modal" aria-expanded="false" title="게임 규칙 · 단축키 (?)" data-i18n-attr="aria-label:topbar.help.aria;title:topbar.help.title">?</button>
-          <button id="install-app-btn" class="icon-button install-toggle" type="button" aria-label="앱 설치" title="앱 설치" data-i18n-attr="aria-label:topbar.install.aria;title:topbar.install.title" hidden>↓</button>
-          <button id="notification-toggle-btn" class="icon-button notification-toggle" type="button" aria-label="내 차례 브라우저 알림 켜기" title="내 차례 알림 켜기">!</button>
-          <button id="sound-toggle-btn" class="icon-button sound-toggle" type="button" aria-label="사운드 켜기" title="사운드 켜기">♪</button>
-          <button id="haptics-toggle-btn" class="icon-button haptics-toggle" type="button" aria-label="진동 피드백 끄기" title="진동 끄기">◉</button>
+          <nav class="topbar-nav" aria-label="주요 메뉴" data-i18n-attr="aria-label:topbar.nav.aria">
+            <button id="stats-btn" class="topbar-link stats-toggle" type="button" aria-label="내 기록 보기" aria-haspopup="dialog" aria-controls="stats-modal" aria-expanded="false" title="내 기록 (데일리 캘린더 · 전적)" data-i18n-attr="aria-label:topbar.stats.aria;title:topbar.stats.title"><span class="icon-slot" data-icon="chart" aria-hidden="true"></span><span class="topbar-link-label" data-i18n="topbar.stats.label">내 기록</span></button>
+            <button id="replay-btn" class="topbar-link replay-toggle" type="button" aria-label="리플레이 보기" aria-haspopup="dialog" aria-controls="replay-modal" aria-expanded="false" title="리플레이 (저장된 경기 재생 · 공유)" data-i18n-attr="aria-label:topbar.replay.aria;title:topbar.replay.title"><span class="icon-slot" data-icon="film" aria-hidden="true"></span><span class="topbar-link-label" data-i18n="topbar.replay.label">리플레이</span></button>
+            <button id="help-btn" class="topbar-link help-toggle" type="button" aria-label="게임 규칙과 단축키 보기" aria-keyshortcuts="?" aria-haspopup="dialog" aria-controls="help-modal" aria-expanded="false" title="게임 규칙 · 단축키 (?)" data-i18n-attr="aria-label:topbar.help.aria;title:topbar.help.title"><span class="icon-slot" data-icon="help" aria-hidden="true"></span><span class="topbar-link-label" data-i18n="topbar.help.label">도움말</span></button>
+            <div class="settings-menu">
+              <button id="settings-menu-btn" class="icon-button settings-menu-trigger" type="button" aria-label="설정 열기" aria-haspopup="dialog" aria-controls="settings-menu-panel" aria-expanded="false" title="설정 (사운드 · 진동 · 알림 · 테마 · 언어)" data-i18n-attr="aria-label:topbar.settings.aria;title:topbar.settings.title"><span class="icon-slot" data-icon="settings" aria-hidden="true"></span></button>
+              <div id="settings-menu-panel" class="settings-popover" role="dialog" aria-modal="false" aria-labelledby="settings-menu-title" hidden>
+                <p id="settings-menu-title" class="settings-popover-title" data-i18n="settings.title">설정</p>
+                <p class="settings-group-label" data-i18n="settings.group.feedback">피드백</p>
+                <button id="sound-toggle-btn" class="settings-item sound-toggle" type="button" aria-pressed="false" aria-label="사운드 켜기" title="사운드 켜기"><span class="icon-slot" data-icon="speakerOff" aria-hidden="true"></span><span class="settings-item-label" data-i18n="settings.sound">사운드</span><span class="switch" aria-hidden="true"></span></button>
+                <button id="haptics-toggle-btn" class="settings-item haptics-toggle" type="button" aria-pressed="true" aria-label="진동 피드백 끄기" title="진동 끄기"><span class="icon-slot" data-icon="vibrate" aria-hidden="true"></span><span class="settings-item-label" data-i18n="settings.haptics">진동</span><span class="switch" aria-hidden="true"></span></button>
+                <button id="notification-toggle-btn" class="settings-item notification-toggle" type="button" aria-pressed="false" aria-label="내 차례 브라우저 알림 켜기" title="내 차례 알림 켜기"><span class="icon-slot" data-icon="bell" aria-hidden="true"></span><span class="settings-item-label" data-i18n="settings.notifications">내 차례 알림</span><span class="switch" aria-hidden="true"></span></button>
+                <p class="settings-group-label" data-i18n="settings.group.display">화면 · 언어</p>
+                <button id="theme-toggle-btn" class="settings-item theme-toggle" type="button" aria-pressed="false" aria-label="다크 모드 켜기" title="다크 모드 켜기"><span class="icon-slot" data-icon="moon" aria-hidden="true"></span><span class="settings-item-label" data-i18n="settings.darkMode">다크 모드</span><span class="switch" aria-hidden="true"></span></button>
+                <button id="locale-toggle-btn" class="settings-item locale-toggle" type="button" aria-pressed="false" aria-label="영어로 전환" title="English"><span class="icon-slot" data-icon="globe" aria-hidden="true"></span><span class="settings-item-label" data-i18n="settings.language">언어</span><span id="locale-toggle-value" class="settings-item-value" data-i18n="settings.language.current">한국어</span></button>
+                <button id="install-app-btn" class="settings-item install-toggle" type="button" aria-label="앱 설치" title="앱 설치" data-i18n-attr="aria-label:topbar.install.aria;title:topbar.install.title" hidden><span class="icon-slot" data-icon="download" aria-hidden="true"></span><span class="settings-item-label" data-i18n="settings.install">앱 설치</span></button>
+              </div>
+            </div>
+          </nav>
         </div>
       </header>
 
@@ -164,7 +175,7 @@
           </section>
 
           <div id="welcome-card" class="welcome-card">
-            <button id="welcome-dismiss-btn" class="welcome-dismiss" type="button" aria-label="환영 카드 닫기" title="닫기" data-i18n-attr="aria-label:welcome.dismiss.aria;title:common.close">✕</button>
+            <button id="welcome-dismiss-btn" class="welcome-dismiss" type="button" aria-label="환영 카드 닫기" title="닫기" data-i18n-attr="aria-label:welcome.dismiss.aria;title:common.close"><span class="icon-slot" data-icon="close" aria-hidden="true"></span></button>
             <strong class="welcome-title" data-i18n="welcome.title">Sequence Arena에 오신 걸 환영합니다</strong>
             <p class="welcome-body">보드의 같은 카드 칸에 칩을 놓고, <strong>5칸 일렬</strong>을 먼저 두 개 만들면 승리합니다.</p>
             <!-- Pre-filled with the multiplayer-mode copy (same line counts as the offline
@@ -602,7 +613,7 @@
       <div class="help-dialog modes-dialog">
         <header class="help-header">
           <h2 id="modes-modal-title" data-i18n="modes.title">모드 / 퍼즐</h2>
-          <button id="modes-close-btn" class="icon-button help-close" type="button" aria-label="모드 닫기" title="닫기" data-i18n-attr="aria-label:modes.close.aria;title:common.close">✕</button>
+          <button id="modes-close-btn" class="icon-button help-close" type="button" aria-label="모드 닫기" title="닫기" data-i18n-attr="aria-label:modes.close.aria;title:common.close"><span class="icon-slot" data-icon="close" aria-hidden="true"></span></button>
         </header>
         <div class="modes-body">
           <p class="modes-note" data-i18n="modes.note">모두 이 브라우저에만 저장되는 오프라인·시드 콘텐츠예요. 서버가 필요 없습니다.</p>
@@ -628,7 +639,7 @@
       <div class="help-dialog stats-dialog">
         <header class="help-header">
           <h2 id="stats-modal-title" data-i18n="stats.title">내 기록</h2>
-          <button id="stats-close-btn" class="icon-button help-close" type="button" aria-label="내 기록 닫기" title="닫기" data-i18n-attr="aria-label:stats.close.aria;title:common.close">✕</button>
+          <button id="stats-close-btn" class="icon-button help-close" type="button" aria-label="내 기록 닫기" title="닫기" data-i18n-attr="aria-label:stats.close.aria;title:common.close"><span class="icon-slot" data-icon="close" aria-hidden="true"></span></button>
         </header>
         <div class="stats-body">
           <p id="stats-sr-summary" class="sr-only" aria-live="polite"></p>
@@ -688,7 +699,7 @@
       <div class="help-dialog replay-dialog">
         <header class="help-header">
           <h2 id="replay-modal-title">리플레이</h2>
-          <button id="replay-close-btn" class="icon-button help-close" type="button" aria-label="리플레이 닫기" title="닫기">✕</button>
+          <button id="replay-close-btn" class="icon-button help-close" type="button" aria-label="리플레이 닫기" title="닫기"><span class="icon-slot" data-icon="close" aria-hidden="true"></span></button>
         </header>
         <div class="replay-body">
           <p id="replay-sr-summary" class="sr-only" aria-live="polite"></p>
@@ -733,7 +744,7 @@
       <div class="help-dialog">
         <header class="help-header">
           <h2 id="help-modal-title" data-i18n="help.title">게임 규칙 · 단축키</h2>
-          <button id="help-close-btn" class="icon-button help-close" type="button" aria-label="도움말 닫기" title="닫기" data-i18n-attr="aria-label:help.close.aria;title:common.close">✕</button>
+          <button id="help-close-btn" class="icon-button help-close" type="button" aria-label="도움말 닫기" title="닫기" data-i18n-attr="aria-label:help.close.aria;title:common.close"><span class="icon-slot" data-icon="close" aria-hidden="true"></span></button>
         </header>
         <div class="help-body">
           <section class="help-section">

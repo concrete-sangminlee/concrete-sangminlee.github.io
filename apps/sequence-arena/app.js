@@ -35,6 +35,7 @@ import {
 } from "./client/net-client.js";
 import { bindReplayControllerContext, closeReplayModal, wireReplayControllerEvents } from "./client/replay-controller.js";
 import { HAPTIC, playSoundPattern } from "./client/sound-bank.js";
+import { mountIcons, setIcon } from "./client/icons.js";
 import { TUTORIAL_SEED, TUTORIAL_STEPS, createTutorialMachine } from "./client/tutorial.js";
 import {
   buildDailyCalendar,
@@ -241,6 +242,8 @@ const refs = {
   welcomeModeSteps: document.getElementById("welcome-mode-steps"),
   themeToggleBtn: document.getElementById("theme-toggle-btn"),
   localeToggleBtn: document.getElementById("locale-toggle-btn"),
+  settingsMenuBtn: document.getElementById("settings-menu-btn"),
+  settingsMenuPanel: document.getElementById("settings-menu-panel"),
   offlineBanner: document.getElementById("offline-banner"),
   offlineText: document.getElementById("offline-text"),
   offlineRetryBtn: document.getElementById("offline-retry-btn"),
@@ -347,6 +350,14 @@ const refs = {
   livePolite: document.getElementById("live-polite"),
   liveAssertive: document.getElementById("live-assertive"),
 };
+
+// Draw the SVG glyph for every static `[data-icon]` slot (top bar, settings popover). State
+// toggles below swap glyphs via setToggleIcon so icons never depend on emoji/system fonts.
+mountIcons(document);
+
+function setToggleIcon(button, name) {
+  setIcon(button?.querySelector(".icon-slot"), name);
+}
 
 function announcePolite(message) {
   if (!refs.livePolite || !message) {
@@ -1233,7 +1244,7 @@ function setFlashMessage(message) {
 }
 
 function updateSoundButton() {
-  refs.soundToggleBtn.textContent = clientState.audioMuted ? "♪" : "♫";
+  setToggleIcon(refs.soundToggleBtn, clientState.audioMuted ? "speakerOff" : "speaker");
   refs.soundToggleBtn.setAttribute("aria-pressed", String(!clientState.audioMuted));
   refs.soundToggleBtn.setAttribute("aria-label", clientState.audioMuted ? "사운드 켜기" : "사운드 끄기");
   refs.soundToggleBtn.title = clientState.audioMuted ? "사운드 켜기" : "사운드 끄기";
@@ -1308,7 +1319,6 @@ function updateNotificationButton() {
   const active = supported && permission === "granted" && clientState.turnNotificationsEnabled;
   refs.notificationToggleBtn.hidden = !supported;
   refs.notificationToggleBtn.disabled = !supported || permission === "denied";
-  refs.notificationToggleBtn.textContent = active ? "●" : "!";
   refs.notificationToggleBtn.setAttribute("aria-pressed", String(active));
   refs.notificationToggleBtn.setAttribute(
     "aria-label",
@@ -2833,7 +2843,7 @@ function updateHapticsButton() {
   if (!refs.hapticsToggleBtn) return;
   const supported = isVibrationSupported();
   const muted = clientState.hapticsMuted || !supported;
-  refs.hapticsToggleBtn.textContent = muted ? "◌" : "◉";
+  setToggleIcon(refs.hapticsToggleBtn, muted ? "vibrateOff" : "vibrate");
   refs.hapticsToggleBtn.disabled = !supported;
   refs.hapticsToggleBtn.setAttribute("aria-disabled", String(!supported));
   refs.hapticsToggleBtn.setAttribute("aria-pressed", String(!muted));
@@ -5344,6 +5354,7 @@ refs.shareRoomBtn.addEventListener("click", () => {
   });
 });
 refs.installAppBtn.addEventListener("click", () => {
+  closeSettingsMenu();
   installApp().catch(() => {
     setFlashMessage("앱 설치를 시작하지 못했습니다.");
     render();
@@ -5390,7 +5401,7 @@ function applyTheme(theme) {
   }
   if (refs.themeToggleBtn) {
     const isDark = theme === "dark";
-    refs.themeToggleBtn.textContent = isDark ? "☀" : "☾";
+    setToggleIcon(refs.themeToggleBtn, isDark ? "sun" : "moon");
     refs.themeToggleBtn.setAttribute("aria-pressed", String(isDark));
     refs.themeToggleBtn.setAttribute("aria-label", isDark ? "라이트 모드 켜기" : "다크 모드 켜기");
     refs.themeToggleBtn.title = isDark ? "라이트 모드 켜기" : "다크 모드 켜기";
@@ -5415,8 +5426,8 @@ refs.themeToggleBtn?.addEventListener("click", toggleTheme);
 function updateLocaleToggleButton() {
   if (!refs.localeToggleBtn) return;
   const isEnglish = activeLocale() === "en";
-  // Button shows the language it will switch TO, matching the theme toggle's intent-forward label.
-  refs.localeToggleBtn.textContent = isEnglish ? "한" : "EN";
+  // The row shows the *current* language as its value (settings.language.current, translated by
+  // applyStaticTranslations); the accessible name stays intent-forward ("Switch to …").
   refs.localeToggleBtn.setAttribute("aria-pressed", String(isEnglish));
   refs.localeToggleBtn.setAttribute(
     "aria-label",
@@ -5462,6 +5473,70 @@ if (activeLocale() !== "ko") {
   applyStaticTranslations(document);
 }
 refs.localeToggleBtn?.addEventListener("click", toggleLocale);
+
+// Settings popover (top bar). A non-modal disclosure dialog: the trigger carries
+// aria-haspopup="dialog" + aria-expanded, opening moves focus to the first enabled item,
+// Escape / outside click / tabbing away closes it, and Escape returns focus to the trigger.
+// The sound/haptics/notification/theme/locale/install buttons keep their ids + aria-pressed
+// contracts; they simply live inside this panel instead of the crowded icon row.
+function isSettingsMenuOpen() {
+  return Boolean(refs.settingsMenuPanel && !refs.settingsMenuPanel.hidden);
+}
+
+function openSettingsMenu() {
+  if (!refs.settingsMenuPanel || !refs.settingsMenuBtn) return;
+  refs.settingsMenuPanel.hidden = false;
+  refs.settingsMenuBtn.setAttribute("aria-expanded", "true");
+  const firstItem = [...refs.settingsMenuPanel.querySelectorAll("button")].find(
+    (button) => !button.hidden && !button.disabled
+  );
+  firstItem?.focus();
+}
+
+function closeSettingsMenu({ restoreFocus = false } = {}) {
+  if (!refs.settingsMenuPanel || !refs.settingsMenuBtn || refs.settingsMenuPanel.hidden) return;
+  refs.settingsMenuPanel.hidden = true;
+  refs.settingsMenuBtn.setAttribute("aria-expanded", "false");
+  if (restoreFocus) {
+    refs.settingsMenuBtn.focus();
+  }
+}
+
+refs.settingsMenuBtn?.addEventListener("click", () => {
+  if (isSettingsMenuOpen()) {
+    closeSettingsMenu({ restoreFocus: true });
+  } else {
+    openSettingsMenu();
+  }
+});
+
+document.addEventListener(
+  "keydown",
+  (event) => {
+    if (event.key === "Escape" && isSettingsMenuOpen()) {
+      event.preventDefault();
+      event.stopPropagation();
+      closeSettingsMenu({ restoreFocus: true });
+    }
+  },
+  true
+);
+
+document.addEventListener("pointerdown", (event) => {
+  if (!isSettingsMenuOpen()) return;
+  const wrapper = refs.settingsMenuBtn?.parentElement;
+  if (wrapper && event.target instanceof Node && !wrapper.contains(event.target)) {
+    closeSettingsMenu();
+  }
+});
+
+refs.settingsMenuBtn?.parentElement?.addEventListener("focusout", (event) => {
+  const wrapper = event.currentTarget;
+  const next = event.relatedTarget;
+  if (isSettingsMenuOpen() && next instanceof Node && !wrapper.contains(next)) {
+    closeSettingsMenu();
+  }
+});
 
 // Room code inputs are ASCII-only and should visually feel uppercase as the user types.
 // The hint element doubles as the error surface. Cache the original neutral copy at boot
