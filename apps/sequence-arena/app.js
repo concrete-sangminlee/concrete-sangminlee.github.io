@@ -8182,7 +8182,6 @@ async function fetchBuildVersion() {
 
 fetchBuildVersion();
 watchNotificationPermission();
-pruneOfflineRuntimeRecoveredState();
 
 // Wire the network/reconnect slice (client/net-client.js) to the app's shared state and peer
 // functions through its single bindNetClientContext() binding point — mirrors the board-paint /
@@ -8228,6 +8227,12 @@ bindNetClientContext({
   applyQueueStatus,
   applyMatchFound,
 });
+
+// Must run AFTER bindNetClientContext(): it calls net-client helpers (clearReconnectCountdownTimer,
+// hideOfflineBanner). Calling it earlier threw on every returning visit to the static host (a saved
+// session exists), which aborted boot before the net-client was bound, so sendSocket() later failed
+// and selected cards could not be placed on the board.
+pruneOfflineRuntimeRecoveredState();
 
 connectSocket();
 render();
