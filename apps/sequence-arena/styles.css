@@ -8077,3 +8077,24 @@ body[data-game-chrome="on"] #game-side-panels .log-list li {
     background: Highlight;
   }
 }
+
+
+/* ---- ≤680px short phones: keep the whole board inside its panel ---------------------------
+   On short screens (e.g. 360×640, 375×667) the playing board panel is capped at 47dvh, but the
+   canvas still sized itself from the viewport width, so it overflowed the panel and the status
+   panel covered the board's bottom row (those cells could not be clicked). Size the canvas from
+   the panel's real content height instead and keep it square and centred. */
+@media (max-width: 680px) {
+  body[data-game="playing"][data-has-room="true"] .board-panel {
+    grid-template-rows: minmax(0, 1fr);
+    place-items: center;
+  }
+
+  body[data-game="playing"][data-has-room="true"] #game-canvas {
+    width: auto;
+    height: 100%;
+    max-width: 100%;
+    max-height: 100%;
+    aspect-ratio: 1 / 1;
+  }
+}

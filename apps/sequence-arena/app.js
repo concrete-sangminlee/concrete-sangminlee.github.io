@@ -4084,6 +4084,12 @@ function normalizeMatchHistory(rawHistory) {
         botDifficulty: typeof entry.botDifficulty === "string" && entry.botDifficulty ? normalizeBotDifficulty(entry.botDifficulty) : "",
         daily: normalizeDailyChallengeMeta(entry.daily),
         tutorial: entry.tutorial === true,
+        // The local runtime attaches the finished match's replay record here; the finish
+        // recorder (maybeRecordLocalSoloResult) reads it to offer "리플레이 저장" and
+        // "경기 분석 보기". It was missing from this whitelist since the replay feature shipped,
+        // so both post-game buttons never appeared in real play. validateReplayRecord() still
+        // vets it before use.
+        replay: entry.replay && typeof entry.replay === "object" ? entry.replay : null,
       };
     })
     .filter(Boolean);
