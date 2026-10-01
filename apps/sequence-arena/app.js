@@ -21,7 +21,7 @@ import {
   drawBoardTargetMarker,
   drawCardFaceDetails,
 } from "./client/board-paint.js";
-import { bindBoardRenderContext, drawBoard } from "./client/board-render.js";
+import { BOARD_LOGICAL_SIZE, bindBoardRenderContext, drawBoard } from "./client/board-render.js";
 import {
   bindNetClientContext,
   connectSocket,
@@ -8239,6 +8239,45 @@ bindNetClientContext({
 // session exists), which aborted boot before the net-client was bound, so sendSocket() later failed
 // and selected cards could not be placed on the board.
 pruneOfflineRuntimeRecoveredState();
+
+// ---- Crisp board on HiDPI screens -------------------------------------------------------
+// The painters draw in a fixed BOARD_LOGICAL_SIZE (1000) space. The canvas backing store used
+// to be fixed at 1000px too, so on a 2x laptop the ~780px board was upscaled from 1000 device
+// pixels into ~1560 and looked soft. Size the backing store to displayed size × DPR (never
+// below the logical size, capped for memory) and install a base transform that maps logical
+// units to device pixels. Click hit-testing divides by canvas.width/rect.width, so it is
+// unaffected. Resetting canvas.width clears the transform, so it is re-applied every sync.
+const BOARD_BACKING_MAX_PX = 2048;
+function syncBoardCanvasResolution() {
+  const cssSize = canvas.getBoundingClientRect().width;
+  if (!(cssSize > 0)) return false;
+  const dpr = Math.min(Math.max(window.devicePixelRatio || 1, 1), 3);
+  const backing = Math.max(BOARD_LOGICAL_SIZE, Math.min(BOARD_BACKING_MAX_PX, Math.round(cssSize * dpr)));
+  const changed = canvas.width !== backing || canvas.height !== backing;
+  if (changed) {
+    canvas.width = backing;
+    canvas.height = backing;
+  }
+  const scale = backing / BOARD_LOGICAL_SIZE;
+  ctx.setTransform(scale, 0, 0, scale, 0, 0);
+  return changed;
+}
+
+let boardResolutionFrame = 0;
+function scheduleBoardResolutionSync() {
+  if (boardResolutionFrame) return;
+  boardResolutionFrame = requestAnimationFrame(() => {
+    boardResolutionFrame = 0;
+    if (syncBoardCanvasResolution()) drawBoard();
+  });
+}
+
+syncBoardCanvasResolution();
+if (typeof ResizeObserver === "function") {
+  new ResizeObserver(scheduleBoardResolutionSync).observe(canvas);
+}
+// devicePixelRatio changes (browser zoom, moving the window to another monitor) fire resize.
+window.addEventListener("resize", scheduleBoardResolutionSync, { passive: true });
 
 connectSocket();
 render();

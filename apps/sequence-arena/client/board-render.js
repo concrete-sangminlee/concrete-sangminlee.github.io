@@ -19,6 +19,12 @@ import {
 
 let host = null;
 
+// The board is always painted in a fixed 1000×1000 logical space (every coordinate, font size
+// and line width in this module and board-paint.js is tuned to it). app.js sizes the canvas
+// backing store to the displayed size × devicePixelRatio and installs a matching base transform,
+// so HiDPI screens get a crisp board without any painter knowing the real pixel size.
+export const BOARD_LOGICAL_SIZE = 1000;
+
 export function bindBoardRenderContext(context) {
   host = context;
 }
@@ -34,7 +40,7 @@ let boardSurfacePatternTheme = null;
 
 export function drawPlaceholderBoard() {
   const { canvas, ctx } = host;
-  const size = canvas.width;
+  const size = BOARD_LOGICAL_SIZE;
   ctx.clearRect(0, 0, size, size);
   const isDark = document.documentElement.getAttribute("data-theme") === "dark";
   const rail = ctx.createLinearGradient(0, 0, size, size);
@@ -170,7 +176,7 @@ export function drawBoard() {
     return;
   }
 
-  const size = canvas.width;
+  const size = BOARD_LOGICAL_SIZE;
   const cellSize = size / BOARD_SIZE;
   const targetPulse = (performance.now() % TARGET_PULSE_ANIM_MS) / TARGET_PULSE_ANIM_MS;
   // Selection cannot change mid-draw, so the target-marker mode is resolved once per
@@ -480,7 +486,7 @@ export function drawSequenceCascade() {
   if (!cascade) return;
   const elapsed = performance.now() - cascade.startedAt;
   const t = Math.min(1, Math.max(0, elapsed / SEQUENCE_CASCADE_MS));
-  const size = canvas.width;
+  const size = BOARD_LOGICAL_SIZE;
   const cellSize = size / BOARD_SIZE;
   const haloColor = "255, 220, 96"; // warm gold; reads on both light and dark board
 
@@ -588,7 +594,7 @@ export function drawVictoryWash() {
   if (!wash) return;
   const elapsed = performance.now() - wash.startedAt;
   const t = Math.min(1, Math.max(0, elapsed / VICTORY_WASH_MS));
-  const size = canvas.width;
+  const size = BOARD_LOGICAL_SIZE;
   // Ruby = warm rose-gold; Cobalt = cool indigo-cyan. Both bias toward the warm/cool end
   // of their team color but with extra brightness so the wash reads as "celebratory glow"
   // rather than "your team's chip color filling the screen".

@@ -8098,3 +8098,33 @@ body[data-game-chrome="on"] #game-side-panels .log-list li {
     aspect-ratio: 1 / 1;
   }
 }
+
+/* ---- ≤680px: all five hand cards visible at once (no sideways scrolling) ------------------
+   The playing hand used fixed 78–110px cards in a horizontally scrolling tray, so on a 360–414px
+   phone only two cards were fully visible and the rest had to be swiped into view. Lay the hand
+   out as five equal columns that always fit the tray; the corner index (rank + suit) stays the
+   primary mark, and the decorative centre face shrinks with the card. */
+@media (max-width: 680px) {
+  body[data-game="playing"][data-has-room="true"] .hand-container {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 4px;
+    overflow-x: visible;
+    scroll-snap-type: none;
+    padding: 8px 2px 6px;
+  }
+
+  body[data-game="playing"][data-has-room="true"] .card-button {
+    flex: none;
+    width: auto;
+    min-width: 0;
+    min-height: 0;
+    aspect-ratio: 0.72 / 1;
+    padding: 4px;
+  }
+
+  body[data-game="playing"][data-has-room="true"] .card-button .card-action,
+  body[data-game="playing"][data-has-room="true"] .card-button .card-note {
+    display: none;
+  }
+}
