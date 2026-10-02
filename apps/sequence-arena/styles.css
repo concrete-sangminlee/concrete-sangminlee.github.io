@@ -8128,3 +8128,676 @@ body[data-game-chrome="on"] #game-side-panels .log-list li {
     display: none;
   }
 }
+
+/* ==========================================================================================
+   Phone game layout v2 (2026-10-02) — portrait ≤680px and landscape phones (≤500px tall).
+   Problems this replaces (measured in headless Chromium):
+   - Short phones (360×640, 375×667): the board panel was a fixed 47dvh but its grid track was
+     only ~215px, so the board overflowed onto the status panel and hid the chat / 게임 설정
+     buttons and the turn banner.
+   - The status panel was 196px tall (256px during discard/draw, when the piles appeared), so
+     the board jumped size mid-turn and there was little room left for the board.
+   - Landscape phones (844×390, 740×360, 667×375): the hand sat below the viewport and could
+     not be reached at all.
+   - The installed iOS PWA uses a black-translucent status bar, but the play shell only had
+     6px of top padding, so the board's top row went under the clock/notch.
+   - Score rows lost their left padding, so the team chip overlapped the team name.
+   The layout below gives the status panel and the hand fixed heights and sizes the board to
+   exactly the space that is left, so nothing can overflow or shift during a turn.
+   ========================================================================================== */
+@media (max-width: 680px), (orientation: landscape) and (max-height: 500px) {
+  body[data-game-chrome="on"] {
+    --pl-gap: 6px;
+    --pl-shell-t: max(6px, env(safe-area-inset-top));
+    --pl-shell-b: max(6px, env(safe-area-inset-bottom));
+    --pl-shell-l: max(6px, env(safe-area-inset-left));
+    --pl-shell-r: max(6px, env(safe-area-inset-right));
+    --pl-avail-w: calc(100vw - var(--pl-shell-l) - var(--pl-shell-r));
+    --pl-avail-h: calc(100dvh - var(--pl-shell-t) - var(--pl-shell-b));
+    /* Status HUD: 12 padding + 44 (turn + buttons) + 22 (steps) + 2×20 (scores) + 3×5 gaps. */
+    --pl-hud-h: 133px;
+    /* Hand: 6 + tray (8 + card + 6) + 6 + 44 buttons + 7. */
+    --pl-hand-chrome: 77px;
+  }
+
+  body[data-game-chrome="on"][data-game="playing"] .app-shell {
+    height: 100dvh;
+    min-height: 0;
+    overflow: hidden;
+    padding: var(--pl-shell-t) var(--pl-shell-r) var(--pl-shell-b) var(--pl-shell-l);
+  }
+
+  body[data-game-chrome="on"][data-game="playing"] .app-topbar {
+    display: none;
+  }
+
+  body[data-game-chrome="on"][data-game="playing"] .main-grid {
+    height: 100%;
+    min-height: 0;
+    display: block;
+    padding: 0;
+    overflow: hidden;
+  }
+
+  body[data-game-chrome="on"][data-game="playing"] .game-layout {
+    height: 100%;
+    min-height: 0;
+    display: grid;
+    gap: var(--pl-gap);
+    overflow: hidden;
+  }
+
+  body[data-game-chrome="on"][data-game="playing"] .board-panel {
+    position: relative;
+    top: auto;
+    box-sizing: border-box;
+    width: var(--pl-board);
+    height: var(--pl-board);
+    min-width: 0;
+    min-height: 0;
+    max-width: none;
+    padding: 5px;
+    justify-self: center;
+    align-self: center;
+    display: block;
+  }
+
+  body[data-game-chrome="on"][data-game="playing"] #game-canvas {
+    width: 100%;
+    height: 100%;
+    max-width: 100%;
+    max-height: 100%;
+    aspect-ratio: auto;
+  }
+
+  body[data-game-chrome="on"][data-game="playing"] .sidebar {
+    position: relative;
+    top: auto;
+    min-height: 0;
+    max-height: none;
+    display: flex;
+    flex-direction: column;
+    gap: var(--pl-gap);
+    overflow: hidden;
+  }
+
+  /* ---- Status HUD: a fixed-height grid --------------------------------------------------
+       "turn banner .......... [chat][settings]"
+       "카드 선택 · 칩 놓기 · 버리기 · 뽑기"
+       "● 루비 0/2      [버림 더미][덱]"
+       "● 코발트 0/2    [        ][  ]"                                                       */
+  body[data-game-chrome="on"][data-game="playing"] .status-panel {
+    flex: 0 0 auto;
+    box-sizing: border-box;
+    height: var(--pl-hud-h);
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) auto;
+    grid-template-rows: 44px 22px 20px 20px;
+    grid-template-areas:
+      "banner banner banner actions"
+      "steps  steps  steps  steps"
+      "sa     sa     piles  piles"
+      "sb     sb     piles  piles";
+    gap: 5px 5px;
+    padding: 6px;
+    overflow: hidden;
+    border-radius: var(--radius-lg);
+  }
+
+  body[data-game-chrome="on"][data-game="playing"] .status-panel > * {
+    grid-column: auto;
+    min-width: 0;
+    margin: 0;
+  }
+
+  body[data-game-chrome="on"][data-game="playing"] .status-panel .panel-head {
+    display: contents;
+  }
+
+  body[data-game-chrome="on"][data-game="playing"] .status-panel .panel-head h2,
+  body[data-game-chrome="on"][data-game="playing"] #turn-subtitle,
+  body[data-game-chrome="on"][data-game="playing"] #daily-badge,
+  body[data-game-chrome="on"][data-game="playing"] .status-message,
+  body[data-game-chrome="on"][data-game="playing"] .lobby-progress-card,
+  body[data-game-chrome="on"][data-game="playing"] .status-panel .score-row.neutral {
+    display: none;
+  }
+
+  body[data-game-chrome="on"][data-game="playing"] .game-hud-actions {
+    grid-area: actions;
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    justify-content: flex-end;
+  }
+
+  body[data-game-chrome="on"][data-game="playing"] .game-hud-actions .game-hud-btn,
+  body[data-game-chrome="on"][data-game="playing"] .game-hud-actions #game-panels-btn {
+    display: inline-grid;
+    place-items: center;
+    width: 44px;
+    min-width: 44px;
+    height: 44px;
+    min-height: 44px;
+    padding: 0;
+  }
+
+  body[data-game-chrome="on"][data-game="playing"] .game-hud-btn-label {
+    display: none;
+  }
+
+  body[data-game-chrome="on"][data-game="playing"] .turn-banner {
+    grid-area: banner;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    min-height: 0;
+    height: 44px;
+    padding: 0 10px;
+    border-radius: var(--radius-md);
+  }
+
+  body[data-game-chrome="on"][data-game="playing"] .turn-banner strong {
+    min-width: 0;
+    overflow: hidden;
+    font-size: 0.92rem;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  body[data-game-chrome="on"][data-game="playing"] #turn-team {
+    flex: 0 0 auto;
+    font-size: 0.82rem;
+    white-space: nowrap;
+  }
+
+  body[data-game-chrome="on"][data-game="playing"] .turn-steps {
+    grid-area: steps;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 4px;
+    height: 22px;
+    margin: 0;
+    padding: 0;
+  }
+
+  body[data-game-chrome="on"][data-game="playing"] .turn-steps li {
+    min-width: 0;
+    height: 22px;
+    min-height: 0;
+    gap: 3px;
+    padding: 0 4px;
+    justify-content: center;
+    overflow: hidden;
+    font-size: 0.68rem;
+    line-height: 1;
+    white-space: nowrap;
+  }
+
+  body[data-game-chrome="on"][data-game="playing"] .turn-steps .turn-step-dot {
+    width: 6px;
+    height: 6px;
+    flex: 0 0 auto;
+  }
+
+  body[data-game-chrome="on"][data-game="playing"] .status-panel .score-row.ruby,
+  body[data-game-chrome="on"][data-game="playing"] .status-panel .score-row.cobalt {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    height: 20px;
+    min-height: 0;
+    /* Keep room for the team chip drawn by .score-row::before (it overlapped the name). */
+    padding: 0 2px 0 18px;
+    border-bottom: 0;
+    font-size: 0.76rem;
+    line-height: 1;
+  }
+
+  body[data-game-chrome="on"][data-game="playing"] .status-panel .score-row.ruby {
+    grid-area: sa;
+  }
+
+  body[data-game-chrome="on"][data-game="playing"] .status-panel .score-row.cobalt {
+    grid-area: sb;
+  }
+
+  body[data-game-chrome="on"][data-game="playing"] .status-panel .score-row::before {
+    left: 2px;
+    width: 12px;
+    height: 12px;
+  }
+
+  body[data-game-chrome="on"][data-game="playing"] .status-panel .score-row strong,
+  body[data-game-chrome="on"][data-game="playing"] .status-panel .score-row span {
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  body[data-game-chrome="on"][data-game="playing"] .status-panel .score-row span {
+    flex: 0 0 auto;
+    font-weight: 800;
+  }
+
+  /* The piles are always shown (disabled until their step), so nothing shifts mid-turn; the
+     active pile still pulses through the existing .pile-button.active styles. */
+  body[data-game-chrome="on"][data-game="playing"] .pile-actions,
+  body[data-game-chrome="on"][data-game="playing"][data-pending-step="none"] .pile-actions {
+    grid-area: piles;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 5px;
+    margin: 0;
+  }
+
+  body[data-game-chrome="on"][data-game="playing"] .pile-button {
+    position: relative;
+    display: grid;
+    align-content: center;
+    gap: 1px;
+    min-width: 0;
+    min-height: 0;
+    height: 45px;
+    padding: 0 4px 0 30px;
+    overflow: hidden;
+    border-radius: var(--radius-md);
+    text-align: left;
+  }
+
+  body[data-game-chrome="on"][data-game="playing"] .pile-button::before {
+    left: 6px;
+    top: 8px;
+    width: 18px;
+    height: 26px;
+  }
+
+  body[data-game-chrome="on"][data-game="playing"] .pile-button::after {
+    left: 9px;
+    top: 5px;
+    width: 18px;
+    height: 26px;
+    font-size: 0.55rem;
+  }
+
+  body[data-game-chrome="on"][data-game="playing"] .pile-button span {
+    overflow: hidden;
+    font-size: 0.64rem;
+    line-height: 1.1;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  body[data-game-chrome="on"][data-game="playing"] .pile-button strong {
+    font-size: 0.86rem;
+    line-height: 1.1;
+  }
+
+  body[data-game-chrome="on"][data-game="playing"] .pile-button small {
+    display: none;
+  }
+
+  /* ---- Hand: fixed height, five equal cards, one row of actions -------------------------- */
+  body[data-game-chrome="on"][data-game="playing"] .hand-panel {
+    flex: 0 0 auto;
+    box-sizing: border-box;
+    height: calc(var(--pl-card-h) + var(--pl-hand-chrome));
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 6px 6px 7px;
+    overflow: hidden;
+  }
+
+  body[data-game-chrome="on"][data-game="playing"] .hand-panel .panel-head,
+  body[data-game-chrome="on"][data-game="playing"] .selection-hint {
+    display: none;
+  }
+
+  body[data-game-chrome="on"][data-game="playing"] .hand-container {
+    flex: 0 0 auto;
+    box-sizing: border-box;
+    height: calc(var(--pl-card-h) + 14px);
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    align-items: end;
+    gap: 4px;
+    margin: 0;
+    padding: 8px 2px 6px;
+    overflow: visible;
+    scroll-snap-type: none;
+  }
+
+  body[data-game-chrome="on"][data-game="playing"] .card-button {
+    flex: none;
+    width: 100%;
+    min-width: 0;
+    height: auto;
+    min-height: 0;
+    max-height: var(--pl-card-h);
+    margin: 0;
+    aspect-ratio: 0.72 / 1;
+    padding: 4px;
+  }
+
+  body[data-game-chrome="on"][data-game="playing"] .card-button .card-action,
+  body[data-game-chrome="on"][data-game="playing"] .card-button .card-note {
+    display: none;
+  }
+
+  body[data-game-chrome="on"][data-game="playing"] .hand-panel .button-row {
+    flex: 0 0 44px;
+    display: grid;
+    grid-template-columns: none;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(0, 1fr);
+    gap: 6px;
+    margin: 0;
+  }
+
+  body[data-game-chrome="on"][data-game="playing"] .hand-panel .button-row button {
+    min-width: 0;
+    height: 44px;
+    min-height: 44px;
+    padding: 0 6px;
+    overflow: hidden;
+    font-size: 0.8rem;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  /* Achievement / level-up toasts sit at the top on phones so they never cover the result
+     card's buttons (they used to stack over 리매치 and 리플레이 저장). */
+  .progression-toast-stack {
+    top: max(8px, env(safe-area-inset-top));
+    bottom: auto;
+    max-width: calc(100vw - 24px);
+    gap: 6px;
+  }
+
+  .progression-toast {
+    padding: 8px 14px;
+    font-size: 0.8rem;
+    text-align: center;
+  }
+
+  .progression-toast:nth-last-child(n + 3) {
+    display: none;
+  }
+
+  /* Results: the winner is already in the victory card, so the turn banner and the step pills
+     are noise here. */
+  body[data-game-chrome="on"][data-game="finished"] #turn-banner,
+  body[data-game-chrome="on"][data-game="finished"] .turn-steps {
+    display: none;
+  }
+}
+
+/* Results card on phones: winner and score share a row and the secondary actions sit two to
+   a row, so 리매치 / 리플레이 저장 / 분석 보기 all fit on screen even at 360×640 (분석 보기
+   used to sit below the fold). The score rows get their chip gutter back too. */
+@media (max-width: 680px), (orientation: landscape) and (max-height: 500px) {
+  body[data-game-chrome="on"][data-game="finished"] .victory-card:not([hidden]) {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 8px;
+    margin: 0 0 6px;
+    padding: 10px 12px 12px;
+  }
+
+  body[data-game-chrome="on"][data-game="finished"] .victory-card > * {
+    flex: 1 1 100%;
+    min-width: 0;
+    margin: 0;
+  }
+
+  body[data-game-chrome="on"][data-game="finished"] .victory-kicker {
+    display: none;
+  }
+
+  body[data-game-chrome="on"][data-game="finished"] #victory-winner {
+    flex: 1 1 auto;
+    font-size: 1.32rem;
+    line-height: 1.15;
+  }
+
+  body[data-game-chrome="on"][data-game="finished"] #victory-score {
+    flex: 0 0 auto;
+    font-size: 0.86rem;
+    white-space: nowrap;
+  }
+
+  body[data-game-chrome="on"][data-game="finished"] .victory-card #rematch-btn,
+  body[data-game-chrome="on"][data-game="finished"] .victory-card .ghost-button {
+    min-height: 44px;
+  }
+
+  body[data-game-chrome="on"][data-game="finished"] .victory-card .ghost-button {
+    flex: 1 1 40%;
+    padding: 0 8px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  body[data-game-chrome="on"][data-game="finished"] .rematch-vote-status,
+  body[data-game-chrome="on"][data-game="finished"] .victory-daily-result {
+    font-size: 0.78rem;
+    line-height: 1.25;
+  }
+
+  body[data-game-chrome="on"][data-game="finished"] .status-panel .score-row {
+    padding-left: 26px;
+  }
+
+  /* The deck / discard piles mean nothing once the game is over. */
+  body[data-game-chrome="on"][data-game="finished"] .pile-actions {
+    display: none;
+  }
+
+  /* Panels keep their content height; the result column (.sidebar) is what scrolls. */
+  body[data-game-chrome="on"][data-game="finished"] .sidebar > .panel {
+    flex: 0 0 auto;
+  }
+}
+
+/* Portrait results: the board takes what the result card leaves (at least 38dvh, at most
+   the full width), so the final position stays big on tall phones and the card still fits
+   under it on short ones. The result column fills the rest and scrolls inside itself — it
+   used to keep its content height (.sidebar is align-self: start), so the status line and
+   score rows were cut off with no way to scroll to them. */
+@media (max-width: 680px) and (min-height: 501px) {
+  body[data-game-chrome="on"][data-game="finished"] .board-panel {
+    width: min(100%, max(38dvh, 100dvh - 340px));
+  }
+
+  body[data-game-chrome="on"][data-game="finished"] .sidebar {
+    align-self: stretch;
+    height: auto;
+    max-height: none;
+    display: flex;
+    flex-direction: column;
+    gap: var(--pl-gap);
+  }
+}
+
+/* Landscape results: same split as play — board left at full height, results beside it. */
+@media (orientation: landscape) and (max-height: 500px) {
+  body[data-game-chrome="on"][data-game="finished"] {
+    --pl-board: min(var(--pl-avail-h), var(--pl-avail-w) - 264px - var(--pl-gap));
+    height: 100dvh;
+    overflow: hidden;
+  }
+
+  body[data-game-chrome="on"][data-game="finished"] .app-shell {
+    height: 100dvh;
+    min-height: 0;
+    overflow: hidden;
+    padding: var(--pl-shell-t) var(--pl-shell-r) var(--pl-shell-b) var(--pl-shell-l);
+  }
+
+  body[data-game-chrome="on"][data-game="finished"] .app-topbar {
+    display: none;
+  }
+
+  body[data-game-chrome="on"][data-game="finished"] .main-grid {
+    height: 100%;
+    min-height: 0;
+    display: block;
+    padding: 0;
+    overflow: hidden;
+  }
+
+  body[data-game-chrome="on"][data-game="finished"] .game-layout {
+    height: 100%;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: var(--pl-board) minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr);
+    gap: var(--pl-gap);
+    align-items: center;
+    overflow: hidden;
+  }
+
+  body[data-game-chrome="on"][data-game="finished"] .board-panel {
+    position: relative;
+    top: auto;
+    box-sizing: border-box;
+    width: var(--pl-board);
+    height: var(--pl-board);
+    min-height: 0;
+    padding: 5px;
+    aspect-ratio: auto;
+    justify-self: center;
+  }
+
+  body[data-game-chrome="on"][data-game="finished"] #game-canvas {
+    width: 100%;
+    height: 100%;
+  }
+
+  body[data-game-chrome="on"][data-game="finished"] .sidebar {
+    position: relative;
+    top: auto;
+    height: 100%;
+    min-height: 0;
+    max-height: none;
+    display: flex;
+    flex-direction: column;
+    gap: var(--pl-gap);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  body[data-game-chrome="on"][data-game="finished"]:not([data-side-drawer="open"]) #game-side-panels {
+    display: none;
+  }
+}
+
+/* Portrait phones: board on top, HUD and hand stacked under it. */
+@media (max-width: 680px) and (orientation: portrait), (max-width: 680px) and (min-height: 501px) {
+  body[data-game-chrome="on"][data-game="playing"] {
+    /* Card width from the hand tray width: avail - 12 (panel padding) - 4 (tray padding)
+       - 16 (four 4px gaps), split five ways. */
+    --pl-card-w: calc((var(--pl-avail-w) - 32px) / 5);
+    --pl-card-h: calc(var(--pl-card-w) / 0.72);
+    --pl-board: max(
+      200px,
+      min(
+        var(--pl-avail-w),
+        var(--pl-avail-h) - var(--pl-hud-h) - var(--pl-card-h) - var(--pl-hand-chrome) - 3 * var(--pl-gap)
+      )
+    );
+  }
+
+  /* Board, HUD and hand form one group. On tall phones the spare height is split above and
+     below the group (centred like a card table) instead of leaving a hole in the middle. */
+  body[data-game-chrome="on"][data-game="playing"] .game-layout {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto auto;
+    align-content: center;
+  }
+
+  body[data-game-chrome="on"][data-game="playing"] .sidebar {
+    height: auto;
+    align-self: start;
+  }
+}
+
+/* Landscape phones: board on the left at full height, HUD + hand in the column beside it. */
+@media (orientation: landscape) and (max-height: 500px) {
+  body[data-game-chrome="on"][data-game="playing"] {
+    --pl-board: min(var(--pl-avail-h), var(--pl-avail-w) - 264px - var(--pl-gap));
+    --pl-side-w: calc(var(--pl-avail-w) - var(--pl-board) - var(--pl-gap));
+    --pl-card-w: calc((var(--pl-side-w) - 32px) / 5);
+    --pl-card-h: min(
+      calc(var(--pl-card-w) / 0.72),
+      calc(var(--pl-avail-h) - var(--pl-hud-h) - var(--pl-hand-chrome) - var(--pl-gap))
+    );
+  }
+
+  body[data-game-chrome="on"][data-game="playing"] .game-layout {
+    grid-template-columns: var(--pl-board) minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr);
+    align-items: center;
+  }
+
+  body[data-game-chrome="on"][data-game="playing"] .sidebar {
+    height: 100%;
+    justify-content: center;
+  }
+
+  body[data-game-chrome="on"][data-game="playing"] .card-button {
+    width: auto;
+    height: 100%;
+    max-width: 100%;
+    justify-self: center;
+  }
+
+  body[data-game-chrome="on"][data-game="playing"]:not([data-side-drawer="open"]) #game-side-panels {
+    display: none;
+  }
+}
+
+
+/* Tutorial coach on phones: cover whichever part of the screen the current step does not use.
+   Steps that point at the hand or the piles put the coach over the board; steps that point at
+   the board (or at nothing) put it over the controls. It used to sit on the top rows of the
+   board while the player was asked to place a chip (portrait), and on four of the five hand
+   cards while they were asked to pick one (landscape kept the desktop corner). */
+@media (max-width: 680px) and (orientation: portrait), (max-width: 680px) and (min-height: 501px) {
+  body[data-game-chrome="on"][data-game="playing"] .tutorial-bubble {
+    top: auto;
+    bottom: var(--pl-shell-b);
+    left: var(--pl-shell-l);
+    right: var(--pl-shell-r);
+  }
+
+  body[data-game-chrome="on"][data-game="playing"]:has(#hand-container.tutorial-spotlight, .pile-button.tutorial-spotlight) .tutorial-bubble {
+    top: var(--pl-shell-t);
+    bottom: auto;
+  }
+}
+
+@media (orientation: landscape) and (max-height: 500px) {
+  body[data-game-chrome="on"][data-game="playing"] .tutorial-bubble {
+    top: var(--pl-shell-t);
+    right: var(--pl-shell-r);
+    bottom: auto;
+    left: auto;
+    width: var(--pl-side-w);
+    padding: 10px 12px;
+  }
+
+  body[data-game-chrome="on"][data-game="playing"]:has(#hand-container.tutorial-spotlight, .pile-button.tutorial-spotlight) .tutorial-bubble {
+    top: auto;
+    right: auto;
+    bottom: var(--pl-shell-b);
+    left: var(--pl-shell-l);
+    width: var(--pl-board);
+  }
+}

@@ -143,6 +143,9 @@ const PAGES_PUBLIC_URL = "https://concrete-sangminlee.github.io/sequence-arena/"
 const canvas = document.getElementById("game-canvas");
 const ctx = canvas.getContext("2d");
 bindBoardPaintContext(ctx);
+// Backing-store cap for syncBoardCanvasResolution(); declared up here (not next to it) because
+// render() calls that sync, and render() can run before the bottom of this module is reached.
+const BOARD_BACKING_MAX_PX = 2048;
 
 const refs = {
   createForm: document.getElementById("create-form"),
@@ -5174,6 +5177,10 @@ function render() {
     updatePageTitle();
     updateAppBadge();
     syncWakeLock();
+    // renderStatus() flips body[data-game] / [data-game-chrome], which can resize the board (the
+    // phone layout grows it when a game starts). Re-sync the backing store now rather than one
+    // ResizeObserver + rAF round trip later, so the first frames are never painted too small.
+    if (syncBoardCanvasResolution()) drawBoard();
   } catch (error) {
     // Never let a single broken render wedge the entire game loop. Beacon at most once per
     // RENDER_ERROR_REPORT_COOLDOWN_MS so a transient error does not silence late-session
@@ -8247,7 +8254,6 @@ pruneOfflineRuntimeRecoveredState();
 // below the logical size, capped for memory) and install a base transform that maps logical
 // units to device pixels. Click hit-testing divides by canvas.width/rect.width, so it is
 // unaffected. Resetting canvas.width clears the transform, so it is re-applied every sync.
-const BOARD_BACKING_MAX_PX = 2048;
 function syncBoardCanvasResolution() {
   const cssSize = canvas.getBoundingClientRect().width;
   if (!(cssSize > 0)) return false;
