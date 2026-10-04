@@ -91,12 +91,6 @@
 - type: conference
   year: 2026
   authors: Lee, S. M., & Kang, T. H.-K.
-  title: AI-embedded impact-echo system for concrete structures with liner plates
-  venue: ACEM26 / Structures26
-
-- type: conference
-  year: 2026
-  authors: Lee, S. M., & Kang, T. H.-K.
   title: 축소된 풍압공 계측자료를 활용한 딥러닝 기반 풍하중 시간이력 재구성
   venue: 한국풍공학회 제29회 학술대회
   details: 29(1), 73-74

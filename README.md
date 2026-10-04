@@ -15,7 +15,7 @@ Personal academic website for Sang Min Lee, Ph.D. Candidate in Artificial Intell
 ## Publications
 
 - 6 Journal Articles (JNDE, ACI Structural Journal, ASCE J. Structural Engineering, etc.)
-- 21 Conference Papers (JCDL, APCWE, ACEM, EACWE, Structures Congress, etc.)
+- 20 Conference Papers (JCDL, APCWE, ACEM, EACWE, Structures Congress, etc.)
 - 2 Registered Patents (Korea)
 
 ## Editing content
