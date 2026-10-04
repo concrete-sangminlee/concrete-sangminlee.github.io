@@ -22,10 +22,12 @@ Personal academic website for Sang Min Lee, Ph.D. Candidate in Artificial Intell
 
 All content lives in `contents/`:
 
-- `publications.yml` — every publication (type, year, authors, title, venue, links). Counts, filters, BibTeX, and JSON-LD are generated from it.
-- `publications.bib` — curated BibTeX for entries that reference it via `bib:`; the rest are generated.
-- `config.yml` — name, tagline, profile facts, Google Scholar metrics, contact links.
-- `*.md` — bio (`home.md`), education, experiences, projects, patents, awards, services, research interests.
+- `publications.yml`: every publication (type, year, authors, title, venue, topic, links). Counts, filters, BibTeX, and JSON-LD are generated from it.
+- `publications.bib`: curated BibTeX for entries that reference it via `bib:`. The rest are generated.
+- `research.yml`: research areas. Each `id` matches a publication `topic`.
+- `news.md`: one line per item, `- **2026.03** Text` (month optional).
+- `config.yml`: name, role, description, contact links.
+- `home.md`: bio. The other `*.md` files are education, experiences, projects, patents, awards, and services.
 
 ## Build
 

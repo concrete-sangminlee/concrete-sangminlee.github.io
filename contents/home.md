@@ -1,3 +1,3 @@
-I am a Ph.D. candidate in the Interdisciplinary Program in Artificial Intelligence at **Seoul National University**, advised by Prof. Thomas H.-K. Kang.
+I'm a Ph.D. candidate in the Interdisciplinary Program in Artificial Intelligence at Seoul National University, advised by Prof. Thomas H.-K. Kang. My research asks how machine learning can make the inspection and design of buildings more reliable: automating impact-echo testing of concrete, monitoring structural condition from sensor data, estimating wind loads from fewer measurements, and grounding language models in building codes.
 
-My research builds machine-learning methods for **resilient infrastructure**: automated impact-echo testing and structural health monitoring for concrete structures, data-driven wind engineering, and retrieval-augmented LLMs for building design codes.
+Before the Ph.D., I received an M.S. in structural engineering and a B.S. in architecture and architectural engineering, with a double major in electrical and computer engineering, both from SNU.

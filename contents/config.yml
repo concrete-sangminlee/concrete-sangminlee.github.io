@@ -1,54 +1,42 @@
 # Site-wide settings. Section bodies live in the other files in contents/.
-title: Sang Min Lee — AI for Resilient Infrastructure
+title: Sang Min Lee
 name: Sang Min Lee
 name-ko: 이상민
 role: Ph.D. Candidate in Artificial Intelligence
-# *emphasis* is rendered in the accent colour
-tagline: AI for *resilient infrastructure*
-description: Sang Min Lee (이상민) — Ph.D. Candidate in Artificial Intelligence at Seoul National University. Machine learning for structural health monitoring, non-destructive testing, wind engineering, and LLMs for building codes.
+affiliation: Seoul National University
+description: Sang Min Lee (이상민) is a Ph.D. candidate in Artificial Intelligence at Seoul National University, working on machine learning for non-destructive testing, structural health monitoring, wind engineering, and building codes.
 copyright-text: '&copy; 2026 Sang Min Lee'
 
-# Quick facts on the profile card (icon: building | user | pin | scholar)
-profile:
-  - icon: building
-    label: Seoul National University
-    sub: Interdisciplinary Program in AI
-  - icon: user
-    label: Prof. Thomas H.-K. Kang
-    sub: Advisor
-  - icon: pin
-    label: Seoul, Republic of Korea
+scholar-url: 'https://scholar.google.com/citations?user=ogvd_LsAAAAJ&hl=en'
 
-# Google Scholar metrics shown in the hero stats (update manually)
-scholar:
-  url: 'https://scholar.google.com/citations?user=ogvd_LsAAAAJ&hl=en'
-  citations: 11
-  h-index: 2
-  updated: Oct 2026
-
-# Contact cards. code -> icon: EM mail, GH github, GS scholar, ID orcid, BL pen, TM sparkles
+# Contact links. Shown under the intro (`intro: true`) and in the Contact section.
+# icon: mail | scholar | orcid | github | pen | sparkles
 contact:
-  - code: EM
-    label: Email
+  - label: Email
     value: 201612445@snu.ac.kr
     url: 'mailto:201612445@snu.ac.kr'
-  - code: GS
-    label: Google Scholar
+    icon: mail
+    intro: true
+  - label: Google Scholar
     value: Sang Min Lee
     url: 'https://scholar.google.com/citations?user=ogvd_LsAAAAJ&hl=en'
-  - code: ID
-    label: ORCID
+    icon: scholar
+    intro: true
+  - label: ORCID
     value: 0000-0002-6822-5252
     url: 'https://orcid.org/0000-0002-6822-5252'
-  - code: GH
-    label: GitHub
+    icon: orcid
+    intro: true
+  - label: GitHub
     value: concrete-sangminlee
     url: 'https://github.com/concrete-sangminlee'
-  - code: BL
-    label: Blog
-    value: concrete-sangminlee
+    icon: github
+    intro: true
+  - label: Blog
+    value: concrete-sangminlee.github.io/blog
     url: '/blog/'
-  - code: TM
-    label: ThinkMany
-    value: concrete-sangminlee
+    icon: pen
+  - label: ThinkMany
+    value: concrete-sangminlee.github.io/thinkmany
     url: '/thinkmany/'
+    icon: sparkles

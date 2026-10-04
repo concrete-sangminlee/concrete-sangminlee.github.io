@@ -1,0 +1,37 @@
+# Research areas. `id` matches the `topic` field in publications.yml;
+# the paper count and "papers" link are generated from it.
+- id: ndt
+  title: Automated non-destructive testing
+  summary: >-
+    Impact-echo testing can find defects hidden inside concrete, but reading
+    the signals still takes an experienced inspector. I train models that
+    classify impact-echo responses automatically and build an edge-AI system
+    that runs them on site, including on liner-plate-backed concrete in
+    nuclear containment buildings.
+
+- id: shm
+  title: Structural health monitoring
+  summary: >-
+    Anomaly detection and system identification for buildings using deep
+    support vector data description, and crack-image classifiers light
+    enough to run on-device.
+
+- id: wind
+  title: Data-driven wind engineering
+  summary: >-
+    Predicting façade wind pressures from fewer pressure taps, clustering taps
+    by their time histories, reconstructing wind-load time series, and
+    estimating design wind speed from satellite imagery.
+
+- id: llm
+  title: Language models for building codes
+  summary: >-
+    Retrieval-augmented generation over structural and wind design codes,
+    domain-specialised language models, and retrieval training with
+    condition-mutated hard negatives for safety-sensitive Korean code clauses.
+
+- id: materials
+  title: Machine learning for concrete properties
+  summary: >-
+    Earlier work comparing machine-learning models for the compressive
+    strength of concrete and the shear strength of prestressed concrete.
