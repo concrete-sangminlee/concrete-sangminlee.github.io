@@ -9,7 +9,8 @@
 #   details  optional volume(issue), pages, location, etc.
 #   note     optional badge text (e.g. "Master's thesis")
 #   links    optional map of label -> URL (e.g. paper, doi)
-#   bib      optional key into publications.bib (enables "Cite" button)
+#   topic    optional research area id from research.yml (ndt | shm | wind | llm | materials)
+#   bib      optional key into publications.bib (curated BibTeX; otherwise generated)
 #
 # Entries are rendered in the order below, grouped by year (newest first).
 
@@ -18,6 +19,7 @@
   year: 2025
   authors: Lee, S. M., Hong, J., Choi, H., & Kang, T. H.-K.
   title: Machine learning assisted method for automated impact-echo testing of concrete structures
+  topic: ndt
   venue: Journal of Nondestructive Evaluation
   details: 44(4), 121
   links:
@@ -28,6 +30,7 @@
   year: 2025
   authors: Lee, S. M., Choi, H. S., Kim, C., & Kang, T. H.-K.
   title: Lightweight alternative machine learning model for automating concrete crack image classification
+  topic: shm
   venue: ACI Structural Journal
   details: 122(5)
   links:
@@ -38,6 +41,7 @@
   year: 2025
   authors: Lee, Y. I., Lee, S. M., & Kang, T. H.-K.
   title: Multiclass deep support vector data description for structural health monitoring
+  topic: shm
   venue: Journal of Structural Engineering
   details: 151(12)
   links:
@@ -48,6 +52,7 @@
   year: 2023
   authors: Ahn, B., Lee, D., Lee, S. M., & Kang, T. H.-K.
   title: 인공신경망을 활용한 위성사진 기반 기대풍속 예측 방법론에 관한 연구
+  topic: wind
   venue: 한국풍공학회논문집
   details: 27(4), 135-142
   bib: ahn2023windprediction
@@ -56,6 +61,7 @@
   year: 2023
   authors: Lee, S. M., Choi, H., & Kang, T. H.-K.
   title: 스마트 임팩트 에코 검사를 위한 기계학습 응용
+  topic: ndt
   venue: 건축(대한건축학회지)
   details: 67(3), 47-50
   bib: lee2023smartimpactecho
@@ -64,6 +70,7 @@
   year: 2022
   authors: Lee, S. M., Sung, H. S., & Kang, T. H.-K.
   title: Comparison of performance for predicting compressive strength of concrete using machine learning
+  topic: materials
   venue: Journal of the Korea Concrete Institute
   details: 34(5), 505-513
   bib: lee2022compressive
@@ -73,12 +80,14 @@
   year: 2026
   authors: Lee, S. M., & Kang, T. H.-K.
   title: "CoMuRAG: Condition-mutated hard negatives for safety-sensitive Korean building-code retrieval"
+  topic: llm
   venue: ACM/IEEE Joint Conference on Digital Libraries (JCDL 2026)
 
 - type: conference
   year: 2026
   authors: Park, H. G., Lee, S. M., & Kang, T. H.-K.
   title: 원전 격납건물 라이너 플레이트 배면 결함의 임팩트 에코 응답 특성에 관한 실험적 연구
+  topic: ndt
   venue: 한국콘크리트학회 학술대회 논문집
   details: 38(2)
 
@@ -86,12 +95,14 @@
   year: 2026
   authors: Park, H. G., Lee, S. M., & Kang, T. H.-K.
   title: Modified impact-echo testing of liner-plate-backed concrete in nuclear containment buildings
+  topic: ndt
   venue: ACEM26 / Structures26
 
 - type: conference
   year: 2026
   authors: Lee, S. M., & Kang, T. H.-K.
   title: 축소된 풍압공 계측자료를 활용한 딥러닝 기반 풍하중 시간이력 재구성
+  topic: wind
   venue: 한국풍공학회 제29회 학술대회
   details: 29(1), 73-74
 
@@ -99,6 +110,7 @@
   year: 2026
   authors: Lee, S. M., & Kang, T. H.-K.
   title: 콘크리트 내부결함 탐사를 위한 엣지AI 임팩트에코 시스템 개발 연구
+  topic: ndt
   venue: 한국콘크리트학회 학술대회 논문집
   details: 38(1), 267-268
 
@@ -106,6 +118,7 @@
   year: 2026
   authors: Park, H. G., Lee, S. M., & Kang, T. H.-K.
   title: 원전 격납건물 라이너플레이트 배면 콘크리트 내부 결함 모사를 통한 임팩트 에코 검사 적용 연구
+  topic: ndt
   venue: 한국콘크리트학회 학술대회 논문집
   details: 38(1), 273-274
 
@@ -113,12 +126,14 @@
   year: 2025
   authors: Lee, S. M., & Kang, T. H.-K.
   title: Retrieval augmented generation for assistance of using wind load design codes
+  topic: llm
   venue: The 10th Asia-Pacific Conference on Wind Engineering (APCWE10)
 
 - type: conference
   year: 2025
   authors: Lee, S. M., & Kang, T. H.-K.
   title: 딥러닝을 활용한 콘크리트 건물의 벽면 풍압계수 클러스터링 연구
+  topic: wind
   venue: 한국콘크리트학회 학술대회 논문집
   details: 37(1), 13-14
 
@@ -126,6 +141,7 @@
   year: 2024
   authors: Lee, Y. I., Lee, S. M., & Kang, T. H.-K.
   title: 멀티클래스 심층 SVDD를 활용한 콘크리트 건축물 모니터링 연구
+  topic: shm
   venue: 한국콘크리트학회 학술대회 논문집
   details: 36(2), 345-346
 
@@ -133,6 +149,7 @@
   year: 2024
   authors: Lee, S. M., & Kang, T. H.-K.
   title: 전문가 혼합 아키텍처를 활용한 건축구조기준 특화 대규모 언어모델 프레임워크
+  topic: llm
   venue: 한국콘크리트학회 학술대회 논문집
   details: 36(2), 343-344
 
@@ -140,12 +157,14 @@
   year: 2024
   authors: Lee, S. M., Lee, Y. I., & Kang, T. H.-K.
   title: Multi-sphere deep SVDD for system identification of building structure
+  topic: shm
   venue: The 2024 World Congress on Advances in Civil, Environmental, and Materials Research (ACEM24)
 
 - type: conference
   year: 2024
   authors: Lee, S. M., Choi, H. S., Kim, C., & Kang, T. H.-K.
   title: Representation learning for classification of concrete crack images
+  topic: shm
   venue: The 2024 Structures Congress
   details: Seoul, Korea
 
@@ -153,6 +172,7 @@
   year: 2024
   authors: Lee, S. M., Choi, H. S., Kim, C., & Kang, T. H.-K.
   title: Lightweighting concrete crack image classification machine learning models for on-device AI
+  topic: shm
   venue: 한국콘크리트학회 학술대회 논문집
   details: 36(1), 57-58
 
@@ -160,6 +180,7 @@
   year: 2023
   authors: Lee, S. M., Choi, H., & Kang, T. H.-K.
   title: 머신러닝 응용 임팩트 에코 검사 자동화 연구
+  topic: ndt
   venue: 한국콘크리트학회 학술대회 논문집
   details: 35(1), 187-188
 
@@ -167,6 +188,7 @@
   year: 2022
   authors: Lee, S. M., & Kang, T. H.-K.
   title: Clustering wind pressure tap using dynamic time warping
+  topic: wind
   venue: 8th European-African Conference on Wind Engineering (EACWE2022)
   details: Bucharest, Romania
 
@@ -174,6 +196,7 @@
   year: 2022
   authors: Lee, S. M., & Kang, T. H.-K.
   title: Shear strength prediction of prestressed concrete based on machine learning
+  topic: materials
   venue: The 2022 Structures Congress
   details: Seoul, Korea
 
@@ -181,6 +204,7 @@
   year: 2022
   authors: Lee, S. M., Sung, H. S., & Kang, T. H.-K.
   title: 머신러닝 기반 콘크리트 압축강도 예측 연구
+  topic: materials
   venue: 한국콘크리트학회 학술대회 논문집
   details: 34(1), 179-180
 
@@ -188,12 +212,14 @@
   year: 2021
   authors: Lee, S. M., & Kang, T. H.-K.
   title: Prediction of wind pressure coefficients on high-rise building façade using LSTM RNN model for sensor reduction
+  topic: wind
   venue: The 2021 World Congress on Advances in Structural Engineering and Mechanics (ASEM21)
 
 - type: conference
   year: 2021
   authors: Lee, S. M., & Kang, T. H.-K.
   title: 장단기기억 순환신경망 기반 콘크리트 건물 벽면 풍압계수 예측 연구
+  topic: wind
   venue: 한국콘크리트학회 학술대회 논문집
   details: 33(2), 155-156
 
@@ -201,6 +227,7 @@
   year: 2021
   authors: Lee, S. M., & Kang, T. H.-K.
   title: LSTM 네트워크를 활용한 콘크리트 건물의 벽면 풍압계수 예측 연구
+  topic: wind
   venue: 한국콘크리트학회 학술대회 논문집
   details: 33(1), 189-190
 
@@ -209,6 +236,7 @@
   year: 2023
   authors: Lee, S. M.
   title: Machine learning application to automated impact-echo test for concrete structures
+  topic: ndt
   venue: Seoul National University
   note: Master's thesis
 

@@ -2,11 +2,11 @@
 /**
  * Static site builder for concrete-sangminlee.github.io
  *
- *   contents/*.md, config.yml, publications.yml  ──►  dist/index.html (+ assets)
+ *   contents/*  ──►  dist/index.html (+ assets, publications.bib, sitemap, sw)
  *
- * Markdown sections are parsed into structured components (timeline, cards,
- * lists). If a file doesn't match the expected shape, it falls back to plain
- * rendered Markdown, so content edits never break the build.
+ * Markdown files are parsed into structured rows (CV entries, news, etc.).
+ * If a file doesn't match the expected shape, it falls back to plain
+ * rendered Markdown, so a content edit never breaks the build.
  */
 
 import fs from 'fs';
@@ -20,25 +20,21 @@ import { minify as minifyHTML } from 'html-minifier-terser';
 const buildStart = Date.now();
 const CONTENT_DIR = 'contents';
 const DIST_DIR = 'dist';
+const SITE_URL = 'https://concrete-sangminlee.github.io/';
 const SELF = 'Lee, S. M.';
 
-// --------------------------------------------------------------------------
+// ==========================================================================
 // Helpers
-// --------------------------------------------------------------------------
+// ==========================================================================
 function fail(msg) {
     console.error(`build.js: ${msg}`);
     process.exit(1);
 }
-
-function readContent(file, { optional = false } = {}) {
+function readContent(file) {
     const p = path.join(CONTENT_DIR, file);
-    if (!fs.existsSync(p)) {
-        if (optional) return '';
-        fail(`missing content file ${p}`);
-    }
+    if (!fs.existsSync(p)) fail(`missing content file ${p}`);
     return fs.readFileSync(p, 'utf8');
 }
-
 function loadYaml(file) {
     try {
         return yaml.load(readContent(file));
@@ -52,43 +48,46 @@ const esc = s => String(s ?? '')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;');
-
 const md = s => marked.parseInline(String(s ?? '')).trim();
 const hasHangul = s => /[\u3131-\uD79D]/.test(String(s));
 const langAttr = s => (hasHangul(s) ? ' lang="ko"' : '');
-const icon = (name, cls = 'icon') => `<svg class="${cls}" aria-hidden="true"><use href="#i-${name}"/></svg>`;
+const icon = name => `<svg class="icon" aria-hidden="true"><use href="#i-${name}"/></svg>`;
 const isExternal = url => /^https?:\/\//.test(url);
-const linkAttrs = url => (isExternal(url) ? ' target="_blank" rel="noopener noreferrer"' : '');
-const pad2 = n => String(n).padStart(2, '0');
+const linkAttrs = url => (isExternal(url) ? ' target="_blank" rel="noopener"' : '');
+/** Typographic range: "2021-2027" -> "2021–2027" */
+const range = s => String(s).replace(/\s*-\s*/g, '–');
 
-/** Split a markdown file into blocks of non-empty lines. */
 function mdBlocks(src) {
     return src.replace(/\r/g, '').split(/\n\s*\n/).map(b => b.trim()).filter(Boolean);
 }
-/** `- item` lines in a block/file. */
 function mdListItems(src) {
     return src.replace(/\r/g, '').split('\n').map(l => l.match(/^\s*[-*]\s+(.+)$/)).filter(Boolean).map(m => m[1].trim());
 }
+const fallback = src => `<div class="prose">${marked.parse(src)}</div>`;
 
-// --------------------------------------------------------------------------
+// ==========================================================================
 // Config
-// --------------------------------------------------------------------------
+// ==========================================================================
 if (!fs.existsSync(CONTENT_DIR)) fail(`content directory not found: ${CONTENT_DIR}/`);
 const config = loadYaml('config.yml');
 if (!config || typeof config !== 'object') fail('config.yml is empty or not an object');
-const REQUIRED = ['title', 'name', 'role', 'tagline', 'description', 'copyright-text'];
+const REQUIRED = ['title', 'name', 'role', 'affiliation', 'description', 'copyright-text'];
 const missing = REQUIRED.filter(k => typeof config[k] !== 'string');
 if (missing.length) fail(`config.yml missing required string keys: ${missing.join(', ')}`);
+const contacts = Array.isArray(config.contact) ? config.contact : [];
 
-// --------------------------------------------------------------------------
+// ==========================================================================
 // Publications
-// --------------------------------------------------------------------------
+// ==========================================================================
 const PUB_TYPES = {
-    journal: { label: 'Journal', plural: 'Journal articles', bib: 'article' },
-    conference: { label: 'Conference', plural: 'Conference papers', bib: 'inproceedings' },
-    thesis: { label: 'Thesis', plural: 'Theses', bib: 'thesis' },
-    early: { label: 'Early work', plural: 'Early work', bib: 'misc' },
+    journal: { label: 'Journal', tab: 'Journal', bib: 'article' },
+    conference: { label: 'Conference', tab: 'Conference', bib: 'inproceedings' },
+    thesis: { label: 'Thesis', tab: 'Thesis', bib: 'thesis' },
+    early: { label: 'Early work', tab: 'Early work', bib: 'misc' },
 };
+
+const research = loadYaml('research.yml') || [];
+const topicIds = new Set(research.map(r => r.id));
 
 const pubs = loadYaml('publications.yml');
 if (!Array.isArray(pubs)) fail('publications.yml must be a list');
@@ -97,6 +96,7 @@ pubs.forEach((p, i) => {
         if (p[k] === undefined || p[k] === null || p[k] === '') fail(`publications.yml entry #${i + 1} is missing "${k}"`);
     }
     if (!PUB_TYPES[p.type]) fail(`publications.yml entry #${i + 1} has unknown type "${p.type}"`);
+    if (p.topic && !topicIds.has(p.topic)) fail(`publications.yml entry #${i + 1} has unknown topic "${p.topic}"`);
     p.year = Number(p.year);
     p.index = i;
 });
@@ -105,23 +105,19 @@ pubs.forEach((p, i) => {
 function splitAuthors(str) {
     return String(str).split(/,\s*(?:&\s*)?(?=[A-Z][A-Za-z'\-]+,\s)/).map(s => s.replace(/^&\s*/, '').trim()).filter(Boolean);
 }
-
 function renderAuthors(str) {
-    const list = splitAuthors(str).map(a => (a === SELF ? `<strong class="me">${esc(a)}</strong>` : esc(a)));
+    const list = splitAuthors(str).map(a => (a === SELF ? `<span class="me">${esc(a)}</span>` : esc(a)));
     if (list.length <= 1) return list.join('');
+    if (list.length === 2) return `${list[0]}, &amp; ${list[1]}`;
     return list.slice(0, -1).join(', ') + ', &amp; ' + list[list.length - 1];
 }
 
-// --- BibTeX: curated entries from publications.bib + generated for the rest
+// --- BibTeX: curated entries from publications.bib, generated for the rest
 const bibSrcPath = path.join(CONTENT_DIR, 'publications.bib');
 const curatedBib = fs.existsSync(bibSrcPath) ? fs.readFileSync(bibSrcPath, 'utf8') : '';
 const bibByKey = {};
 for (const m of curatedBib.matchAll(/@\w+\{([^,\s]+),[\s\S]*?\n\}/g)) bibByKey[m[1]] = m[0].trim();
 
-function bibAuthor(a) {
-    // APA "Lee, S. M." is already "Last, First" for BibTeX
-    return a;
-}
 function parseDetails(d) {
     if (!d) return {};
     const m = String(d).match(/^(\d+)\((\d+)\)(?:,\s*(.+))?$/);
@@ -146,7 +142,7 @@ function generateBib(p) {
     const d = parseDetails(p.details);
     let type = t;
     const fields = [
-        ['author', splitAuthors(p.authors).map(bibAuthor).join(' and ')],
+        ['author', splitAuthors(p.authors).join(' and ')],
         ['title', `{${p.title}}`],
     ];
     if (t === 'article') fields.push(['journal', p.venue]);
@@ -161,12 +157,12 @@ function generateBib(p) {
     }
     for (const k of ['volume', 'number', 'pages', 'address']) if (d[k]) fields.push([k, d[k]]);
     fields.push(['year', String(p.year)]);
-    if (p.links && p.links.doi) fields.push(['doi', p.links.doi]);
-    if (p.links && p.links.paper) fields.push(['url', p.links.paper]);
+    if (p.links?.doi) fields.push(['doi', p.links.doi]);
+    if (p.links?.paper) fields.push(['url', p.links.paper]);
     const key = makeKey(p);
     const w = Math.max(...fields.map(f => f[0].length));
-    const texEsc = v => (k => (k === 'url' || k === 'doi' ? v : v.replace(/(^|[^\\])([&%#])/g, '$1\\$2')));
-    const body = fields.filter(f => f[1]).map(([k, v]) => `  ${k.padEnd(w)} = {${texEsc(v)(k)}}`).join(',\n');
+    const tex = (k, v) => (k === 'url' || k === 'doi' ? v : v.replace(/(^|[^\\])([&%#])/g, '$1\\$2'));
+    const body = fields.filter(f => f[1]).map(([k, v]) => `  ${k.padEnd(w)} = {${tex(k, v)}}`).join(',\n');
     return { key, text: `@${type}{${key},\n${body}\n}` };
 }
 
@@ -177,7 +173,7 @@ for (const p of pubs) {
         p.bibKey = p.bib;
         bibData[p.bib] = bibByKey[p.bib];
     } else {
-        if (p.bib) console.warn(`build.js: bib key "${p.bib}" not found in publications.bib — generating one`);
+        if (p.bib) console.warn(`build.js: bib key "${p.bib}" not found in publications.bib, generating one`);
         const g = generateBib(p);
         p.bibKey = g.key;
         bibData[g.key] = g.text;
@@ -185,344 +181,346 @@ for (const p of pubs) {
     }
 }
 
-// --- Counts
 const counts = Object.fromEntries(Object.keys(PUB_TYPES).map(t => [t, pubs.filter(p => p.type === t).length]));
+const topicCounts = Object.fromEntries(research.map(r => [r.id, pubs.filter(p => p.topic === r.id).length]));
 
-// --- HTML
 const LINK_LABELS = { paper: 'Paper', doi: 'DOI', pdf: 'PDF', code: 'Code', slides: 'Slides', poster: 'Poster', video: 'Video' };
-function renderPub(p) {
-    const T = PUB_TYPES[p.type];
-    const venueBits = [];
-    if (p.venue) venueBits.push(`<em${langAttr(p.venue)}>${esc(p.venue)}</em>`);
-    if (p.details) venueBits.push(`<span>${esc(p.details)}</span>`);
-    if (p.note) venueBits.push(`<span class="pub-note">${esc(p.note)}</span>`);
 
-    const actions = [];
+function renderPub(p) {
+    const venue = [];
+    if (p.venue) venue.push(`<em${langAttr(p.venue)}>${esc(p.venue)}</em>`);
+    if (p.details) venue.push(`, <span class="nowrap">${esc(String(p.details).replace(/(\d)-(\d)/g, '$1–$2'))}</span>`);
+    const typeLabel = p.note || PUB_TYPES[p.type].label;
+
+    const links = [];
     for (const [k, url] of Object.entries(p.links || {})) {
         const href = k === 'doi' && !isExternal(url) ? `https://doi.org/${url}` : url;
-        actions.push(`<a class="pub-link" href="${esc(href)}" target="_blank" rel="noopener noreferrer">${icon(k === 'code' ? 'github' : 'file')}${esc(LINK_LABELS[k] || k)}</a>`);
+        links.push(`<a class="link" href="${esc(href)}" target="_blank" rel="noopener">${esc(LINK_LABELS[k] || k)}</a>`);
     }
-    actions.push(`<button class="pub-link js-only" type="button" data-cite="${esc(p.bibKey)}" aria-label="Cite: ${esc(p.title)}">${icon('braces')}Cite</button>`);
+    links.push(`<button class="link js-only" type="button" data-cite="${esc(p.bibKey)}">BibTeX</button>`);
 
     const search = [p.title, p.authors, p.venue, p.details, p.note, p.year].filter(Boolean).join(' ').toLowerCase();
-    return `<article class="pub" data-type="${p.type}" data-search="${esc(search)}">
-        <div class="pub-main">
-            <h4 class="pub-title"${langAttr(p.title)}>${esc(p.title)}</h4>
-            <p class="pub-authors">${renderAuthors(p.authors)}</p>
-            <p class="pub-venue"><span class="badge badge-${p.type}">${T.label}</span>${venueBits.join('')}</p>
-        </div>
-        <div class="pub-actions">${actions.join('')}</div>
-    </article>`;
+    return `<li class="pub" data-type="${p.type}"${p.topic ? ` data-topic="${p.topic}"` : ''} data-search="${esc(search)}">
+        <h4 class="pub-title"${langAttr(p.title)}>${esc(p.title)}</h4>
+        <p class="pub-authors">${renderAuthors(p.authors)}</p>
+        <p class="pub-venue">${venue.join('')}<span class="sep" aria-hidden="true">·</span><span class="pub-type${p.type === 'journal' ? ' is-journal' : ''}">${esc(typeLabel)}</span><span class="pub-links">${links.join('')}</span></p>
+    </li>`;
 }
 
 function renderPublications() {
-    const typeOrder = Object.keys(PUB_TYPES);
-    const sorted = [...pubs].sort((a, b) => b.year - a.year || typeOrder.indexOf(a.type) - typeOrder.indexOf(b.type) || a.index - b.index);
+    const order = Object.keys(PUB_TYPES);
+    const sorted = [...pubs].sort((a, b) => b.year - a.year || order.indexOf(a.type) - order.indexOf(b.type) || a.index - b.index);
     const years = [...new Set(sorted.map(p => p.year))];
-    const groups = years.map(y => `<div class="pub-year-group" data-year="${y}">
+    const groups = years.map(y => `<div class="pub-group" data-year="${y}">
         <h3 class="pub-year"><time datetime="${y}">${y}</time></h3>
-        <div class="pub-items">${sorted.filter(p => p.year === y).map(renderPub).join('')}</div>
+        <ol class="pub-list">${sorted.filter(p => p.year === y).map(renderPub).join('')}</ol>
     </div>`).join('');
 
     const nonEarly = pubs.length - counts.early;
-    const segs = [
-        ['all', 'All', nonEarly],
-        ...typeOrder.map(t => [t, PUB_TYPES[t].plural.replace(' articles', 's').replace(' papers', 's'), counts[t]]),
-    ].filter(s => s[2] > 0);
-    const seg = segs.map(([k, label, n], i) =>
-        `<button class="seg-btn" type="button" data-filter="${k}" aria-pressed="${i === 0}">${esc(label)}<span class="seg-count">${n}</span></button>`
-    ).join('');
+    const tabs = [['all', 'All', nonEarly], ...order.map(t => [t, PUB_TYPES[t].tab, counts[t]])]
+        .filter(t => t[2] > 0)
+        .map(([k, label, n], i) => `<button class="tab" type="button" data-filter="${k}" aria-pressed="${i === 0}">${esc(label)}<span class="n">${n}</span></button>`)
+        .join('');
+    const topics = JSON.stringify(Object.fromEntries(research.map(r => [r.id, r.title]))).replace(/</g, '\\u003c');
 
-    return `<div class="pub-toolbar js-only" role="search">
-            <div class="seg" role="group" aria-label="Filter by type">${seg}</div>
+    return `<div class="pub-controls js-only">
+            <div class="tabs" role="group" aria-label="Filter by type">${tabs}</div>
             <label class="search">
                 <span class="sr-only">Search publications</span>
                 ${icon('search')}
-                <input type="search" id="pub-search" placeholder="Search title, venue, author…" autocomplete="off" spellcheck="false">
+                <input type="search" id="pub-search" placeholder="Search" autocomplete="off" spellcheck="false">
                 <kbd aria-hidden="true">/</kbd>
             </label>
         </div>
-        <p class="pub-status js-only" id="pub-status" aria-live="polite"></p>
-        <div class="pub-list" id="pub-list">${groups}</div>
-        <p class="pub-empty" id="pub-empty" hidden>No publications match your search.</p>
-        <div class="pub-footer">
-            <a class="btn btn-sm" href="publications.bib" download>${icon('download')}Download BibTeX</a>
-            ${config.scholar?.url ? `<a class="btn btn-sm" href="${esc(config.scholar.url)}" target="_blank" rel="noopener noreferrer">${icon('scholar')}Google Scholar${icon('arrow-ur')}</a>` : ''}
-        </div>`;
+        <div class="pub-state js-only" id="pub-state" aria-live="polite" data-topics="${esc(topics)}"></div>
+        <div id="pub-groups">${groups}</div>
+        <p class="pub-empty" id="pub-empty" hidden>Nothing matches. <button class="link" type="button" data-reset>Clear filters</button></p>
+        <p class="pub-foot">
+            <a class="link" href="publications.bib" download>All entries as BibTeX</a>
+            ${config['scholar-url'] ? `<a class="link" href="${esc(config['scholar-url'])}" target="_blank" rel="noopener">Google Scholar</a>` : ''}
+        </p>`;
 }
 
-// JSON-LD for scholarly works (journals + conference papers)
-function pubsJsonLd() {
-    const graph = pubs.filter(p => p.type === 'journal' || p.type === 'conference').map(p => {
-        const bib = bibByKey[p.bib] || '';
-        const doi = (bib.match(/doi\s*=\s*\{([^}]+)\}/) || [])[1] || p.links?.doi;
-        const authors = splitAuthors(p.authors).map(a => {
-            const [last, first] = a.split(',').map(s => s.trim());
-            return { '@type': 'Person', name: first ? `${first} ${last}` : last };
-        });
-        const d = parseDetails(p.details);
-        const o = {
-            '@type': 'ScholarlyArticle',
-            headline: p.title,
-            author: authors,
-            datePublished: String(p.year),
-            isPartOf: p.venue ? { '@type': p.type === 'journal' ? 'Periodical' : 'Event', name: p.venue, ...(d.volume && { volumeNumber: d.volume }), ...(d.number && { issueNumber: d.number }) } : undefined,
-            inLanguage: hasHangul(p.title) ? 'ko' : 'en',
-        };
-        if (doi) {
-            o.identifier = { '@type': 'PropertyValue', propertyID: 'DOI', value: doi };
-            o.sameAs = `https://doi.org/${doi}`;
-        } else if (p.links?.paper) o.sameAs = p.links.paper;
-        Object.keys(o).forEach(k => o[k] === undefined && delete o[k]);
-        return o;
-    });
-    return JSON.stringify({ '@context': 'https://schema.org', '@graph': graph });
-}
+// ==========================================================================
+// Sections
+// ==========================================================================
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-// --------------------------------------------------------------------------
-// Markdown sections → components
-// --------------------------------------------------------------------------
-const fallback = src => `<div class="prose">${marked.parse(src)}</div>`;
+/** "2023.03.-2027.02.(expected)" -> "2023–2027" ; "Oct 2025 - Nov 2025" -> "Oct–Nov 2025" */
+function formatPeriod(raw) {
+    const s = raw.replace(/\((expected|present)\)/i, '').trim();
+    const dotted = [...s.matchAll(/(\d{4})\.(\d{2})\.?/g)];
+    if (dotted.length === 2) return `${dotted[0][1]}–${dotted[1][1]}`;
+    const named = [...s.matchAll(/([A-Z][a-z]{2})[a-z]*\.?\s+(\d{4})/g)];
+    if (named.length === 2) {
+        const [[, m1, y1], [, m2, y2]] = named;
+        return y1 === y2 ? `${m1}–${m2} ${y1}` : `${m1} ${y1} – ${m2} ${y2}`;
+    }
+    return range(s);
+}
 
 /** Blocks of: **Title** [date]\n- org\n- detail… */
-function renderTimeline(src) {
+function renderCv(src) {
     const items = [];
     for (const block of mdBlocks(src)) {
         const lines = block.split('\n');
         const head = lines[0].match(/^\*\*(.+?)\*\*\s*\[(.+?)\]\s*$/);
         if (!head) continue;
         const bullets = mdListItems(lines.slice(1).join('\n'));
-        items.push({ title: head[1], date: head[2], org: bullets[0], details: bullets.slice(1) });
+        items.push({ title: head[1], date: head[2], org: bullets[0], notes: bullets.slice(1) });
     }
     if (!items.length) return fallback(src);
-    const nowYear = new Date().getFullYear();
-    return `<ol class="timeline">${items.map(it => {
-        const expected = /expected|present|current/i.test(it.date);
-        const endYear = Math.max(...(it.date.match(/\d{4}/g) || [0]).map(Number));
-        const current = expected || endYear > nowYear;
-        const date = it.date
-            .replace(/\((?:expected|present)\)/i, '')
-            .replace(/(\d{4})\.(\d{2})\./g, '$1.$2')
-            .replace(/\s*-\s*/, ' — ')
-            .trim();
-        const details = it.details.map(d => {
-            const kv = d.match(/^([A-Z][A-Za-z ]{2,24}):\s+(.+)$/);
-            return kv
-                ? `<li${langAttr(d)}><span class="tl-k">${esc(kv[1])}:</span> ${md(kv[2])}</li>`
-                : `<li${langAttr(d)}>${md(d)}</li>`;
+    return `<ol class="cv">${items.map(it => {
+        const expected = /expected/i.test(it.date);
+        const notes = it.notes.map(n => {
+            const kv = n.match(/^([A-Z][A-Za-z ]{2,24}):\s+(.+)$/);
+            return kv ? `<li${langAttr(n)}><span class="cv-k">${esc(kv[1])}:</span> ${md(kv[2])}</li>` : `<li${langAttr(n)}>${md(n)}</li>`;
         }).join('');
-        return `<li class="tl-item reveal${current ? ' is-current' : ''}">
-            <div class="tl-date">${esc(date)}${expected ? '<br><span class="tl-badge">In progress</span>' : ''}</div>
-            <div class="tl-body">
-                <h3 class="tl-title">${md(it.title)}</h3>
-                ${it.org ? `<p class="tl-org"${langAttr(it.org)}>${md(it.org)}</p>` : ''}
-                ${details ? `<ul class="tl-details">${details}</ul>` : ''}
+        return `<li>
+            <p class="cv-when">${esc(formatPeriod(it.date))}</p>
+            <div class="cv-what">
+                <p class="cv-title">${md(it.title)}${expected ? '<span class="tag">Expected</span>' : ''}</p>
+                ${it.org ? `<p class="cv-sub"${langAttr(it.org)}>${md(it.org)}</p>` : ''}
+                ${notes ? `<ul class="cv-notes">${notes}</ul>` : ''}
             </div>
         </li>`;
     }).join('')}</ol>`;
+}
+
+/** - **2026** Text */
+function renderNews(src) {
+    const items = mdListItems(src).map(l => l.match(/^\*\*(\d{4}(?:\.\d{1,2})?)\*\*\s*[-–—:]?\s*(.+)$/)).filter(Boolean);
+    if (!items.length) return fallback(src);
+    return `<ul class="news">${items.map(([, d, text]) => {
+        const iso = d.replace('.', '-').replace(/-(\d)$/, '-0$1');
+        const label = d.includes('.') ? `${MONTHS[Number(d.split('.')[1]) - 1]} ${d.split('.')[0]}` : d;
+        return `<li><time datetime="${iso}">${esc(label)}</time><span>${md(text)}</span></li>`;
+    }).join('')}</ul>`;
+}
+
+function renderResearch() {
+    return `<div class="areas">${research.map(r => {
+        const n = topicCounts[r.id] || 0;
+        return `<div class="area">
+            <h3>${esc(r.title)}</h3>
+            <p>${md(r.summary)}</p>
+            ${n ? `<a class="link area-link" href="#publications" data-topic="${esc(r.id)}"><span class="t">${n} paper${n === 1 ? '' : 's'}</span> <span class="arr" aria-hidden="true">→</span></a>` : ''}
+        </div>`;
+    }).join('')}</div>`;
 }
 
 /** - **Name** (2021-2027) - Funder */
 function renderProjects(src) {
     const items = mdListItems(src).map(l => l.match(/^\*\*(.+?)\*\*\s*\(([^)]+)\)\s*[-–—]\s*(.+)$/)).filter(Boolean);
     if (!items.length) return fallback(src);
-    return `<div class="card-grid">${items.map(([, name, period, funder]) => `<article class="card reveal">
-        <div class="card-top"><span class="card-icon">${icon('layers')}</span><span class="mono-label">${esc(period.replace('-', ' — '))}</span></div>
-        <h3 class="card-title">${md(name)}</h3>
-        <p class="card-foot">${md(funder)}</p>
-    </article>`).join('')}</div>`;
+    return `<ol class="cv">${items.map(([, name, period, funder]) => `<li>
+        <p class="cv-when">${esc(range(period))}</p>
+        <div class="cv-what"><p class="cv-title">${md(name)}</p><p class="cv-sub">${md(funder)}</p></div>
+    </li>`).join('')}</ol>`;
 }
 
-/** - **Lee, S. M.**, & Kang, T. H.-K. (2023). Title. *KR Patent 1,2,3*. */
-function renderPatents(src) {
-    const items = mdListItems(src).map(l => l.match(/^(.+?)\s*\((\d{4})\)\.\s*(.+?)\.\s*\*(.+?)\*\.?$/)).filter(Boolean);
-    if (!items.length) return fallback(src);
-    return `<div class="card-grid">${items.map(([, authors, year, title, number]) => `<article class="card reveal">
-        <div class="card-top"><span class="card-icon">${icon('bulb')}</span><span class="mono-label"><time datetime="${year}">${year}</time> · Registered</span></div>
-        <h3 class="card-title">${esc(title)}</h3>
-        <p class="card-sub">${renderAuthors(authors.replace(/\*\*/g, ''))}</p>
-        <p class="card-foot"><span class="patent-no">${esc(number)}</span></p>
-    </article>`).join('')}</div>`;
+/** - **Lee, S. M.**, & Kang, T. H.-K. (2023). Title. *KR 10-1234567*. */
+const patents = mdListItems(readContent('patents.md'))
+    .map(l => l.match(/^(.+?)\s*\((\d{4})\)\.\s*(.+?)\.\s*\*(.+?)\*\.?$/))
+    .filter(Boolean)
+    .map(([, authors, year, title, number]) => ({ authors: authors.replace(/\*\*/g, ''), year, title, number }));
+function renderPatents() {
+    if (!patents.length) return fallback(readContent('patents.md'));
+    return `<ol class="cv">${patents.map(p => `<li>
+        <p class="cv-when">${esc(p.year)}</p>
+        <div class="cv-what">
+            <p class="cv-title">${esc(p.title)}</p>
+            <p class="cv-sub">${renderAuthors(p.authors)}</p>
+            <p class="cv-sub">Korean Patent <span class="num">${esc(p.number.replace(/^KR\s*/, ''))}</span>, registered</p>
+        </div>
+    </li>`).join('')}</ol>`;
 }
 
 /** - **Award name (Korean)** - 2025, 2026 */
 function renderAwards(src) {
     const items = mdListItems(src).map(l => l.match(/^\*\*(.+?)\*\*\s*[-–—]\s*(.+)$/)).filter(Boolean);
     if (!items.length) return fallback(src);
-    return `<ul class="award-list reveal">${items.map(([, name, years]) => {
+    // newest first by latest year
+    const latest = s => Math.max(...(s.match(/\d{4}/g) || [0]).map(Number));
+    items.sort((a, b) => latest(b[2]) - latest(a[2]));
+    return `<ol class="cv">${items.map(([, name, years]) => {
         const sub = name.match(/^(.*?)\s*\(([^)]+)\)$/);
-        const title = sub ? sub[1] : name;
-        return `<li class="award">
-            <span class="card-icon">${icon('award')}</span>
-            <span class="award-name">${esc(title)}${sub ? `<span class="award-sub"${langAttr(sub[2])}>${esc(sub[2])}</span>` : ''}</span>
-            <span class="award-years">${esc(years).replace(/(\d{4})/g, '<time datetime="$1">$1</time>')}</span>
+        return `<li>
+            <p class="cv-when">${esc(years)}</p>
+            <div class="cv-what"><p class="cv-title">${esc(sub ? sub[1] : name)}</p>${sub ? `<p class="cv-sub" lang="ko">${esc(sub[2])}</p>` : ''}</div>
         </li>`;
-    }).join('')}</ul>`;
+    }).join('')}</ol>`;
 }
 
-/** ### Memberships\n- ABBR (Full name)\n---\n### Conference Organization\n- **Name** (2025) - Role */
-function renderServices(src) {
+/** ### Memberships\n- ABBR (Full name)\n### Conference Organization\n- **Name** (2025) - Role, Place */
+function renderService(src) {
     const parts = src.split(/^###\s+/m).map(s => s.trim()).filter(Boolean);
-    const out = [];
+    const rows = [];
+    let members = null;
     for (const part of parts) {
         const [heading, ...rest] = part.split('\n');
-        const body = rest.join('\n').replace(/^-{3,}\s*$/m, '');
-        const items = mdListItems(body);
+        const items = mdListItems(rest.join('\n'));
         if (/member/i.test(heading)) {
-            out.push(`<div><h3 class="sub-head">${esc(heading)}</h3><ul class="member-list">${items.map(i => {
+            members = items.map(i => {
                 const m = i.match(/^([A-Z][A-Za-z&]+)\s*\((.+)\)$/);
-                return m
-                    ? `<li class="member reveal"><span class="member-abbr">${esc(m[1])}</span><span class="member-name">${esc(m[2])}</span></li>`
-                    : `<li class="member reveal"><span class="member-name">${md(i)}</span></li>`;
-            }).join('')}</ul></div>`);
+                return m ? `<li><abbr title="${esc(m[2])}">${esc(m[1])}</abbr></li>` : `<li>${md(i)}</li>`;
+            }).join('');
         } else {
-            out.push(`<div><h3 class="sub-head">${esc(heading)}</h3>${items.map(i => {
+            for (const i of items) {
                 const m = i.match(/^\*\*(.+?)\*\*\s*\(([^)]+)\)\s*[-–—]\s*(.+)$/);
-                return m
-                    ? `<div class="service-item reveal"><strong>${esc(m[1])}</strong><span class="mono-label"><time datetime="${esc(m[2])}">${esc(m[2])}</time></span><span>${md(m[3])}</span></div>`
-                    : `<div class="service-item reveal"><span>${md(i)}</span></div>`;
-            }).join('')}</div>`);
+                if (m) {
+                    const [role, ...where] = m[3].split(',').map(s => s.trim());
+                    rows.push(`<li><p class="cv-when">${esc(m[2])}</p><div class="cv-what"><p class="cv-title">${esc(role)}, ${esc(m[1])}</p>${where.length ? `<p class="cv-sub">${esc(where.join(', '))}</p>` : ''}</div></li>`);
+                } else rows.push(`<li><p class="cv-when"></p><div class="cv-what">${md(i)}</div></li>`);
+            }
         }
     }
-    return out.length ? `<div class="service-grid">${out.join('')}</div>` : fallback(src);
+    if (members) rows.push(`<li><p class="cv-when">Member</p><div class="cv-what"><ul class="inline-list">${members}</ul></div></li>`);
+    return rows.length ? `<ol class="cv">${rows.join('')}</ol>` : fallback(src);
 }
 
-const CONTACT_ICONS = { EM: 'mail', GH: 'github', GS: 'scholar', ID: 'orcid', BL: 'pen', TM: 'sparkles' };
 function renderContact() {
-    const cards = (config.contact || []).map(c => `<a class="contact-card reveal" href="${esc(c.url)}"${linkAttrs(c.url)}>
-            <span class="card-icon">${icon(CONTACT_ICONS[c.code] || 'arrow-ur')}</span>
-            <span><span class="contact-label">${esc(c.label)}</span><span class="contact-val">${esc(c.value)}</span></span>
-            ${icon('arrow-ur', 'icon contact-arrow')}
-        </a>`).join('');
-    return `<address class="contact-grid">${cards}</address>`;
+    return `<dl class="contact-list">${contacts.map(c => {
+        const isMail = c.url.startsWith('mailto:');
+        return `<div><dt>${esc(c.label)}</dt><dd><a class="link" href="${esc(c.url)}"${linkAttrs(c.url)}>${esc(c.value)}</a>${isMail ? `<button class="copy-btn js-only" type="button" data-copy="${esc(c.value)}">Copy</button>` : ''}</dd></div>`;
+    }).join('')}</dl>`;
 }
 
-// --------------------------------------------------------------------------
-// Hero
-// --------------------------------------------------------------------------
-const interests = mdListItems(readContent('research-interests.md'));
-const contactBy = code => (config.contact || []).find(c => c.code === code);
-
-function renderHero() {
-    const email = contactBy('EM');
-    const scholar = contactBy('GS');
-    const github = contactBy('GH');
-    const facts = (config.profile || []).map(f => `<div class="fact">
-            <dt>${icon(f.icon || 'pin')}<span class="sr-only">${esc(f.sub || '')}</span></dt>
-            <dd>${esc(f.label)}${f.sub ? `<span>${esc(f.sub)}</span>` : ''}</dd>
-        </div>`).join('');
-    const quick = ['EM', 'GS', 'ID', 'GH', 'BL'].map(contactBy).filter(Boolean).map(c =>
-        `<a class="icon-btn" href="${esc(c.url)}"${linkAttrs(c.url)} aria-label="${esc(c.label)}" title="${esc(c.label)}">${icon(CONTACT_ICONS[c.code])}</a>`
-    ).join('');
-
-    const sch = config.scholar || {};
-    const stats = [
-        { n: counts.journal, label: 'Journal articles', href: '#publications', filter: 'journal' },
-        { n: counts.conference, label: 'Conference papers', href: '#publications', filter: 'conference' },
-        { n: (readContent('patents.md').match(/^\s*[-*]\s+/gm) || []).length, label: 'Registered patents', href: '#patents' },
-        sch.citations !== undefined && { n: sch.citations, label: 'Citations', small: `h-index ${sch['h-index'] ?? '–'} · Google Scholar`, href: sch.url, external: true },
-    ].filter(Boolean);
-
-    return `<section class="hero" aria-labelledby="hero-name">
+function renderIntro() {
+    const links = contacts.filter(c => c.intro).map(c => {
+        const text = c.url.startsWith('mailto:') ? c.value : c.label;
+        return `<li><a href="${esc(c.url)}"${linkAttrs(c.url)}>${icon(c.icon || 'mail')}${esc(text)}</a></li>`;
+    }).join('');
+    return `<section class="intro" aria-label="About">
         <div class="wrap">
-            <div class="hero-grid">
-                <div class="hero-copy">
-                    <p class="eyebrow reveal"><span class="pulse" aria-hidden="true"></span>${esc(config.role)}</p>
-                    <h1 class="hero-name reveal" id="hero-name">${esc(config.name)}${config['name-ko'] ? `<span class="hero-name-ko" lang="ko">${esc(config['name-ko'])}</span>` : ''}</h1>
-                    <p class="hero-tagline reveal">${md(config.tagline)}</p>
-                    <div class="hero-bio reveal">${marked.parse(readContent('home.md'))}</div>
-                    ${interests.length ? `<ul class="chips reveal" aria-label="Research interests">${interests.map(i => `<li class="chip">${esc(i)}</li>`).join('')}</ul>` : ''}
-                    <div class="hero-cta reveal">
-                        ${email ? `<a class="btn btn-primary" href="${esc(email.url)}">${icon('mail')}Get in touch</a>` : ''}
-                        <a class="btn" href="#publications">${icon('file')}Publications</a>
-                        ${scholar ? `<a class="btn" href="${esc(scholar.url)}"${linkAttrs(scholar.url)}>${icon('scholar')}Scholar</a>` : ''}
-                        ${github ? `<a class="btn" href="${esc(github.url)}"${linkAttrs(github.url)}>${icon('github')}GitHub</a>` : ''}
+            <div class="row">
+                <div class="portrait">
+                    <picture>
+                        <source srcset="static/assets/img/photo.webp" type="image/webp">
+                        <img src="static/assets/img/photo.jfif" alt="Portrait of ${esc(config.name)}" width="200" height="200" fetchpriority="high">
+                    </picture>
+                </div>
+                <div class="intro-main">
+                    <div class="intro-head">
+                        <h1 class="name">${esc(config.name)}${config['name-ko'] ? `<span class="name-ko" lang="ko">${esc(config['name-ko'])}</span>` : ''}</h1>
+                        <p class="role">${esc(config.role)}<br>${esc(config.affiliation)}</p>
+                    </div>
+                    <div class="intro-body">
+                        <div class="bio prose">${marked.parse(readContent('home.md'))}</div>
+                        ${links ? `<ul class="intro-links">${links}</ul>` : ''}
                     </div>
                 </div>
-                <aside class="profile-card reveal" aria-label="Profile">
-                    <div class="portrait">
-                        <picture>
-                            <source srcset="static/assets/img/photo.webp" type="image/webp">
-                            <img src="static/assets/img/photo.jfif" alt="Portrait of ${esc(config.name)}" width="200" height="200" loading="eager" fetchpriority="high" decoding="async">
-                        </picture>
-                    </div>
-                    <dl class="facts">${facts}</dl>
-                    <div class="profile-links">${quick}</div>
-                </aside>
             </div>
-            <div class="stats reveal">${stats.map(s => {
-                const tag = s.href ? 'a' : 'div';
-                const attrs = s.href ? ` href="${esc(s.href)}"${s.external ? ' target="_blank" rel="noopener noreferrer"' : ''}${s.filter ? ` data-goto-filter="${s.filter}"` : ''}` : '';
-                return `<${tag} class="stat"${attrs}><span class="stat-n">${s.n}</span><span class="stat-l">${esc(s.label)}${s.small ? `<small>${esc(s.small)}</small>` : ''}</span></${tag}>`;
-            }).join('')}</div>
         </div>
     </section>`;
 }
 
-// --------------------------------------------------------------------------
-// Sections
-// --------------------------------------------------------------------------
-const scholarLink = config.scholar?.url ? ` <a href="${esc(config.scholar.url)}" target="_blank" rel="noopener noreferrer">Google Scholar</a>` : '';
 const SECTIONS = [
-    { id: 'education', nav: 'Education', title: 'Education', render: () => renderTimeline(readContent('education.md')) },
-    { id: 'experience', nav: 'Experience', title: 'Experience', render: () => renderTimeline(readContent('experiences.md')) },
+    { id: 'news', title: 'News', render: () => renderNews(readContent('news.md')) },
+    { id: 'research', title: 'Research', nav: true, render: renderResearch },
     {
-        id: 'publications', nav: 'Publications', title: 'Publications', render: renderPublications,
-        desc: `${counts.journal} journal articles and ${counts.conference} conference papers on machine learning for concrete, wind, and structural engineering. Also on${scholarLink}.`,
+        id: 'publications', title: 'Publications', nav: true, render: renderPublications,
+        meta: `${counts.journal} journal articles<br>${counts.conference} conference papers`,
     },
-    { id: 'projects', nav: 'Projects', title: 'Research Projects', render: () => renderProjects(readContent('projects.md')), desc: 'Funded research programs I have contributed to.' },
-    { id: 'patents', nav: 'Patents', title: 'Patents', render: () => renderPatents(readContent('patents.md')) },
-    { id: 'awards', nav: 'Awards', title: 'Awards &amp; Honors', render: () => renderAwards(readContent('awards.md')) },
-    { id: 'service', nav: 'Service', title: 'Service', render: () => renderServices(readContent('services.md')), desc: 'Professional memberships and academic service.' },
-    { id: 'contact', nav: 'Contact', title: 'Contact', render: renderContact, desc: 'Happy to talk about research collaborations, AI for infrastructure, or anything on this page.' },
+    { id: 'patents', title: 'Patents', render: renderPatents },
+    { id: 'experience', title: 'Experience', nav: true, render: () => renderCv(readContent('experiences.md')) },
+    { id: 'education', title: 'Education', nav: true, render: () => renderCv(readContent('education.md')) },
+    { id: 'projects', title: 'Research projects', render: () => renderProjects(readContent('projects.md')) },
+    { id: 'awards', title: 'Awards', nav: true, render: () => renderAwards(readContent('awards.md')) },
+    { id: 'service', title: 'Service', render: () => renderService(readContent('services.md')) },
+    { id: 'contact', title: 'Contact', nav: true, render: renderContact },
 ];
 
-const sectionsHtml = SECTIONS.map((s, i) => `<section class="section" id="${s.id}" aria-labelledby="${s.id}-title">
-        <div class="wrap section-grid">
-            <header class="section-head reveal">
-                <span class="section-num">${pad2(i + 1)}</span>
-                <h2 class="section-title" id="${s.id}-title">${s.title}</h2>
-                ${s.desc ? `<p class="section-desc">${s.desc}</p>` : ''}
-            </header>
-            <div class="section-body">${s.render()}</div>
+const sectionsHtml = SECTIONS.map(s => `<section class="section" id="${s.id}" aria-labelledby="${s.id}-title">
+        <div class="wrap">
+            <div class="row">
+                <header>
+                    <h2 class="section-title" id="${s.id}-title">${esc(s.title)}</h2>
+                    ${s.meta ? `<p class="section-meta">${s.meta}</p>` : ''}
+                </header>
+                <div class="section-body">${s.render()}</div>
+            </div>
         </div>
     </section>`).join('\n');
 
-const navHtml = SECTIONS.map(s => `<li><a href="#${s.id}" data-nav="${s.id}">${esc(s.nav)}</a></li>`).join('');
+const navHtml = SECTIONS.filter(s => s.nav).map(s => `<li><a href="#${s.id}" data-nav="${s.id}">${esc(s.title)}</a></li>`).join('');
 
-// --------------------------------------------------------------------------
+// ==========================================================================
+// Structured data
+// ==========================================================================
+function jsonLd() {
+    const person = {
+        '@type': 'Person',
+        '@id': SITE_URL + '#person',
+        name: config.name,
+        alternateName: config['name-ko'],
+        url: SITE_URL,
+        image: SITE_URL + 'static/assets/img/photo.jfif',
+        jobTitle: config.role,
+        affiliation: { '@type': 'CollegeOrUniversity', name: config.affiliation, sameAs: 'https://www.snu.ac.kr/' },
+        alumniOf: { '@type': 'CollegeOrUniversity', name: config.affiliation },
+        email: (contacts.find(c => c.url.startsWith('mailto:')) || {}).url,
+        sameAs: contacts.filter(c => isExternal(c.url)).map(c => c.url),
+        knowsAbout: research.map(r => r.title),
+    };
+    const works = pubs.filter(p => p.type === 'journal' || p.type === 'conference').map(p => {
+        const doi = ((bibByKey[p.bib] || '').match(/doi\s*=\s*\{([^}]+)\}/) || [])[1] || p.links?.doi;
+        const d = parseDetails(p.details);
+        const o = {
+            '@type': 'ScholarlyArticle',
+            headline: p.title,
+            author: splitAuthors(p.authors).map(a => {
+                const [last, first] = a.split(',').map(s => s.trim());
+                return a === SELF ? { '@id': SITE_URL + '#person' } : { '@type': 'Person', name: first ? `${first} ${last}` : last };
+            }),
+            datePublished: String(p.year),
+            inLanguage: hasHangul(p.title) ? 'ko' : 'en',
+            isPartOf: p.venue ? { '@type': p.type === 'journal' ? 'Periodical' : 'Event', name: p.venue, ...(d.volume && { volumeNumber: d.volume }), ...(d.number && { issueNumber: d.number }) } : undefined,
+        };
+        if (doi) {
+            o.identifier = { '@type': 'PropertyValue', propertyID: 'DOI', value: doi };
+            o.sameAs = `https://doi.org/${doi}`;
+        } else if (p.links?.paper) o.sameAs = p.links.paper;
+        return o;
+    });
+    const pats = patents.map(p => ({
+        '@type': 'CreativeWork',
+        additionalType: 'Patent',
+        name: p.title,
+        datePublished: p.year,
+        author: splitAuthors(p.authors).map(a => (a === SELF ? { '@id': SITE_URL + '#person' } : { '@type': 'Person', name: a })),
+        identifier: { '@type': 'PropertyValue', propertyID: 'KR patent registration', value: p.number.replace(/^KR\s*/, '') },
+    }));
+    return JSON.stringify({ '@context': 'https://schema.org', '@graph': [person, ...works, ...pats] }).replace(/</g, '\\u003c');
+}
+
+// ==========================================================================
 // Assemble
-// --------------------------------------------------------------------------
+// ==========================================================================
 const now = new Date();
 const buildDate = now.toISOString().slice(0, 10);
-const buildDateLabel = now.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric', timeZone: 'UTC' });
+const buildDateLabel = now.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' });
 
 let output = fs.readFileSync('index.html', 'utf8');
-const slot = (name, html) => { output = output.split(`<!-- @SLOT:${name} -->`).join(html); };
+const slot = (name, html) => {
+    if (!output.includes(`<!-- @SLOT:${name} -->`)) fail(`index.html is missing <!-- @SLOT:${name} -->`);
+    output = output.split(`<!-- @SLOT:${name} -->`).join(html);
+};
 slot('nav', navHtml);
-slot('hero', renderHero());
+slot('intro', renderIntro());
 slot('sections', sectionsHtml);
 
 const vars = { ...config, 'build-date': buildDate, 'build-date-label': buildDateLabel };
 output = output.replace(/\{\{([\w-]+)\}\}/g, (m, k) => {
     if (typeof vars[k] !== 'string') fail(`index.html references unknown placeholder {{${k}}}`);
-    // copyright-text may contain entities on purpose; everything else is escaped
     return k === 'copyright-text' ? vars[k] : esc(vars[k]);
 });
 
-output = output.replace(
-    /<script type="application\/ld\+json" id="json-ld-articles">.*?<\/script>/,
-    () => `<script type="application/ld+json" id="json-ld-articles">${pubsJsonLd()}</script>`
-);
-output = output.replace(
-    '<script type="application/json" id="bib-data">{}</script>',
-    () => `<script type="application/json" id="bib-data">${JSON.stringify(bibData).replace(/</g, '\\u003c')}</script>`
-);
+output = output.replace('<script type="application/ld+json" id="json-ld">{}</script>', () => `<script type="application/ld+json">${jsonLd()}</script>`);
+output = output.replace('<script type="application/json" id="bib-data">{}</script>', () => `<script type="application/json" id="bib-data">${JSON.stringify(bibData).replace(/</g, '\\u003c')}</script>`);
 
-// Inline CSS (removes one render-blocking request)
 {
-    const rawCss = fs.readFileSync('static/css/main.css', 'utf8');
-    const css = (await esbuild.transform(rawCss, { loader: 'css', minify: true })).code;
+    const css = (await esbuild.transform(fs.readFileSync('static/css/main.css', 'utf8'), { loader: 'css', minify: true })).code;
     const re = /\s*<!-- INLINE_CSS_HERE:[\s\S]*?-->\s*<link rel="stylesheet" href="static\/css\/main\.css" \/>/;
     if (!re.test(output)) fail('INLINE_CSS_HERE marker not found in index.html');
     output = output.replace(re, () => `\n<style>${css}</style>`);
@@ -530,10 +528,9 @@ output = output.replace(
 
 output = await minifyHTML(output, {
     collapseWhitespace: true,
-    conservativeCollapse: false,
+    conservativeCollapse: true,
     removeComments: true,
     removeRedundantAttributes: true,
-    removeEmptyAttributes: true,
     minifyCSS: true,
     minifyJS: true,
     collapseBooleanAttributes: true,
@@ -545,9 +542,9 @@ fs.rmSync(DIST_DIR, { recursive: true, force: true });
 fs.mkdirSync(DIST_DIR, { recursive: true });
 fs.writeFileSync(path.join(DIST_DIR, 'index.html'), output);
 
-// --------------------------------------------------------------------------
+// ==========================================================================
 // Assets
-// --------------------------------------------------------------------------
+// ==========================================================================
 function copyRecursive(src, dest) {
     if (!fs.existsSync(src)) return;
     if (fs.statSync(src).isDirectory()) {
@@ -563,7 +560,7 @@ function copyRecursive(src, dest) {
 copyRecursive('static', path.join(DIST_DIR, 'static'));
 
 const photoSrc = path.join(DIST_DIR, 'static/assets/img/photo.jfif');
-await sharp(photoSrc).webp({ quality: 82 }).toFile(path.join(DIST_DIR, 'static/assets/img/photo.webp'));
+await sharp(photoSrc).webp({ quality: 90 }).toFile(path.join(DIST_DIR, 'static/assets/img/photo.webp'));
 
 const faviconPath = path.join(DIST_DIR, 'static/assets/favicon-32.png');
 await sharp(faviconPath).png({ compressionLevel: 9 }).toFile(faviconPath + '.tmp');
@@ -578,7 +575,6 @@ await Promise.all([
     .png({ compressionLevel: 9, palette: true, quality: 80 })
     .toFile(path.join(DIST_DIR, 'static/assets', name))));
 
-// CSS is inlined; drop the standalone file
 fs.rmSync(path.join(DIST_DIR, 'static/css'), { recursive: true, force: true });
 
 {
@@ -591,7 +587,6 @@ for (const f of ['robots.txt', '404.html', 'manifest.json']) {
     if (fs.existsSync(f)) fs.copyFileSync(f, path.join(DIST_DIR, f));
 }
 
-// Standalone static apps published under stable subpaths
 copyRecursive('apps/sequence-arena', path.join(DIST_DIR, 'sequence-arena'));
 
 if (fs.existsSync('sitemap.xml')) {
@@ -599,22 +594,19 @@ if (fs.existsSync('sitemap.xml')) {
     fs.writeFileSync(path.join(DIST_DIR, 'sitemap.xml'), sitemap);
 }
 
-// Service worker: versioned cache name so old caches are evicted per deploy
 if (fs.existsSync('sw.js')) {
     const sw = fs.readFileSync('sw.js', 'utf8').replace('__CACHE_VERSION__', 'sml-' + Date.now());
     fs.writeFileSync(path.join(DIST_DIR, 'sw.js'), (await esbuild.transform(sw, { loader: 'js', minify: true, target: 'es2019' })).code);
 }
 
-// publications.bib: curated entries + generated entries for everything else
 fs.writeFileSync(
     path.join(DIST_DIR, 'publications.bib'),
-    curatedBib.trim() + '\n\n' + (generatedBib.length ? '% ---- generated from contents/publications.yml ----\n\n' + generatedBib.join('\n\n') + '\n' : '')
+    curatedBib.trim() + '\n\n' + (generatedBib.length ? '% Generated from contents/publications.yml\n\n' + generatedBib.join('\n\n') + '\n' : '')
 );
 
-// security.txt at the RFC 9116 legacy location (.well-known/ is stripped by upload-pages-artifact)
 if (fs.existsSync('.well-known/security.txt')) fs.copyFileSync('.well-known/security.txt', path.join(DIST_DIR, 'security.txt'));
 
-// --------------------------------------------------------------------------
+// ==========================================================================
 function dirSize(dir) {
     let total = 0;
     for (const entry of fs.readdirSync(dir)) {
@@ -624,5 +616,5 @@ function dirSize(dir) {
     }
     return total;
 }
-console.log(`Publications: ${counts.journal} journal · ${counts.conference} conference · ${counts.thesis} thesis · ${counts.early} early`);
-console.log(`Build complete → dist/ (${(dirSize(DIST_DIR) / 1024).toFixed(1)} KB in ${((Date.now() - buildStart) / 1000).toFixed(2)}s)`);
+console.log(`Publications: ${counts.journal} journal, ${counts.conference} conference, ${counts.thesis} thesis, ${counts.early} early`);
+console.log(`Build complete: dist/ (${(dirSize(DIST_DIR) / 1024).toFixed(1)} KB in ${((Date.now() - buildStart) / 1000).toFixed(2)}s)`);

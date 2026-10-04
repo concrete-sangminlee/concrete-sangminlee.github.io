@@ -6,14 +6,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>{{title}}</title>
     <meta name="description" content="{{description}}" />
-    <meta name="keywords" content="Sang Min Lee, 이상민, Seoul National University, AI, Machine Learning, Structural Health Monitoring, Impact-Echo, Non-Destructive Testing, Wind Engineering, Concrete, LLM, RAG" />
     <meta name="author" content="Sang Min Lee" />
     <meta name="robots" content="index, follow" />
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net; img-src 'self' data: https:; script-src 'self' 'unsafe-inline'; worker-src 'self'; connect-src 'self'; base-uri 'self'; form-action 'self'" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src 'self' https://cdn.jsdelivr.net; img-src 'self' data: https:; script-src 'self' 'unsafe-inline'; worker-src 'self'; connect-src 'self'; base-uri 'self'; form-action 'self'" />
     <meta http-equiv="X-Content-Type-Options" content="nosniff" />
     <meta name="referrer" content="strict-origin-when-cross-origin" />
 
-    <!-- Theme bootstrap: runs before first paint to avoid a light/dark flash -->
     <script>
         (function () {
             var d = document.documentElement, t = null;
@@ -24,7 +22,6 @@
         })();
     </script>
 
-    <!-- Open Graph -->
     <meta property="og:title" content="{{title}}" />
     <meta property="og:description" content="{{description}}" />
     <meta property="og:type" content="profile" />
@@ -33,207 +30,102 @@
     <meta property="og:image:width" content="200" />
     <meta property="og:image:height" content="200" />
     <meta property="og:image:alt" content="Sang Min Lee" />
+    <meta property="profile:first_name" content="Sang Min" />
+    <meta property="profile:last_name" content="Lee" />
     <meta name="twitter:card" content="summary" />
     <link rel="canonical" href="https://concrete-sangminlee.github.io/" />
-    <meta name="theme-color" content="#f8f7f4" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#0b0d11" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#111214" media="(prefers-color-scheme: dark)" />
     <meta name="color-scheme" content="light dark" />
     <link rel="manifest" href="manifest.json" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
 
-    <!-- JSON-LD Structured Data -->
-    <script type="application/ld+json" id="json-ld-articles">{"@context":"https://schema.org","@graph":[]}</script>
-    <script type="application/ld+json">
-    {
-        "@context": "https://schema.org",
-        "@type": "Person",
-        "name": "Sang Min Lee",
-        "alternateName": "이상민",
-        "givenName": "Sang Min",
-        "familyName": "Lee",
-        "email": "mailto:201612445@snu.ac.kr",
-        "url": "https://concrete-sangminlee.github.io/",
-        "image": "https://concrete-sangminlee.github.io/static/assets/img/photo.jfif",
-        "jobTitle": "Ph.D. Candidate in Artificial Intelligence",
-        "worksFor": { "@type": "EducationalOrganization", "name": "Seoul National University", "sameAs": "https://www.snu.ac.kr/" },
-        "affiliation": { "@type": "EducationalOrganization", "name": "Seoul National University" },
-        "alumniOf": { "@type": "EducationalOrganization", "name": "Seoul National University" },
-        "nationality": "Korean",
-        "sameAs": [
-            "https://github.com/concrete-sangminlee",
-            "https://scholar.google.com/citations?user=ogvd_LsAAAAJ&hl=en",
-            "https://orcid.org/0000-0002-6822-5252"
-        ],
-        "knowsAbout": ["Machine Learning", "Wind Engineering", "Structural Health Monitoring", "Concrete", "Non-Destructive Testing", "Artificial Intelligence", "Deep Learning", "Retrieval-Augmented Generation"],
-        "award": [
-            "SNU AI Fellowship (2025, 2026)",
-            "SNU AI Paper Competition Excellence Award (2025)",
-            "SNU AI Graduate School Scholarship (2023, 2024)",
-            "SNU Outstanding Teaching Assistant Award (2022)",
-            "Korea Concrete Institute Outstanding Presentation Award (2022)",
-            "Big Data Analysis Engineer Certification (2025)"
-        ]
-    }
-    </script>
-    <script type="application/ld+json">
-    {
-        "@context": "https://schema.org",
-        "@graph": [
-            {
-                "@type": "CreativeWork",
-                "additionalType": "Patent",
-                "name": "AI-based defect detection system inside concrete members",
-                "author": [
-                    { "@type": "Person", "name": "Sang Min Lee" },
-                    { "@type": "Person", "name": "Thomas H.-K. Kang" }
-                ],
-                "datePublished": "2023",
-                "identifier": { "@type": "PropertyValue", "propertyID": "KR Patent", "value": "1,026,114,570,000" }
-            },
-            {
-                "@type": "CreativeWork",
-                "additionalType": "Patent",
-                "name": "Wind load estimation system based on artificial intelligence",
-                "author": [
-                    { "@type": "Person", "name": "Sang Min Lee" },
-                    { "@type": "Person", "name": "Thomas H.-K. Kang" }
-                ],
-                "datePublished": "2022",
-                "identifier": { "@type": "PropertyValue", "propertyID": "KR Patent", "value": "1,024,803,820,000" }
-            }
-        ]
-    }
-    </script>
+    <script type="application/ld+json" id="json-ld">{}</script>
 
-    <!-- Icons -->
     <link rel="icon" type="image/png" sizes="32x32" href="static/assets/favicon-32.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="static/assets/apple-touch-icon.png" />
-    <link rel="preload" as="image" href="static/assets/img/photo.webp" type="image/webp" fetchpriority="high" />
 
-    <!-- Fonts (async, non-blocking): Pretendard (Latin + Hangul), Instrument Serif (display), JetBrains Mono (labels) -->
+    <!-- Pretendard: one family for Latin and Hangul (dynamic subset, loads only the glyphs a page uses) -->
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="preload" as="style" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" onload="this.onload=null;this.rel='stylesheet'">
-    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&amp;family=JetBrains+Mono:wght@400;500;600&amp;display=swap" onload="this.onload=null;this.rel='stylesheet'">
-    <noscript>
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&amp;family=JetBrains+Mono:wght@400;500;600&amp;display=swap">
-    </noscript>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 
-    <!-- INLINE_CSS_HERE: build.js replaces this comment with <style>...</style> -->
+    <!-- INLINE_CSS_HERE: build.js replaces this comment and the link below with an inline style tag -->
     <link rel="stylesheet" href="static/css/main.css" />
 
     <script src="static/js/scripts.js" defer></script>
 </head>
 
-<body id="page-top">
-    <!-- SVG icon sprite -->
+<body id="top">
     <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
-        <symbol id="i-mail" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="m3.5 7.5 8.5 6 8.5-6"/></symbol>
+        <symbol id="i-mail" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3.5 7 8.5 6 8.5-6"/></symbol>
         <symbol id="i-github" viewBox="0 0 24 24"><path fill="currentColor" stroke="none" d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.58.1.79-.25.79-.56v-1.96c-3.2.7-3.87-1.54-3.87-1.54-.52-1.33-1.28-1.69-1.28-1.69-1.05-.71.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.76 2.7 1.25 3.36.96.1-.75.4-1.25.73-1.54-2.55-.29-5.24-1.28-5.24-5.69 0-1.26.45-2.28 1.19-3.09-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.77 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.83 1.19 3.09 0 4.42-2.69 5.39-5.26 5.68.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5Z"/></symbol>
-        <symbol id="i-scholar" viewBox="0 0 24 24"><path d="M22 9.5 12 4.5 2 9.5l10 5 10-5Z"/><path d="M6 11.5v5c3.5 2.6 8.5 2.6 12 0v-5"/><path d="M22 9.5v5.5"/></symbol>
-        <symbol id="i-orcid" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5"/><path d="M8.5 10v6.5"/><path d="M8.5 7.4v.1"/><path d="M11.5 7.5h2.25a4.5 4.5 0 0 1 0 9H11.5z"/></symbol>
+        <symbol id="i-scholar" viewBox="0 0 24 24"><path d="M22 9.5 12 4.5 2 9.5l10 5 10-5Z"/><path d="M6 11.5v5c3.5 2.6 8.5 2.6 12 0v-5"/></symbol>
+        <symbol id="i-orcid" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5"/><path d="M8.6 10.2v6.3"/><path d="M8.6 7.5v.01"/><path d="M11.6 7.6h2.1a4.45 4.45 0 0 1 0 8.9h-2.1z"/></symbol>
         <symbol id="i-pen" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></symbol>
         <symbol id="i-sparkles" viewBox="0 0 24 24"><path d="M10 3.5 11.7 8.3 16.5 10l-4.8 1.7L10 16.5l-1.7-4.8L3.5 10l4.8-1.7Z"/><path d="M18 14.5l.9 2.6 2.6.9-2.6.9-.9 2.6-.9-2.6-2.6-.9 2.6-.9Z"/></symbol>
-        <symbol id="i-arrow-ur" viewBox="0 0 24 24"><path d="M7 17 17 7"/><path d="M8 7h9v9"/></symbol>
-        <symbol id="i-arrow-up" viewBox="0 0 24 24"><path d="M12 19V5"/><path d="m5.5 11.5 6.5-6.5 6.5 6.5"/></symbol>
-        <symbol id="i-arrow-down" viewBox="0 0 24 24"><path d="M12 5v14"/><path d="m5.5 12.5 6.5 6.5 6.5-6.5"/></symbol>
         <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M4.6 4.6 6 6M18 18l1.4 1.4M2.5 12h2M19.5 12h2M4.6 19.4 6 18M18 6l1.4-1.4"/></symbol>
         <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20.5 13.2A8.5 8.5 0 1 1 10.8 3.5a6.6 6.6 0 0 0 9.7 9.7Z"/></symbol>
-        <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol>
+        <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 8h16M4 16h16"/></symbol>
         <symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
         <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.7-3.7"/></symbol>
-        <symbol id="i-file" viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8Z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h4"/></symbol>
-        <symbol id="i-braces" viewBox="0 0 24 24"><path d="M8 3H7a2 2 0 0 0-2 2v4.5A2.5 2.5 0 0 1 2.5 12 2.5 2.5 0 0 1 5 14.5V19a2 2 0 0 0 2 2h1"/><path d="M16 21h1a2 2 0 0 0 2-2v-4.5a2.5 2.5 0 0 1 2.5-2.5A2.5 2.5 0 0 1 19 9.5V5a2 2 0 0 0-2-2h-1"/></symbol>
-        <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3.5v11"/><path d="m7 10 5 5 5-5"/><path d="M4.5 20.5h15"/></symbol>
-        <symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4.5A1.5 1.5 0 0 1 3 13.5v-9A1.5 1.5 0 0 1 4.5 3h9A1.5 1.5 0 0 1 15 4.5V5"/></symbol>
-        <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 21s-7-6.1-7-11.5a7 7 0 0 1 14 0C19 14.9 12 21 12 21Z"/><circle cx="12" cy="9.5" r="2.5"/></symbol>
-        <symbol id="i-building" viewBox="0 0 24 24"><path d="M3 21h18"/><path d="M5 21V9l7-5 7 5v12"/><path d="M9.5 21v-5h5v5"/><path d="M9.5 11.5h.01M14.5 11.5h.01"/></symbol>
-        <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4.5 21a7.5 7.5 0 0 1 15 0"/></symbol>
-        <symbol id="i-award" viewBox="0 0 24 24"><circle cx="12" cy="9" r="6"/><path d="m8.6 13.9-1.6 7.6 5-3 5 3-1.6-7.6"/></symbol>
-        <symbol id="i-layers" viewBox="0 0 24 24"><path d="m12 3 9 5-9 5-9-5 9-5Z"/><path d="m3 12.5 9 5 9-5"/><path d="m3 16.5 9 5 9-5"/></symbol>
-        <symbol id="i-bulb" viewBox="0 0 24 24"><path d="M9 18h6"/><path d="M10 21.5h4"/><path d="M12 2.5a6.5 6.5 0 0 0-3.9 11.7c.6.5.9 1.2.9 2V16h6v-.8c0-.8.3-1.5.9-2A6.5 6.5 0 0 0 12 2.5Z"/></symbol>
-        <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 4.6a3.5 3.5 0 0 1 0 6.8"/><path d="M18 14.2a6.5 6.5 0 0 1 3.5 5.8"/></symbol>
-        <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></symbol>
-        <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.5"/></symbol>
     </svg>
 
     <a class="skip-link" href="#main">Skip to content</a>
 
-    <!-- Navigation -->
-    <header class="nav" id="nav">
-        <div class="wrap nav-inner">
-            <a class="brand" href="#page-top" aria-label="Sang Min Lee — back to top">
-                <span class="brand-mark" aria-hidden="true">SL</span>
-                <span class="brand-name">{{name}}</span>
-            </a>
+    <header class="site-header" id="site-header">
+        <div class="wrap header-inner">
+            <a class="brand" href="#top">{{name}}</a>
             <nav aria-label="Primary">
-                <ul class="nav-links">
-                    <!-- @SLOT:nav -->
-                </ul>
+                <ul class="nav-links"><!-- @SLOT:nav --></ul>
             </nav>
-            <div class="nav-actions">
-                <button class="icon-btn theme-toggle js-only" type="button" aria-label="Toggle dark mode" title="Toggle theme">
+            <div class="header-actions">
+                <button class="icon-btn theme-toggle js-only" type="button" aria-label="Switch colour theme" title="Switch colour theme">
                     <svg class="icon i-sun" aria-hidden="true"><use href="#i-sun"/></svg>
                     <svg class="icon i-moon" aria-hidden="true"><use href="#i-moon"/></svg>
                 </button>
-                <button class="icon-btn menu-btn js-only" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-menu">
+                <button class="icon-btn menu-btn js-only" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-nav">
                     <svg class="icon i-menu" aria-hidden="true"><use href="#i-menu"/></svg>
                     <svg class="icon i-close" aria-hidden="true"><use href="#i-close"/></svg>
                 </button>
             </div>
         </div>
-        <nav class="mobile-menu" id="mobile-menu" aria-label="Mobile" hidden>
-            <ul>
-                <!-- @SLOT:nav -->
-            </ul>
+        <nav class="mobile-nav" id="mobile-nav" aria-label="Mobile" hidden>
+            <ul><!-- @SLOT:nav --></ul>
         </nav>
     </header>
 
     <main id="main">
-        <!-- @SLOT:hero -->
+        <!-- @SLOT:intro -->
         <!-- @SLOT:sections -->
     </main>
 
-    <footer class="footer">
-        <div class="wrap footer-inner">
-            <div>
-                <span id="copyright-text">{{copyright-text}}</span>
-                <span aria-hidden="true"> · </span>
-                <span>Updated <time datetime="{{build-date}}">{{build-date-label}}</time></span>
+    <footer class="site-footer">
+        <div class="wrap">
+            <div class="row">
+                <div></div>
+                <div class="footer-inner">
+                    <p><span id="copyright-text">{{copyright-text}}</span>. Last updated <time datetime="{{build-date}}">{{build-date-label}}</time>.</p>
+                    <ul class="footer-links">
+                        <li><a href="/blog/">Blog</a></li>
+                        <li><a href="/sequence-arena/">Sequence Arena</a></li>
+                        <li><a href="https://github.com/concrete-sangminlee/concrete-sangminlee.github.io">Source</a></li>
+                    </ul>
+                </div>
             </div>
-            <ul class="footer-links">
-                <li><a href="https://github.com/concrete-sangminlee">GitHub</a></li>
-                <li><a href="/blog/">Blog</a></li>
-                <li><a href="/sequence-arena/">Sequence Arena</a></li>
-                <li><a href="publications.bib" download>BibTeX</a></li>
-                <li><a href="https://github.com/concrete-sangminlee/concrete-sangminlee.github.io/blob/master/LICENSE">License</a></li>
-            </ul>
         </div>
     </footer>
 
-    <button class="icon-btn to-top js-only" type="button" aria-label="Back to top">
-        <svg class="icon" aria-hidden="true"><use href="#i-arrow-up"/></svg>
-    </button>
-
-    <!-- BibTeX dialog -->
     <dialog class="modal" id="cite-modal" aria-labelledby="cite-title">
         <div class="modal-head">
-            <h3 id="cite-title">Cite this work</h3>
+            <h2 id="cite-title">BibTeX</h2>
             <button class="icon-btn" type="button" data-close aria-label="Close">
                 <svg class="icon" aria-hidden="true"><use href="#i-close"/></svg>
             </button>
         </div>
         <p class="modal-sub" id="cite-sub"></p>
-        <pre class="bib-pre" id="cite-bib"></pre>
+        <pre class="bib" id="cite-bib"></pre>
         <div class="modal-foot">
-            <button class="btn btn-sm" type="button" data-close>Close</button>
-            <button class="btn btn-sm btn-primary" type="button" id="cite-copy">
-                <svg class="icon" aria-hidden="true"><use href="#i-copy"/></svg>
-                Copy BibTeX
-            </button>
+            <button class="btn" type="button" data-close>Close</button>
+            <button class="btn btn-primary" type="button" id="cite-copy" autofocus>Copy</button>
         </div>
     </dialog>
 

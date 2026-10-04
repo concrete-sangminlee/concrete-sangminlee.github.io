@@ -1,18 +1,16 @@
-/* Sang Min Lee — homepage interactions (progressive enhancement only;
-   every section is fully readable without this file). */
-
+/* Progressive enhancement only: the page is complete without this file. */
 (function () {
     'use strict';
 
-    const $ = (sel, root = document) => root.querySelector(sel);
-    const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
-    const root = document.documentElement;
-    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var $ = function (sel, root) { return (root || document).querySelector(sel); };
+    var $$ = function (sel, root) { return Array.prototype.slice.call((root || document).querySelectorAll(sel)); };
+    var root = document.documentElement;
+    var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-    // ------------------------------------------------------------------ toast
-    let toastTimer;
+    // ---------------------------------------------------------------- toast
+    var toastTimer;
     function toast(msg) {
-        let el = $('.toast');
+        var el = $('.toast');
         if (!el) {
             el = document.createElement('div');
             el.className = 'toast';
@@ -20,253 +18,271 @@
             document.body.appendChild(el);
         }
         el.textContent = msg;
-        requestAnimationFrame(() => el.classList.add('is-visible'));
+        requestAnimationFrame(function () { el.classList.add('is-visible'); });
         clearTimeout(toastTimer);
-        toastTimer = setTimeout(() => el.classList.remove('is-visible'), 1800);
+        toastTimer = setTimeout(function () { el.classList.remove('is-visible'); }, 1600);
     }
 
-    async function copyText(text) {
-        try {
-            await navigator.clipboard.writeText(text);
-            return true;
-        } catch (e) {
-            const ta = document.createElement('textarea');
-            ta.value = text;
-            ta.setAttribute('readonly', '');
-            ta.style.cssText = 'position:fixed;opacity:0';
-            document.body.appendChild(ta);
-            ta.select();
-            let ok = false;
-            try { ok = document.execCommand('copy'); } catch (_) { /* ignore */ }
-            ta.remove();
-            return ok;
+    function copyText(text) {
+        if (navigator.clipboard && window.isSecureContext) {
+            return navigator.clipboard.writeText(text).then(function () { return true; }, function () { return legacyCopy(text); });
         }
+        return Promise.resolve(legacyCopy(text));
+    }
+    function legacyCopy(text) {
+        var ta = document.createElement('textarea');
+        ta.value = text;
+        ta.setAttribute('readonly', '');
+        ta.style.cssText = 'position:fixed;top:0;opacity:0';
+        document.body.appendChild(ta);
+        ta.select();
+        var ok = false;
+        try { ok = document.execCommand('copy'); } catch (e) { /* ignore */ }
+        ta.remove();
+        return ok;
     }
 
-    // ------------------------------------------------------------------ theme
+    // ---------------------------------------------------------------- theme
     function initTheme() {
-        const btn = $('.theme-toggle');
-        const media = window.matchMedia('(prefers-color-scheme: dark)');
-        const stored = () => { try { return localStorage.getItem('theme'); } catch (e) { return null; } };
-        const apply = t => {
+        var btn = $('.theme-toggle');
+        var media = window.matchMedia('(prefers-color-scheme: dark)');
+        function stored() { try { return localStorage.getItem('theme'); } catch (e) { return null; } }
+        function apply(t) {
             root.setAttribute('data-theme', t);
-            if (btn) btn.setAttribute('aria-label', t === 'dark' ? 'Switch to light mode' : 'Switch to dark mode');
-        };
+            if (btn) btn.setAttribute('aria-label', t === 'dark' ? 'Switch to light theme' : 'Switch to dark theme');
+        }
         apply(root.getAttribute('data-theme') || (media.matches ? 'dark' : 'light'));
-        if (btn) btn.addEventListener('click', () => {
-            const next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        if (btn) btn.addEventListener('click', function () {
+            var next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
             apply(next);
             try { localStorage.setItem('theme', next); } catch (e) { /* private mode */ }
         });
-        // Follow the OS until the visitor makes an explicit choice
-        const onChange = e => { if (!stored()) apply(e.matches ? 'dark' : 'light'); };
+        var onChange = function (e) { if (!stored()) apply(e.matches ? 'dark' : 'light'); };
         if (media.addEventListener) media.addEventListener('change', onChange);
+        else if (media.addListener) media.addListener(onChange);
     }
 
-    // ------------------------------------------------------------------ nav
-    function initNav() {
-        const nav = $('#nav');
-        const menuBtn = $('.menu-btn');
-        const menu = $('#mobile-menu');
-        const toTop = $('.to-top');
-        if (!nav) return;
+    // ---------------------------------------------------------------- header
+    function initHeader() {
+        var header = $('#site-header');
+        var btn = $('.menu-btn');
+        var menu = $('#mobile-nav');
+        if (!header) return;
 
-        let ticking = false;
-        const onScroll = () => {
+        var ticking = false;
+        function onScroll() {
             if (ticking) return;
             ticking = true;
-            requestAnimationFrame(() => {
+            requestAnimationFrame(function () {
                 ticking = false;
-                const y = window.scrollY;
-                nav.classList.toggle('is-scrolled', y > 8);
-                if (toTop) toTop.classList.toggle('is-visible', y > 700);
+                header.classList.toggle('is-scrolled', window.scrollY > 4);
+                markCurrent();
             });
-        };
+        }
         window.addEventListener('scroll', onScroll, { passive: true });
-        onScroll();
-
-        if (toTop) toTop.addEventListener('click', () => window.scrollTo({ top: 0, behavior: reducedMotion ? 'auto' : 'smooth' }));
 
         function setMenu(open) {
-            if (!menu || !menuBtn) return;
+            if (!menu || !btn) return;
             menu.hidden = !open;
-            nav.classList.toggle('is-open', open);
-            menuBtn.setAttribute('aria-expanded', String(open));
-            menuBtn.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+            header.classList.toggle('is-open', open);
+            btn.setAttribute('aria-expanded', String(open));
+            btn.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
         }
-        if (menuBtn) menuBtn.addEventListener('click', () => setMenu(menu.hidden));
-        if (menu) menu.addEventListener('click', e => { if (e.target.closest('a')) setMenu(false); });
-        document.addEventListener('keydown', e => { if (e.key === 'Escape' && menu && !menu.hidden) { setMenu(false); menuBtn.focus(); } });
-        window.addEventListener('resize', () => { if (window.innerWidth > 1080) setMenu(false); });
+        if (btn) btn.addEventListener('click', function () { setMenu(menu.hidden); });
+        if (menu) menu.addEventListener('click', function (e) { if (e.target.closest('a')) setMenu(false); });
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && menu && !menu.hidden) { setMenu(false); btn.focus(); }
+        });
+        window.addEventListener('resize', function () { if (window.innerWidth > 960) setMenu(false); });
 
-        // Scroll-spy: highlight the section currently under the nav
-        const links = $$('[data-nav]');
-        const sections = [...new Set(links.map(a => a.dataset.nav))].map(id => document.getElementById(id)).filter(Boolean);
-        if (!('IntersectionObserver' in window) || !sections.length) return;
-        const visible = new Map();
-        const mark = () => {
-            const atBottom = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4;
-            const current = atBottom ? sections[sections.length - 1] : sections.find(s => visible.get(s.id));
-            links.forEach(a => {
-                if (current && a.dataset.nav === current.id) a.setAttribute('aria-current', 'true');
+        // Scroll-spy: the last nav section whose top has passed 40% of the viewport
+        var links = $$('[data-nav]');
+        var ids = links.map(function (a) { return a.getAttribute('data-nav'); }).filter(function (v, i, a) { return a.indexOf(v) === i; });
+        var sections = ids.map(function (id) { return document.getElementById(id); }).filter(Boolean);
+        function markCurrent() {
+            var line = window.innerHeight * 0.4;
+            var current = null;
+            var atBottom = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2;
+            if (atBottom) current = sections[sections.length - 1];
+            else sections.forEach(function (s) { if (s.getBoundingClientRect().top <= line) current = s; });
+            links.forEach(function (a) {
+                if (current && a.getAttribute('data-nav') === current.id) a.setAttribute('aria-current', 'true');
                 else a.removeAttribute('aria-current');
             });
-        };
-        const spy = new IntersectionObserver(entries => {
-            entries.forEach(en => visible.set(en.target.id, en.isIntersecting));
-            mark();
-        }, { rootMargin: '-35% 0px -60% 0px' });
-        sections.forEach(s => spy.observe(s));
-        window.addEventListener('scroll', () => requestAnimationFrame(mark), { passive: true });
-    }
-
-    // ------------------------------------------------------------------ reveal
-    function initReveal() {
-        const els = $$('.reveal');
-        if (reducedMotion || !('IntersectionObserver' in window)) {
-            els.forEach(el => el.classList.add('is-in'));
-            return;
         }
-        const io = new IntersectionObserver(entries => {
-            entries.forEach(en => {
-                if (!en.isIntersecting) return;
-                en.target.classList.add('is-in');
-                io.unobserve(en.target);
-            });
-        }, { rootMargin: '0px 0px -6% 0px', threshold: 0.01 });
-        // Stagger siblings that enter together
-        els.forEach(el => {
-            const sibs = el.parentElement ? Array.from(el.parentElement.children).filter(c => c.classList.contains('reveal')) : [];
-            const i = sibs.indexOf(el);
-            if (i > 0) el.style.transitionDelay = Math.min(i * 60, 360) + 'ms';
-            io.observe(el);
-        });
+        onScroll();
     }
 
-    // ------------------------------------------------------------------ publications
+    // ---------------------------------------------------------------- publications
     function initPublications() {
-        const list = $('#pub-list');
-        if (!list) return;
-        const pubs = $$('.pub', list);
-        const groups = $$('.pub-year-group', list);
-        const buttons = $$('.seg-btn');
-        const search = $('#pub-search');
-        const status = $('#pub-status');
-        const empty = $('#pub-empty');
-        let filter = 'all';
-        let query = '';
+        var groupsEl = $('#pub-groups');
+        if (!groupsEl) return;
+        var pubs = $$('.pub', groupsEl);
+        var groups = $$('.pub-group', groupsEl);
+        var tabs = $$('.tab[data-filter]');
+        var search = $('#pub-search');
+        var state = $('#pub-state');
+        var empty = $('#pub-empty');
+        var topicNames = {};
+        try { topicNames = JSON.parse(state.getAttribute('data-topics') || '{}'); } catch (e) { /* ignore */ }
+
+        var filter = 'all', topic = null, query = '';
 
         function apply() {
-            const terms = query.toLowerCase().split(/\s+/).filter(Boolean);
-            let shown = 0;
-            pubs.forEach(p => {
-                const typeOk = filter === 'all' ? p.dataset.type !== 'early' : p.dataset.type === filter;
-                const text = p.dataset.search || '';
-                const ok = typeOk && terms.every(t => text.includes(t));
+            var terms = query.toLowerCase().split(/\s+/).filter(Boolean);
+            var shown = 0;
+            pubs.forEach(function (p) {
+                var type = p.getAttribute('data-type');
+                var ok = (filter === 'all' ? type !== 'early' : type === filter) &&
+                    (!topic || p.getAttribute('data-topic') === topic) &&
+                    terms.every(function (t) { return (p.getAttribute('data-search') || '').indexOf(t) !== -1; });
                 p.hidden = !ok;
                 if (ok) shown++;
             });
-            groups.forEach(g => { g.hidden = !g.querySelector('.pub:not([hidden])'); });
-            if (empty) empty.hidden = shown > 0;
-            if (status) {
-                const label = filter === 'all' ? 'publications' : (buttons.find(b => b.dataset.filter === filter)?.firstChild?.textContent || '').toLowerCase();
-                status.textContent = query
-                    ? `${shown} result${shown === 1 ? '' : 's'} for “${query}”`
-                    : `${shown} ${label}`;
+            groups.forEach(function (g) { g.hidden = !g.querySelector('.pub:not([hidden])'); });
+            empty.hidden = shown > 0;
+
+            state.textContent = '';
+            if (topic || query) {
+                var count = document.createElement('span');
+                count.textContent = shown + (shown === 1 ? ' paper' : ' papers');
+                state.appendChild(count);
             }
+            if (topic) state.appendChild(makeToken(topicNames[topic] || topic, function () { setTopic(null); }));
+        }
+
+        function makeToken(label, onClear) {
+            var t = document.createElement('span');
+            t.className = 'token';
+            t.appendChild(document.createTextNode(label));
+            var b = document.createElement('button');
+            b.type = 'button';
+            b.setAttribute('aria-label', 'Remove filter: ' + label);
+            b.innerHTML = '<svg class="icon" aria-hidden="true"><use href="#i-close"/></svg>';
+            b.addEventListener('click', onClear);
+            t.appendChild(b);
+            return t;
         }
 
         function setFilter(f) {
             filter = f;
-            buttons.forEach(b => b.setAttribute('aria-pressed', String(b.dataset.filter === f)));
+            tabs.forEach(function (b) { b.setAttribute('aria-pressed', String(b.getAttribute('data-filter') === f)); });
             apply();
         }
-
-        buttons.forEach(b => b.addEventListener('click', () => setFilter(b.dataset.filter)));
-        if (search) {
-            search.addEventListener('input', () => { query = search.value.trim(); apply(); });
-            search.addEventListener('keydown', e => { if (e.key === 'Escape') { search.value = ''; query = ''; apply(); search.blur(); } });
+        function setTopic(t) {
+            topic = t;
+            if (t && filter === 'early') setFilter('all');
+            else apply();
         }
-        document.addEventListener('keydown', e => {
-            if (e.key !== '/' || e.metaKey || e.ctrlKey || e.altKey) return;
-            const t = e.target;
+
+        tabs.forEach(function (b) { b.addEventListener('click', function () { setFilter(b.getAttribute('data-filter')); }); });
+
+        if (search) {
+            search.addEventListener('input', function () { query = search.value.trim(); apply(); });
+            search.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape') { search.value = ''; query = ''; apply(); search.blur(); }
+            });
+        }
+
+        document.addEventListener('keydown', function (e) {
+            if (e.key !== '/' || e.metaKey || e.ctrlKey || e.altKey || !search) return;
+            var t = e.target;
             if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) return;
-            if (!search) return;
             e.preventDefault();
-            document.getElementById('publications').scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth' });
+            document.getElementById('publications').scrollIntoView({ behavior: reduced ? 'auto' : 'smooth' });
             search.focus({ preventScroll: true });
         });
 
-        // Hero stats jump straight to a filtered view
-        $$('[data-goto-filter]').forEach(a => a.addEventListener('click', () => setFilter(a.dataset.gotoFilter)));
+        document.addEventListener('click', function (e) {
+            var a = e.target.closest('[data-topic]');
+            if (a && a.tagName === 'A') {
+                setTopic(a.getAttribute('data-topic'));
+                return;
+            }
+            if (e.target.closest('[data-reset]')) {
+                if (search) search.value = '';
+                query = ''; topic = null;
+                setFilter('all');
+            }
+        });
 
         apply();
     }
 
-    // ------------------------------------------------------------------ cite dialog
+    // ---------------------------------------------------------------- BibTeX dialog
     function initCite() {
-        const dialog = $('#cite-modal');
-        const dataEl = $('#bib-data');
-        if (!dialog || !dataEl) return;
-        let bib = {};
+        var dialog = $('#cite-modal');
+        var dataEl = $('#bib-data');
+        if (!dialog || !dataEl || typeof dialog.showModal !== 'function') {
+            // Old browsers: copy straight to the clipboard instead of opening a dialog
+            document.addEventListener('click', function (e) {
+                var b = e.target.closest('[data-cite]');
+                if (!b || !dataEl) return;
+                var bib = JSON.parse(dataEl.textContent || '{}')[b.getAttribute('data-cite')];
+                if (bib) copyText(bib).then(function (ok) { toast(ok ? 'BibTeX copied' : 'Copy failed'); });
+            });
+            return;
+        }
+        var bib = {};
         try { bib = JSON.parse(dataEl.textContent || '{}'); } catch (e) { return; }
-        const pre = $('#cite-bib');
-        const sub = $('#cite-sub');
-        const copyBtn = $('#cite-copy');
-        let opener = null;
+        var pre = $('#cite-bib');
+        var sub = $('#cite-sub');
+        var opener = null;
 
-        document.addEventListener('click', e => {
-            const btn = e.target.closest('[data-cite]');
-            if (!btn) return;
-            const text = bib[btn.dataset.cite];
+        document.addEventListener('click', function (e) {
+            var b = e.target.closest('[data-cite]');
+            if (!b) return;
+            var text = bib[b.getAttribute('data-cite')];
             if (!text) return;
-            opener = btn;
-            const title = btn.closest('.pub')?.querySelector('.pub-title')?.textContent || '';
+            opener = b;
+            var item = b.closest('.pub');
+            var title = item && $('.pub-title', item);
+            sub.textContent = title ? title.textContent : '';
+            if (title && title.getAttribute('lang')) sub.setAttribute('lang', title.getAttribute('lang'));
+            else sub.removeAttribute('lang');
             pre.textContent = text;
-            sub.textContent = title;
-            if (typeof dialog.showModal === 'function') dialog.showModal();
-            else copyText(text).then(ok => toast(ok ? 'BibTeX copied' : 'Copy failed'));
+            dialog.showModal();
         });
-        dialog.addEventListener('click', e => {
+        dialog.addEventListener('click', function (e) {
             if (e.target === dialog || e.target.closest('[data-close]')) dialog.close();
         });
-        dialog.addEventListener('close', () => { if (opener) opener.focus(); });
-        copyBtn.addEventListener('click', async () => {
-            const ok = await copyText(pre.textContent);
-            toast(ok ? 'BibTeX copied to clipboard' : 'Copy failed — select the text manually');
-            if (ok) dialog.close();
+        dialog.addEventListener('close', function () { if (opener) opener.focus({ preventScroll: true }); });
+        $('#cite-copy').addEventListener('click', function () {
+            copyText(pre.textContent).then(function (ok) {
+                toast(ok ? 'Copied to clipboard' : 'Copy failed. Select the text instead.');
+                if (ok) dialog.close();
+            });
         });
     }
 
-    // ------------------------------------------------------------------ misc
+    // ---------------------------------------------------------------- misc
+    function initCopy() {
+        document.addEventListener('click', function (e) {
+            var b = e.target.closest('[data-copy]');
+            if (!b) return;
+            copyText(b.getAttribute('data-copy')).then(function (ok) { toast(ok ? 'Email address copied' : 'Copy failed'); });
+        });
+    }
+
     function initMisc() {
-        const cr = $('#copyright-text');
+        var cr = $('#copyright-text');
         if (cr) cr.innerHTML = cr.innerHTML.replace(/\d{4}/, String(new Date().getFullYear()));
 
         if ('serviceWorker' in navigator && location.protocol === 'https:') {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js').then(reg => {
-                    reg.addEventListener('updatefound', () => {
-                        const sw = reg.installing;
-                        if (!sw) return;
-                        sw.addEventListener('statechange', () => {
-                            if (sw.state === 'installed' && navigator.serviceWorker.controller) toast('New version available — refresh to update');
-                        });
-                    });
-                }).catch(err => console.warn('[sw] registration failed:', err));
+            window.addEventListener('load', function () {
+                navigator.serviceWorker.register('/sw.js').catch(function (err) { console.warn('[sw]', err); });
             });
         }
     }
 
     function init() {
         initTheme();
-        initNav();
-        initReveal();
+        initHeader();
         initPublications();
         initCite();
+        initCopy();
         initMisc();
     }
-
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
     else init();
 })();
