@@ -15,8 +15,17 @@ Personal academic website for Sang Min Lee, Ph.D. Candidate in Artificial Intell
 ## Publications
 
 - 6 Journal Articles (JNDE, ACI Structural Journal, ASCE J. Structural Engineering, etc.)
-- 19 Conference Proceedings (APCWE, ACEM, EACWE, Structures Congress, etc.)
+- 21 Conference Papers (JCDL, APCWE, ACEM, EACWE, Structures Congress, etc.)
 - 2 Registered Patents (Korea)
+
+## Editing content
+
+All content lives in `contents/`:
+
+- `publications.yml` — every publication (type, year, authors, title, venue, links). Counts, filters, BibTeX, and JSON-LD are generated from it.
+- `publications.bib` — curated BibTeX for entries that reference it via `bib:`; the rest are generated.
+- `config.yml` — name, tagline, profile facts, Google Scholar metrics, contact links.
+- `*.md` — bio (`home.md`), education, experiences, projects, patents, awards, services, research interests.
 
 ## Build
 

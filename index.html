@@ -1,21 +1,33 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="no-js">
 
 <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
-    <meta name="description" content="Sang Min Lee - Ph.D. Candidate in AI at Seoul National University. Research: AI for Resilient Infrastructure, Structural Health Monitoring, Wind Engineering, Machine Learning." />
-    <meta name="keywords" content="Sang Min Lee, Seoul National University, AI, Machine Learning, Structural Engineering, Wind Engineering, Deep Learning, SNU" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>{{title}}</title>
+    <meta name="description" content="{{description}}" />
+    <meta name="keywords" content="Sang Min Lee, 이상민, Seoul National University, AI, Machine Learning, Structural Health Monitoring, Impact-Echo, Non-Destructive Testing, Wind Engineering, Concrete, LLM, RAG" />
     <meta name="author" content="Sang Min Lee" />
     <meta name="robots" content="index, follow" />
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; script-src 'self' 'unsafe-inline'; script-src-attr 'unsafe-inline'; worker-src 'self'; connect-src 'self'; base-uri 'self'; form-action 'self'" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net; img-src 'self' data: https:; script-src 'self' 'unsafe-inline'; worker-src 'self'; connect-src 'self'; base-uri 'self'; form-action 'self'" />
     <meta http-equiv="X-Content-Type-Options" content="nosniff" />
     <meta name="referrer" content="strict-origin-when-cross-origin" />
 
+    <!-- Theme bootstrap: runs before first paint to avoid a light/dark flash -->
+    <script>
+        (function () {
+            var d = document.documentElement, t = null;
+            d.classList.remove('no-js'); d.classList.add('js');
+            try { t = localStorage.getItem('theme'); } catch (e) {}
+            if (t !== 'light' && t !== 'dark') t = window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+            d.setAttribute('data-theme', t);
+        })();
+    </script>
+
     <!-- Open Graph -->
-    <meta property="og:title" content="Sang Min Lee - AI for Resilient Infrastructure" />
-    <meta property="og:description" content="Sang Min Lee - Ph.D. Candidate in AI at Seoul National University. Research: AI for Resilient Infrastructure, Structural Health Monitoring, Wind Engineering, Machine Learning." />
-    <meta property="og:type" content="website" />
+    <meta property="og:title" content="{{title}}" />
+    <meta property="og:description" content="{{description}}" />
+    <meta property="og:type" content="profile" />
     <meta property="og:url" content="https://concrete-sangminlee.github.io/" />
     <meta property="og:image" content="https://concrete-sangminlee.github.io/static/assets/img/photo.jfif" />
     <meta property="og:image:width" content="200" />
@@ -23,11 +35,12 @@
     <meta property="og:image:alt" content="Sang Min Lee" />
     <meta name="twitter:card" content="summary" />
     <link rel="canonical" href="https://concrete-sangminlee.github.io/" />
-    <meta name="theme-color" content="#050505" />
-    <meta name="color-scheme" content="dark" />
+    <meta name="theme-color" content="#f8f7f4" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0b0d11" media="(prefers-color-scheme: dark)" />
+    <meta name="color-scheme" content="light dark" />
     <link rel="manifest" href="manifest.json" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
 
     <!-- JSON-LD Structured Data -->
     <script type="application/ld+json" id="json-ld-articles">{"@context":"https://schema.org","@graph":[]}</script>
@@ -36,6 +49,7 @@
         "@context": "https://schema.org",
         "@type": "Person",
         "name": "Sang Min Lee",
+        "alternateName": "이상민",
         "givenName": "Sang Min",
         "familyName": "Lee",
         "email": "mailto:201612445@snu.ac.kr",
@@ -51,7 +65,7 @@
             "https://scholar.google.com/citations?user=ogvd_LsAAAAJ&hl=en",
             "https://orcid.org/0000-0002-6822-5252"
         ],
-        "knowsAbout": ["Machine Learning", "Wind Engineering", "Structural Health Monitoring", "Concrete", "Non-Destructive Testing", "Artificial Intelligence", "Deep Learning"],
+        "knowsAbout": ["Machine Learning", "Wind Engineering", "Structural Health Monitoring", "Concrete", "Non-Destructive Testing", "Artificial Intelligence", "Deep Learning", "Retrieval-Augmented Generation"],
         "award": [
             "SNU AI Fellowship (2025, 2026)",
             "SNU AI Paper Competition Excellence Award (2025)",
@@ -92,208 +106,138 @@
     }
     </script>
 
-    <title id="title">Sang Min Lee</title>
-
-    <!-- Icon -->
+    <!-- Icons -->
     <link rel="icon" type="image/png" sizes="32x32" href="static/assets/favicon-32.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="static/assets/apple-touch-icon.png" />
     <link rel="preload" as="image" href="static/assets/img/photo.webp" type="image/webp" fetchpriority="high" />
 
-    <!-- Google Fonts (async, non-blocking) -->
+    <!-- Fonts (async, non-blocking): Pretendard (Latin + Hangul), Instrument Serif (display), JetBrains Mono (labels) -->
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&amp;family=Inter:wght@300;400;500;600&amp;display=swap" onload="this.onload=null;this.rel='stylesheet'">
-    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&amp;family=Inter:wght@300;400;500;600&amp;display=swap"></noscript>
+    <link rel="preload" as="style" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&amp;family=JetBrains+Mono:wght@400;500;600&amp;display=swap" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&amp;family=JetBrains+Mono:wght@400;500;600&amp;display=swap">
+    </noscript>
 
     <!-- INLINE_CSS_HERE: build.js replaces this comment with <style>...</style> -->
     <link rel="stylesheet" href="static/css/main.css" />
 
-    <!-- Core JS-->
-    <script type="text/javascript" src="static/js/scripts.js" defer></script>
-
+    <script src="static/js/scripts.js" defer></script>
 </head>
 
 <body id="page-top">
+    <!-- SVG icon sprite -->
+    <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+        <symbol id="i-mail" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="m3.5 7.5 8.5 6 8.5-6"/></symbol>
+        <symbol id="i-github" viewBox="0 0 24 24"><path fill="currentColor" stroke="none" d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.58.1.79-.25.79-.56v-1.96c-3.2.7-3.87-1.54-3.87-1.54-.52-1.33-1.28-1.69-1.28-1.69-1.05-.71.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.76 2.7 1.25 3.36.96.1-.75.4-1.25.73-1.54-2.55-.29-5.24-1.28-5.24-5.69 0-1.26.45-2.28 1.19-3.09-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.77 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.83 1.19 3.09 0 4.42-2.69 5.39-5.26 5.68.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5Z"/></symbol>
+        <symbol id="i-scholar" viewBox="0 0 24 24"><path d="M22 9.5 12 4.5 2 9.5l10 5 10-5Z"/><path d="M6 11.5v5c3.5 2.6 8.5 2.6 12 0v-5"/><path d="M22 9.5v5.5"/></symbol>
+        <symbol id="i-orcid" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5"/><path d="M8.5 10v6.5"/><path d="M8.5 7.4v.1"/><path d="M11.5 7.5h2.25a4.5 4.5 0 0 1 0 9H11.5z"/></symbol>
+        <symbol id="i-pen" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></symbol>
+        <symbol id="i-sparkles" viewBox="0 0 24 24"><path d="M10 3.5 11.7 8.3 16.5 10l-4.8 1.7L10 16.5l-1.7-4.8L3.5 10l4.8-1.7Z"/><path d="M18 14.5l.9 2.6 2.6.9-2.6.9-.9 2.6-.9-2.6-2.6-.9 2.6-.9Z"/></symbol>
+        <symbol id="i-arrow-ur" viewBox="0 0 24 24"><path d="M7 17 17 7"/><path d="M8 7h9v9"/></symbol>
+        <symbol id="i-arrow-up" viewBox="0 0 24 24"><path d="M12 19V5"/><path d="m5.5 11.5 6.5-6.5 6.5 6.5"/></symbol>
+        <symbol id="i-arrow-down" viewBox="0 0 24 24"><path d="M12 5v14"/><path d="m5.5 12.5 6.5 6.5 6.5-6.5"/></symbol>
+        <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M4.6 4.6 6 6M18 18l1.4 1.4M2.5 12h2M19.5 12h2M4.6 19.4 6 18M18 6l1.4-1.4"/></symbol>
+        <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20.5 13.2A8.5 8.5 0 1 1 10.8 3.5a6.6 6.6 0 0 0 9.7 9.7Z"/></symbol>
+        <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol>
+        <symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+        <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.7-3.7"/></symbol>
+        <symbol id="i-file" viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8Z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h4"/></symbol>
+        <symbol id="i-braces" viewBox="0 0 24 24"><path d="M8 3H7a2 2 0 0 0-2 2v4.5A2.5 2.5 0 0 1 2.5 12 2.5 2.5 0 0 1 5 14.5V19a2 2 0 0 0 2 2h1"/><path d="M16 21h1a2 2 0 0 0 2-2v-4.5a2.5 2.5 0 0 1 2.5-2.5A2.5 2.5 0 0 1 19 9.5V5a2 2 0 0 0-2-2h-1"/></symbol>
+        <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3.5v11"/><path d="m7 10 5 5 5-5"/><path d="M4.5 20.5h15"/></symbol>
+        <symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4.5A1.5 1.5 0 0 1 3 13.5v-9A1.5 1.5 0 0 1 4.5 3h9A1.5 1.5 0 0 1 15 4.5V5"/></symbol>
+        <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 21s-7-6.1-7-11.5a7 7 0 0 1 14 0C19 14.9 12 21 12 21Z"/><circle cx="12" cy="9.5" r="2.5"/></symbol>
+        <symbol id="i-building" viewBox="0 0 24 24"><path d="M3 21h18"/><path d="M5 21V9l7-5 7 5v12"/><path d="M9.5 21v-5h5v5"/><path d="M9.5 11.5h.01M14.5 11.5h.01"/></symbol>
+        <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4.5 21a7.5 7.5 0 0 1 15 0"/></symbol>
+        <symbol id="i-award" viewBox="0 0 24 24"><circle cx="12" cy="9" r="6"/><path d="m8.6 13.9-1.6 7.6 5-3 5 3-1.6-7.6"/></symbol>
+        <symbol id="i-layers" viewBox="0 0 24 24"><path d="m12 3 9 5-9 5-9-5 9-5Z"/><path d="m3 12.5 9 5 9-5"/><path d="m3 16.5 9 5 9-5"/></symbol>
+        <symbol id="i-bulb" viewBox="0 0 24 24"><path d="M9 18h6"/><path d="M10 21.5h4"/><path d="M12 2.5a6.5 6.5 0 0 0-3.9 11.7c.6.5.9 1.2.9 2V16h6v-.8c0-.8.3-1.5.9-2A6.5 6.5 0 0 0 12 2.5Z"/></symbol>
+        <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 4.6a3.5 3.5 0 0 1 0 6.8"/><path d="M18 14.2a6.5 6.5 0 0 1 3.5 5.8"/></symbol>
+        <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></symbol>
+        <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.5"/></symbol>
+    </svg>
+
     <a class="skip-link" href="#main">Skip to content</a>
-    <div class="scroll-progress" aria-hidden="true"></div>
-    <noscript>
-        <div style="padding:2rem;text-align:center;background:#0a0a0a;color:#c8c8c8;font-family:monospace;">
-            <p>This site requires JavaScript for interactive features.</p>
-            <p lang="ko">이 사이트는 인터랙티브 기능을 위해 JavaScript가 필요합니다.</p>
-            <a href="https://github.com/concrete-sangminlee" style="color:#39d353;">Visit GitHub profile</a>
-        </div>
-    </noscript>
-    <main id="main">
-    <!-- Top Section -->
-    <section class="top-section">
-        <canvas id="matrix-canvas" aria-hidden="true"></canvas>
-        <div class="hero-overlay" aria-hidden="true"></div>
-        <div class="hero-scanlines" aria-hidden="true"></div>
-        <div class="hero-corners" aria-hidden="true">
-            <span class="corner tl"></span>
-            <span class="corner tr"></span>
-            <span class="corner bl"></span>
-            <span class="corner br"></span>
-        </div>
-        <div class="top-section-content">
-            <div class="container px-5">
-                <div class="row align-items-center">
-                    <div class="col-lg-8 col-md-7">
-                        <p class="hero-prompt">$ ./portfolio --init --user="sangmin"</p>
-                        <h1 class="hero-name"><span id="hero-typed-name">SANG MIN LEE</span><span class="hero-cursor" aria-hidden="true"></span></h1>
-                        <h2 id="top-section-bg-text"></h2>
-                        <div class="hero-terminal-input">
-                            <span class="g">$</span>
-                            <input type="text" id="hero-cmd-input" class="hero-cmd-field"
-                                   placeholder="type 'help' for commands..."
-                                   autocomplete="off" spellcheck="false" aria-label="Terminal command input">
-                        </div>
-                        <div id="hero-cmd-output" class="hero-cmd-output" aria-live="polite"></div>
-                    </div>
-                    <div class="col-lg-4 col-md-5 text-center mt-4 mt-md-0">
-                        <div class="hero-photo-wrap">
-                            <img src="static/assets/img/photo.jfif" alt="Sang Min Lee" class="hero-photo" loading="eager" fetchpriority="high" width="200" height="200">
-                        </div>
-                    </div>
-                </div>
+
+    <!-- Navigation -->
+    <header class="nav" id="nav">
+        <div class="wrap nav-inner">
+            <a class="brand" href="#page-top" aria-label="Sang Min Lee — back to top">
+                <span class="brand-mark" aria-hidden="true">SL</span>
+                <span class="brand-name">{{name}}</span>
+            </a>
+            <nav aria-label="Primary">
+                <ul class="nav-links">
+                    <!-- @SLOT:nav -->
+                </ul>
+            </nav>
+            <div class="nav-actions">
+                <button class="icon-btn theme-toggle js-only" type="button" aria-label="Toggle dark mode" title="Toggle theme">
+                    <svg class="icon i-sun" aria-hidden="true"><use href="#i-sun"/></svg>
+                    <svg class="icon i-moon" aria-hidden="true"><use href="#i-moon"/></svg>
+                </button>
+                <button class="icon-btn menu-btn js-only" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-menu">
+                    <svg class="icon i-menu" aria-hidden="true"><use href="#i-menu"/></svg>
+                    <svg class="icon i-close" aria-hidden="true"><use href="#i-close"/></svg>
+                </button>
             </div>
         </div>
-    </section>
-    <!-- Top Section -->
+        <nav class="mobile-menu" id="mobile-menu" aria-label="Mobile" hidden>
+            <ul>
+                <!-- @SLOT:nav -->
+            </ul>
+        </nav>
+    </header>
 
-    <!-- Home -->
-    <section id="home">
-        <div class="container px-5">
-            <header>
-                <h2 id="home-subtitle"> </h2>
-            </header>
-            <div class="main-body" id="home-md"></div>
-        </div>
-    </section>
-    <!-- Home -->
-
-    <!-- Education -->
-    <section id="education">
-        <div class="container px-5">
-            <header>
-                <h2 id="education-subtitle">EDUCATION</h2>
-            </header>
-            <div class="main-body" id="education-md"></div>
-        </div>
-    </section>
-    <!-- Education -->
-
-    <!-- Experiences -->
-    <section id="experiences">
-        <div class="container px-5">
-            <header>
-                <h2 id="experiences-subtitle">EXPERIENCES</h2>
-            </header>
-            <div class="main-body" id="experiences-md"></div>
-        </div>
-    </section>
-    <!-- Experiences -->
-
-    <!-- Research Interests -->
-    <section id="research-interests">
-        <div class="container px-5">
-            <header>
-                <h2 id="research-interests-subtitle">RESEARCH INTERESTS</h2>
-            </header>
-            <div class="main-body" id="research-interests-md"></div>
-        </div>
-    </section>
-    <!-- Research Interests -->
-
-    <!-- Publications -->
-    <section id="publications">
-        <div class="container px-5">
-            <header>
-                <h2 id="publications-subtitle">PUBLICATIONS</h2>
-            </header>
-            <div class="main-body" id="publications-md"></div>
-
-        </div>
-    </section>
-    <!-- Publications  -->
-
-    <!-- Projects -->
-    <section id="projects">
-        <div class="container px-5">
-            <header>
-                <h2 id="projects-subtitle">RESEARCH PROJECTS</h2>
-            </header>
-            <div class="main-body" id="projects-md"></div>
-
-        </div>
-    </section>
-    <!-- Projects -->
-
-    <!-- Patents -->
-    <section id="patents">
-        <div class="container px-5">
-            <header>
-                <h2 id="patents-subtitle">PATENTS</h2>
-            </header>
-            <div class="main-body" id="patents-md"></div>
-
-        </div>
-    </section>
-    <!-- Patents -->
-
-    <!-- Awards -->
-    <section id="awards">
-        <div class="container px-5">
-            <header>
-                <h2 id="awards-subtitle">AWARDS</h2>
-            </header>
-            <div class="main-body" id="awards-md"></div>
-
-        </div>
-    </section>
-    <!-- Awards -->
-
-    <!-- Services -->
-    <section id="services">
-        <div class="container px-5">
-            <header>
-                <h2 id="services-subtitle">SERVICES &amp; MEMBERSHIPS</h2>
-            </header>
-            <div class="main-body" id="services-md"></div>
-
-        </div>
-    </section>
-    <!-- Services -->
-
-    <!-- Contact -->
-    <section id="contact">
-        <div class="container px-5">
-            <header>
-                <h2 id="contact-subtitle">CONTACT</h2>
-            </header>
-            <address class="contact-grid" id="contact-grid"></address>
-        </div>
-    </section>
-    <!-- Contact -->
+    <main id="main">
+        <!-- @SLOT:hero -->
+        <!-- @SLOT:sections -->
     </main>
 
-    <button class="back-to-top" aria-label="Back to top">&uarr;</button>
-
-    <!-- Footer-->
-    <footer class="bg-bottom text-center py-5">
-        <div class="container px-5">
-            <div class="text-white-50 small">
-                <div id="copyright-text" class="mb-2"></div>
-                <a id="github-link" href="https://github.com/concrete-sangminlee" aria-label="GitHub"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg></a>
-                <span class="mx-1">&middot;</span>
-                <a href="/blog/" aria-label="Blog"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg></a>
-                <span class="mx-1">&middot;</span>
-                <a id="license-link" href="https://github.com/concrete-sangminlee/concrete-sangminlee.github.io/blob/master/LICENSE" aria-label="License"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/></svg></a>
-                <div class="footer-tech">Built with vanilla JS, CSS & Markdown</div>
+    <footer class="footer">
+        <div class="wrap footer-inner">
+            <div>
+                <span id="copyright-text">{{copyright-text}}</span>
+                <span aria-hidden="true"> · </span>
+                <span>Updated <time datetime="{{build-date}}">{{build-date-label}}</time></span>
             </div>
+            <ul class="footer-links">
+                <li><a href="https://github.com/concrete-sangminlee">GitHub</a></li>
+                <li><a href="/blog/">Blog</a></li>
+                <li><a href="/sequence-arena/">Sequence Arena</a></li>
+                <li><a href="publications.bib" download>BibTeX</a></li>
+                <li><a href="https://github.com/concrete-sangminlee/concrete-sangminlee.github.io/blob/master/LICENSE">License</a></li>
+            </ul>
         </div>
     </footer>
 
+    <button class="icon-btn to-top js-only" type="button" aria-label="Back to top">
+        <svg class="icon" aria-hidden="true"><use href="#i-arrow-up"/></svg>
+    </button>
+
+    <!-- BibTeX dialog -->
+    <dialog class="modal" id="cite-modal" aria-labelledby="cite-title">
+        <div class="modal-head">
+            <h3 id="cite-title">Cite this work</h3>
+            <button class="icon-btn" type="button" data-close aria-label="Close">
+                <svg class="icon" aria-hidden="true"><use href="#i-close"/></svg>
+            </button>
+        </div>
+        <p class="modal-sub" id="cite-sub"></p>
+        <pre class="bib-pre" id="cite-bib"></pre>
+        <div class="modal-foot">
+            <button class="btn btn-sm" type="button" data-close>Close</button>
+            <button class="btn btn-sm btn-primary" type="button" id="cite-copy">
+                <svg class="icon" aria-hidden="true"><use href="#i-copy"/></svg>
+                Copy BibTeX
+            </button>
+        </div>
+    </dialog>
+
+    <script type="application/json" id="bib-data">{}</script>
 </body>
 
 </html>

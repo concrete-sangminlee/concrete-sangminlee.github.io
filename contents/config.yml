@@ -1,38 +1,54 @@
-title: Sang Min Lee
-page-top-title: Sang Min Lee
-top-section-bg-text: AI for Resilient Infrastructure
-home-subtitle: Sang Min Lee | Seoul National University
-copyright-text: '&copy; 2026 Sang Min Lee. All Rights Reserved.'
+# Site-wide settings. Section bodies live in the other files in contents/.
+title: Sang Min Lee — AI for Resilient Infrastructure
+name: Sang Min Lee
+name-ko: 이상민
+role: Ph.D. Candidate in Artificial Intelligence
+# *emphasis* is rendered in the accent colour
+tagline: AI for *resilient infrastructure*
+description: Sang Min Lee (이상민) — Ph.D. Candidate in Artificial Intelligence at Seoul National University. Machine learning for structural health monitoring, non-destructive testing, wind engineering, and LLMs for building codes.
+copyright-text: '&copy; 2026 Sang Min Lee'
 
-# Contact information
+# Quick facts on the profile card (icon: building | user | pin | scholar)
+profile:
+  - icon: building
+    label: Seoul National University
+    sub: Interdisciplinary Program in AI
+  - icon: user
+    label: Prof. Thomas H.-K. Kang
+    sub: Advisor
+  - icon: pin
+    label: Seoul, Republic of Korea
+
+# Google Scholar metrics shown in the hero stats (update manually)
+scholar:
+  url: 'https://scholar.google.com/citations?user=ogvd_LsAAAAJ&hl=en'
+  citations: 11
+  h-index: 2
+  updated: Oct 2026
+
+# Contact cards. code -> icon: EM mail, GH github, GS scholar, ID orcid, BL pen, TM sparkles
 contact:
-  - icon: '✉'
-    code: EM
-    label: EMAIL
+  - code: EM
+    label: Email
     value: 201612445@snu.ac.kr
     url: 'mailto:201612445@snu.ac.kr'
-  - icon: GH
-    code: GH
-    label: GITHUB
-    value: concrete-sangminlee
-    url: 'https://github.com/concrete-sangminlee'
-  - icon: GS
-    code: GS
-    label: GOOGLE SCHOLAR
+  - code: GS
+    label: Google Scholar
     value: Sang Min Lee
     url: 'https://scholar.google.com/citations?user=ogvd_LsAAAAJ&hl=en'
-  - icon: ID
-    code: ID
+  - code: ID
     label: ORCID
     value: 0000-0002-6822-5252
     url: 'https://orcid.org/0000-0002-6822-5252'
-  - icon: BL
-    code: BL
-    label: BLOG
+  - code: GH
+    label: GitHub
+    value: concrete-sangminlee
+    url: 'https://github.com/concrete-sangminlee'
+  - code: BL
+    label: Blog
     value: concrete-sangminlee
     url: '/blog/'
-  - icon: TM
-    code: TM
-    label: THINKMANY
+  - code: TM
+    label: ThinkMany
     value: concrete-sangminlee
     url: '/thinkmany/'

@@ -4,74 +4,53 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="robots" content="noindex" />
-    <title>404 - Page Not Found</title>
+    <meta name="color-scheme" content="light dark" />
+    <title>Page not found · Sang Min Lee</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="/static/assets/favicon-32.png" />
+    <script>
+        (function () {
+            var t = null;
+            try { t = localStorage.getItem('theme'); } catch (e) {}
+            if (t !== 'light' && t !== 'dark') t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-theme', t);
+        })();
+    </script>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root { --bg: #f8f7f4; --surface: #fff; --text: #13151a; --text-2: #444a56; --text-3: #767c88; --line: #e5e2db; --accent: #2343c4; --grid: rgba(19,21,26,.055); }
+        :root[data-theme="dark"] { --bg: #0b0d11; --surface: #12151b; --text: #eceef3; --text-2: #b4b9c5; --text-3: #7e8593; --line: #222732; --accent: #8fa6ff; --grid: rgba(236,238,243,.045); }
+        * { box-sizing: border-box; margin: 0; }
         body {
-            background: #050505;
-            color: #c8c8c8;
-            font-family: 'JetBrains Mono', 'Courier New', monospace;
-            display: flex;
-            align-items: center;
-            justify-content: center;
             min-height: 100vh;
+            display: grid;
+            place-items: center;
             padding: 2rem;
+            background: var(--bg);
+            color: var(--text);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Apple SD Gothic Neo", sans-serif;
+            background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+            background-size: 44px 44px;
         }
-        .container { max-width: 480px; text-align: center; }
-        .code {
-            font-size: 5rem;
-            font-weight: 700;
-            color: #39d353;
-            line-height: 1;
-            margin-bottom: 0.5rem;
-        }
-        .msg {
-            font-size: 0.85rem;
-            color: #888;
-            margin-bottom: 2rem;
-        }
-        .term {
-            background: #0a0a0a;
-            border: 1px solid #222;
-            border-radius: 6px;
-            padding: 1.2rem;
-            text-align: left;
-            font-size: 0.8rem;
-            line-height: 1.8;
-            margin-bottom: 2rem;
-        }
-        .g { color: #39d353; }
-        .err { color: #ff5f57; }
-        .dim { color: #555; }
-        a {
-            color: #39d353;
-            text-decoration: none;
-            border-bottom: 1px solid transparent;
-            transition: border-color 0.2s;
-        }
-        a:hover { border-color: #39d353; }
-        .nav-links { display: flex; gap: 1.5rem; justify-content: center; flex-wrap: wrap; font-size: 0.75rem; }
+        main { max-width: 460px; text-align: center; }
+        .code { font-family: "Instrument Serif", Georgia, serif; font-size: 7rem; line-height: 1; letter-spacing: -.03em; }
+        h1 { margin-top: .75rem; font-size: 1.25rem; font-weight: 650; }
+        p { margin-top: .6rem; color: var(--text-2); line-height: 1.6; }
+        nav { display: flex; flex-wrap: wrap; justify-content: center; gap: .5rem; margin-top: 2rem; }
+        a { display: inline-block; padding: .55rem 1rem; border: 1px solid var(--line); border-radius: 11px; background: var(--surface); color: var(--text); font-size: .9rem; font-weight: 600; text-decoration: none; }
+        a:hover { border-color: var(--accent); color: var(--accent); }
+        a.primary { background: var(--text); border-color: var(--text); color: var(--bg); }
+        a.primary:hover { color: var(--bg); opacity: .9; }
     </style>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" onload="this.onload=null;this.rel='stylesheet'">
-    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap"></noscript>
 </head>
 <body>
-    <div class="container">
-        <div class="code">404</div>
-        <div class="msg">Page not found</div>
-        <div class="term">
-            <span class="g">$</span> cd /unknown<br>
-            <span class="err">cd: /unknown: no such directory</span><br>
-            <span class="g">$</span> <span class="dim">try 'cd /' to go home</span>
-        </div>
-        <div class="nav-links">
-            <a href="/">HOME</a>
-            <a href="/#publications">PUBLICATIONS</a>
-            <a href="/#projects">PROJECTS</a>
-            <a href="https://github.com/concrete-sangminlee">GITHUB</a>
-        </div>
-    </div>
+    <main>
+        <div class="code" aria-hidden="true">404</div>
+        <h1>This page doesn’t exist</h1>
+        <p>The link may be outdated, or the page has moved.</p>
+        <nav aria-label="Helpful links">
+            <a class="primary" href="/">Home</a>
+            <a href="/#publications">Publications</a>
+            <a href="/#contact">Contact</a>
+        </nav>
+    </main>
 </body>
 </html>
