@@ -172,9 +172,7 @@
                 const label = filter === 'all' ? 'publications' : (buttons.find(b => b.dataset.filter === filter)?.firstChild?.textContent || '').toLowerCase();
                 status.textContent = query
                     ? `${shown} result${shown === 1 ? '' : 's'} for “${query}”`
-                    : filter === 'all'
-                        ? `Showing ${shown} ${label} · early work is under its own tab`
-                        : `Showing ${shown} ${label}`;
+                    : `${shown} ${label}`;
             }
         }
 
