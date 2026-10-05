@@ -10,6 +10,9 @@
 #   note     optional badge text (e.g. "Master's thesis")
 #   links    optional map of label -> URL (e.g. paper, doi)
 #   topic    optional research area id from research.yml (ndt | shm | wind | llm | materials)
+#   title_en / title_ko, authors_ko, venue_en / venue_ko, note_ko
+#            translations used by the English and Korean CVs
+#   scope    international | domestic (groups the Korean CV); indexing: SCIE | KCI
 #   date     optional full publication date (YYYY-MM-DD)
 #   abstract optional abstract (shown behind an "Abstract" toggle)
 #   bib      optional key into publications.bib (curated BibTeX; otherwise generated)
@@ -24,6 +27,8 @@
   topic: ndt
   venue: Journal of Nondestructive Evaluation
   details: 44(4), 121
+  indexing: SCIE
+  scope: international
   links:
     paper: https://link.springer.com/article/10.1007/s10921-025-01260-3
   bib: lee2025impactecho
@@ -38,6 +43,8 @@
   topic: shm
   venue: ACI Structural Journal
   details: 122(5)
+  indexing: SCIE
+  scope: international
   links:
     paper: https://www.proquest.com/docview/3249300050?pq-origsite=gscholar&fromopenview=true&sourcetype=Scholarly%20Journals
   bib: lee2025lightweight
@@ -52,6 +59,8 @@
   topic: shm
   venue: Journal of Structural Engineering
   details: 151(12)
+  indexing: SCIE
+  scope: international
   links:
     paper: https://ascelibrary.org/doi/full/10.1061/JSENDH.STENG-14823
   bib: lee2025svdd
@@ -66,6 +75,11 @@
   topic: wind
   venue: 한국풍공학회논문집
   details: 27(4), 135-142
+  title_en: A methodology for predicting expected wind speed from satellite images using artificial neural networks
+  authors_ko: 안병욱, 이동혁, 이상민, 강현구
+  venue_en: Journal of the Wind Engineering Institute of Korea
+  indexing: KCI
+  scope: domestic
   bib: ahn2023windprediction
 
 - type: journal
@@ -75,6 +89,10 @@
   topic: ndt
   venue: 건축(대한건축학회지)
   details: 67(3), 47-50
+  title_en: Machine learning applications for smart impact-echo testing
+  authors_ko: 이상민, 최하진, 강현구
+  venue_en: Review of Architecture and Building Science (Architectural Institute of Korea)
+  scope: domestic
   bib: lee2023smartimpactecho
 
 - type: journal
@@ -84,6 +102,11 @@
   topic: materials
   venue: Journal of the Korea Concrete Institute
   details: 34(5), 505-513
+  title_ko: 기계학습 모형의 콘크리트 압축강도 예측 성능 비교 연구
+  authors_ko: 이상민, 성한석, 강현구
+  venue_ko: 콘크리트학회 논문집
+  indexing: KCI
+  scope: domestic
   bib: lee2022compressive
 
 # -------------------------------------------------------------- Conferences
@@ -93,6 +116,7 @@
   title: "CoMuRAG: Condition-mutated hard negatives for safety-sensitive Korean building-code retrieval"
   topic: llm
   venue: ACM/IEEE Joint Conference on Digital Libraries (JCDL 2026)
+  scope: international
   date: 2026-10
 
 - type: conference
@@ -102,6 +126,10 @@
   topic: ndt
   venue: 한국콘크리트학회 학술대회 논문집
   details: 38(2)
+  title_en: Experimental study on impact-echo response characteristics of defects behind liner plates in nuclear containment buildings
+  authors_ko: 박현규, 이상민, 강현구
+  venue_en: Proceedings of the Korea Concrete Institute Conference
+  scope: domestic
 
 - type: conference
   year: 2026
@@ -109,6 +137,7 @@
   title: Modified impact-echo testing of liner-plate-backed concrete in nuclear containment buildings
   topic: ndt
   venue: ACEM26 / Structures26
+  scope: international
 
 - type: conference
   year: 2026
@@ -117,6 +146,10 @@
   topic: wind
   venue: 한국풍공학회 제29회 학술대회
   details: 29(1), 73-74
+  title_en: Deep learning-based reconstruction of wind load time histories from reduced pressure tap measurements
+  authors_ko: 이상민, 강현구
+  venue_en: Proceedings of the 29th Annual Conference of the Wind Engineering Institute of Korea
+  scope: domestic
 
 - type: conference
   year: 2026
@@ -125,6 +158,10 @@
   topic: ndt
   venue: 한국콘크리트학회 학술대회 논문집
   details: 38(1), 267-268
+  title_en: Development of an edge-AI impact-echo system for detecting internal defects in concrete
+  authors_ko: 이상민, 강현구
+  venue_en: Proceedings of the Korea Concrete Institute Conference
+  scope: domestic
 
 - type: conference
   year: 2026
@@ -133,6 +170,10 @@
   topic: ndt
   venue: 한국콘크리트학회 학술대회 논문집
   details: 38(1), 273-274
+  title_en: Applying impact-echo testing to simulated internal defects in concrete behind liner plates of nuclear containment buildings
+  authors_ko: 박현규, 이상민, 강현구
+  venue_en: Proceedings of the Korea Concrete Institute Conference
+  scope: domestic
 
 - type: conference
   year: 2025
@@ -140,6 +181,7 @@
   title: Retrieval augmented generation for assistance of using wind load design codes
   topic: llm
   venue: The 10th Asia-Pacific Conference on Wind Engineering (APCWE10)
+  scope: international
 
 - type: conference
   year: 2025
@@ -148,6 +190,10 @@
   topic: wind
   venue: 한국콘크리트학회 학술대회 논문집
   details: 37(1), 13-14
+  title_en: Clustering of façade wind pressure coefficients on concrete buildings using deep learning
+  authors_ko: 이상민, 강현구
+  venue_en: Proceedings of the Korea Concrete Institute Conference
+  scope: domestic
 
 - type: conference
   year: 2024
@@ -156,6 +202,10 @@
   topic: shm
   venue: 한국콘크리트학회 학술대회 논문집
   details: 36(2), 345-346
+  title_en: Monitoring of concrete buildings using multiclass deep SVDD
+  authors_ko: 이영인, 이상민, 강현구
+  venue_en: Proceedings of the Korea Concrete Institute Conference
+  scope: domestic
 
 - type: conference
   year: 2024
@@ -164,6 +214,10 @@
   topic: llm
   venue: 한국콘크리트학회 학술대회 논문집
   details: 36(2), 343-344
+  title_en: A large language model framework specialized for building structural design codes using a mixture-of-experts architecture
+  authors_ko: 이상민, 강현구
+  venue_en: Proceedings of the Korea Concrete Institute Conference
+  scope: domestic
 
 - type: conference
   year: 2024
@@ -171,6 +225,7 @@
   title: Multi-sphere deep SVDD for system identification of building structure
   topic: shm
   venue: The 2024 World Congress on Advances in Civil, Environmental, and Materials Research (ACEM24)
+  scope: international
 
 - type: conference
   year: 2024
@@ -179,6 +234,7 @@
   topic: shm
   venue: The 2024 Structures Congress
   details: Seoul, Korea
+  scope: international
 
 - type: conference
   year: 2024
@@ -187,6 +243,8 @@
   topic: shm
   venue: 한국콘크리트학회 학술대회 논문집
   details: 36(1), 57-58
+  venue_en: Proceedings of the Korea Concrete Institute Conference
+  scope: domestic
 
 - type: conference
   year: 2023
@@ -195,6 +253,10 @@
   topic: ndt
   venue: 한국콘크리트학회 학술대회 논문집
   details: 35(1), 187-188
+  title_en: Automating impact-echo testing with machine learning
+  authors_ko: 이상민, 최하진, 강현구
+  venue_en: Proceedings of the Korea Concrete Institute Conference
+  scope: domestic
 
 - type: conference
   year: 2022
@@ -203,6 +265,7 @@
   topic: wind
   venue: 8th European-African Conference on Wind Engineering (EACWE2022)
   details: Bucharest, Romania
+  scope: international
 
 - type: conference
   year: 2022
@@ -211,6 +274,7 @@
   topic: materials
   venue: The 2022 Structures Congress
   details: Seoul, Korea
+  scope: international
 
 - type: conference
   year: 2022
@@ -219,6 +283,10 @@
   topic: materials
   venue: 한국콘크리트학회 학술대회 논문집
   details: 34(1), 179-180
+  title_en: Machine learning-based prediction of concrete compressive strength
+  authors_ko: 이상민, 성한석, 강현구
+  venue_en: Proceedings of the Korea Concrete Institute Conference
+  scope: domestic
 
 - type: conference
   year: 2021
@@ -226,6 +294,7 @@
   title: Prediction of wind pressure coefficients on high-rise building façade using LSTM RNN model for sensor reduction
   topic: wind
   venue: The 2021 World Congress on Advances in Structural Engineering and Mechanics (ASEM21)
+  scope: international
 
 - type: conference
   year: 2021
@@ -234,6 +303,10 @@
   topic: wind
   venue: 한국콘크리트학회 학술대회 논문집
   details: 33(2), 155-156
+  title_en: Prediction of façade wind pressure coefficients on concrete buildings using long short-term memory recurrent neural networks
+  authors_ko: 이상민, 강현구
+  venue_en: Proceedings of the Korea Concrete Institute Conference
+  scope: domestic
 
 - type: conference
   year: 2021
@@ -242,6 +315,10 @@
   topic: wind
   venue: 한국콘크리트학회 학술대회 논문집
   details: 33(1), 189-190
+  title_en: Prediction of façade wind pressure coefficients on concrete buildings using LSTM networks
+  authors_ko: 이상민, 강현구
+  venue_en: Proceedings of the Korea Concrete Institute Conference
+  scope: domestic
 
 # ------------------------------------------------------------------ Theses
 - type: thesis
@@ -251,6 +328,8 @@
   topic: ndt
   venue: Seoul National University
   note: Master's thesis
+  venue_ko: 서울대학교 대학원 건축학과
+  note_ko: 석사학위논문
 
 - type: thesis
   year: 2021
@@ -258,6 +337,11 @@
   title: 조도에 따른 자동 개폐성 차양장치의 설계 및 사물인터넷 기술을 이용한 동작 최적화 알고리즘의 구현에 대한 연구
   venue: Seoul National University
   note: Bachelor's thesis
+  title_en: Design of an illuminance-responsive automatic shading device and an IoT-based motion optimization algorithm
+  authors_ko: 이상민
+  venue_en: Department of Architecture and Architectural Engineering, Seoul National University
+  venue_ko: 서울대학교 공과대학 건축학과
+  note_ko: 학사학위논문
 
 - type: thesis
   year: 2021
@@ -265,6 +349,11 @@
   title: 마이크로그리드 내 에너지저장장치(ESS) 최적 운영 방안에 대한 연구
   venue: Seoul National University
   note: Bachelor's thesis
+  title_en: Optimal operation of energy storage systems (ESS) in microgrids
+  authors_ko: 이상민
+  venue_en: Department of Electrical and Computer Engineering, Seoul National University
+  venue_ko: 서울대학교 공과대학 전기정보공학부
+  note_ko: 학사학위논문
 
 # ------------------------------------------------------- Early publications
 - type: early

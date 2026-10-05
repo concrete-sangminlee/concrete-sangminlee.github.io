@@ -538,6 +538,12 @@ a { color: inherit; text-decoration: none; }
     letter-spacing: -0.012em;
     color: var(--text);
 }
+.pub-trans {
+    margin-top: 1px;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    color: var(--text-3);
+}
 .pub-authors {
     margin-top: 2px;
     font-size: 0.93rem;
