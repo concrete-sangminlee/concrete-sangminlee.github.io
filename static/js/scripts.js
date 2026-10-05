@@ -7,6 +7,31 @@
     var root = document.documentElement;
     var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+    // UI strings (the page language comes from <html lang>)
+    var I18N = {
+        en: {
+            toLight: 'Switch to light theme', toDark: 'Switch to dark theme',
+            menuOpen: 'Open menu', menuClose: 'Close menu',
+            papers: function (n) { return n + (n === 1 ? ' paper' : ' papers'); },
+            removeFilter: 'Remove filter: ',
+            copy: function (f) { return 'Copy ' + f; },
+            copied: function (f) { return f + ' copied'; },
+            copyFailed: 'Copy failed', copyFailedLong: 'Copy failed. Select the text instead.',
+            emailCopied: 'Email address copied'
+        },
+        ko: {
+            toLight: '밝은 화면으로 전환', toDark: '어두운 화면으로 전환',
+            menuOpen: '메뉴 열기', menuClose: '메뉴 닫기',
+            papers: function (n) { return '논문 ' + n + '편'; },
+            removeFilter: '필터 해제: ',
+            copy: function (f) { return f + ' 복사'; },
+            copied: function (f) { return f + '를 복사했습니다'; },
+            copyFailed: '복사하지 못했습니다', copyFailedLong: '복사하지 못했습니다. 텍스트를 직접 선택해 주세요.',
+            emailCopied: '이메일 주소를 복사했습니다'
+        }
+    };
+    var S = I18N[(root.getAttribute('lang') || 'en').slice(0, 2)] || I18N.en;
+
     // ---------------------------------------------------------------- toast
     var toastTimer;
     function toast(msg) {
@@ -49,7 +74,7 @@
         function stored() { try { return localStorage.getItem('theme'); } catch (e) { return null; } }
         function apply(t) {
             root.setAttribute('data-theme', t);
-            if (btn) btn.setAttribute('aria-label', t === 'dark' ? 'Switch to light theme' : 'Switch to dark theme');
+            if (btn) btn.setAttribute('aria-label', t === 'dark' ? S.toLight : S.toDark);
         }
         apply(root.getAttribute('data-theme') || (media.matches ? 'dark' : 'light'));
         if (btn) btn.addEventListener('click', function () {
@@ -86,7 +111,7 @@
             menu.hidden = !open;
             header.classList.toggle('is-open', open);
             btn.setAttribute('aria-expanded', String(open));
-            btn.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+            btn.setAttribute('aria-label', open ? S.menuClose : S.menuOpen);
         }
         if (btn) btn.addEventListener('click', function () { setMenu(menu.hidden); });
         if (menu) menu.addEventListener('click', function (e) { if (e.target.closest('a')) setMenu(false); });
@@ -197,7 +222,7 @@
             state.textContent = '';
             if (topic || query) {
                 var count = document.createElement('span');
-                count.textContent = shown + (shown === 1 ? ' paper' : ' papers');
+                count.textContent = S.papers(shown);
                 state.appendChild(count);
             }
             if (topic) state.appendChild(makeToken(topicNames[topic] || topic, function () { setTopic(null); }));
@@ -210,7 +235,7 @@
             t.appendChild(document.createTextNode(label));
             var b = document.createElement('button');
             b.type = 'button';
-            b.setAttribute('aria-label', 'Remove filter: ' + label);
+            b.setAttribute('aria-label', S.removeFilter + label);
             b.innerHTML = '<svg class="icon" aria-hidden="true"><use href="#i-close"/></svg>';
             b.addEventListener('click', onClear);
             t.appendChild(b);
@@ -304,7 +329,7 @@
             if (!current) return;
             pre.textContent = current[format];
             pre.classList.toggle('is-apa', format === 'apa');
-            copyBtn.textContent = 'Copy ' + LABEL[format];
+            copyBtn.textContent = S.copy(LABEL[format]);
             fmtBtns.forEach(function (b) { b.setAttribute('aria-pressed', String(b.getAttribute('data-format') === format)); });
         }
 
@@ -312,7 +337,7 @@
             document.addEventListener('click', function (e) {
                 var b = e.target.closest('[data-cite]');
                 var entry = b && data[b.getAttribute('data-cite')];
-                if (entry) copyText(entry.bib).then(function (ok) { toast(ok ? 'BibTeX copied' : 'Copy failed'); });
+                if (entry) copyText(entry.bib).then(function (ok) { toast(ok ? S.copied('BibTeX') : S.copyFailed); });
             });
             return;
         }
@@ -344,7 +369,7 @@
         dialog.addEventListener('close', function () { if (opener) opener.focus({ preventScroll: true }); });
         copyBtn.addEventListener('click', function () {
             copyText(pre.textContent).then(function (ok) {
-                toast(ok ? LABEL[format] + ' copied' : 'Copy failed. Select the text instead.');
+                toast(ok ? S.copied(LABEL[format]) : S.copyFailedLong);
                 if (ok) dialog.close();
             });
         });
@@ -384,7 +409,7 @@
         document.addEventListener('click', function (e) {
             var b = e.target.closest('[data-copy]');
             if (!b) return;
-            copyText(b.getAttribute('data-copy')).then(function (ok) { toast(ok ? 'Email address copied' : 'Copy failed'); });
+            copyText(b.getAttribute('data-copy')).then(function (ok) { toast(ok ? S.emailCopied : S.copyFailed); });
         });
     }
 

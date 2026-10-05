@@ -1,0 +1,20 @@
+# Homepage news, newest first. `date` is YYYY or YYYY-MM; `text` is Markdown.
+# `text_ko` is used on the Korean homepage (falls back to `text`).
+- date: 2026-10
+  text: Paper on condition-mutated hard negatives for Korean building-code retrieval at JCDL 2026.
+  text_ko: 조건 변형 하드 네거티브를 활용한 한국어 건축기준 검색 논문을 JCDL 2026에서 발표했습니다.
+- date: 2026-09
+  text: SNU AI Fellowship for Fall 2026, my fourth semester as a fellow.
+  text_ko: 2026년 2학기 SNU AI 펠로우십에 선정되었습니다 (네 번째 학기).
+- date: 2025-10
+  text: Visiting researcher at the National Weather Center, University of Oklahoma (Oct–Nov), hosted by Prof. Yang Hong.
+  text_ko: 미국 오클라호마대학교 National Weather Center에서 방문연구를 했습니다 (10–11월, Yang Hong 교수).
+- date: 2025-08
+  text: Impact-echo paper published in *Journal of Nondestructive Evaluation*, following papers in *Journal of Structural Engineering* (July) and *ACI Structural Journal* (April).
+  text_ko: 임팩트 에코 논문이 *Journal of Nondestructive Evaluation*에 게재되었습니다. 앞서 *Journal of Structural Engineering*(7월)과 *ACI Structural Journal*(4월)에도 논문이 실렸습니다.
+- date: 2025-06
+  text: Excellence Award at the SNU AI Paper Competition.
+  text_ko: 서울대학교 인공지능대학원 논문경진대회에서 우수상을 받았습니다.
+- date: 2025-05
+  text: Organizing committee member, 28th WEIK Annual Conference at SNU.
+  text_ko: 서울대학교에서 열린 제28회 한국풍공학회 학술발표회의 조직위원으로 참여했습니다.

@@ -31,9 +31,11 @@ jobs:
             https://raw.githubusercontent.com/orioncactus/pretendard/v1.3.9/packages/pretendard/dist/public/variable/PretendardVariable.ttf
           fc-cache -f
 
-      - run: npm run cv:pdf
+      - run: npm run render
 
       - uses: actions/upload-artifact@v4
         with:
-          name: cv-pdfs
-          path: dist/cv/*.pdf
+          name: rendered
+          path: |
+            dist/cv/*.pdf
+            dist/static/og/*.png
