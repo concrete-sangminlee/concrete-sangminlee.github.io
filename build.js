@@ -199,11 +199,15 @@ function renderPub(p) {
     }
     links.push(`<button class="link js-only" type="button" data-cite="${esc(p.bibKey)}">BibTeX</button>`);
 
+    const absId = `abs-${p.bibKey}`;
+    if (p.abstract) links.unshift(`<button class="link js-only" type="button" data-abstract="${absId}" aria-expanded="false" aria-controls="${absId}">Abstract</button>`);
+
     const search = [p.title, p.authors, p.venue, p.details, p.note, p.year].filter(Boolean).join(' ').toLowerCase();
     return `<li class="pub" data-type="${p.type}"${p.topic ? ` data-topic="${p.topic}"` : ''} data-search="${esc(search)}">
         <h4 class="pub-title"${langAttr(p.title)}>${esc(p.title)}</h4>
         <p class="pub-authors">${renderAuthors(p.authors)}</p>
         <p class="pub-venue">${venue.join('')}<span class="sep" aria-hidden="true">·</span><span class="pub-type${p.type === 'journal' ? ' is-journal' : ''}">${esc(typeLabel)}</span><span class="pub-links">${links.join('')}</span></p>
+        ${p.abstract ? `<div class="pub-abs" id="${absId}"><p>${esc(p.abstract)}</p></div>` : ''}
     </li>`;
 }
 
@@ -249,9 +253,11 @@ const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', '
 /** "2023.03.-2027.02.(expected)" -> "2023–2027" ; "Oct 2025 - Nov 2025" -> "Oct–Nov 2025" */
 function formatPeriod(raw) {
     const s = raw.replace(/\((expected|present)\)/i, '').trim();
+    if (/present/i.test(s) && /^\d{4}/.test(s)) return range(s);
     const dotted = [...s.matchAll(/(\d{4})\.(\d{2})\.?/g)];
     if (dotted.length === 2) return `${dotted[0][1]}–${dotted[1][1]}`;
     const named = [...s.matchAll(/([A-Z][a-z]{2})[a-z]*\.?\s+(\d{4})/g)];
+    if (named.length === 1 && /present/i.test(raw)) return `${named[0][1]} ${named[0][2]} – present`;
     if (named.length === 2) {
         const [[, m1, y1], [, m2, y2]] = named;
         return y1 === y2 ? `${m1}–${m2} ${y1}` : `${m1} ${y1} – ${m2} ${y2}`;
@@ -272,6 +278,7 @@ function renderCv(src) {
     if (!items.length) return fallback(src);
     return `<ol class="cv">${items.map(it => {
         const expected = /expected/i.test(it.date);
+        const current = /present/i.test(it.date);
         const notes = it.notes.map(n => {
             const kv = n.match(/^([A-Z][A-Za-z ]{2,24}):\s+(.+)$/);
             return kv ? `<li${langAttr(n)}><span class="cv-k">${esc(kv[1])}:</span> ${md(kv[2])}</li>` : `<li${langAttr(n)}>${md(n)}</li>`;
@@ -279,7 +286,7 @@ function renderCv(src) {
         return `<li>
             <p class="cv-when">${esc(formatPeriod(it.date))}</p>
             <div class="cv-what">
-                <p class="cv-title">${md(it.title)}${expected ? '<span class="tag">Expected</span>' : ''}</p>
+                <p class="cv-title">${md(it.title)}${expected ? '<span class="tag">Expected</span>' : ''}${current ? '<span class="tag">Current</span>' : ''}</p>
                 ${it.org ? `<p class="cv-sub"${langAttr(it.org)}>${md(it.org)}</p>` : ''}
                 ${notes ? `<ul class="cv-notes">${notes}</ul>` : ''}
             </div>
@@ -336,47 +343,55 @@ function renderPatents() {
     </li>`).join('')}</ol>`;
 }
 
-/** - **Award name (Korean)** - 2025, 2026 */
-function renderAwards(src) {
-    const items = mdListItems(src).map(l => l.match(/^\*\*(.+?)\*\*\s*[-–—]\s*(.+)$/)).filter(Boolean);
-    if (!items.length) return fallback(src);
-    // newest first by latest year
-    const latest = s => Math.max(...(s.match(/\d{4}/g) || [0]).map(Number));
-    items.sort((a, b) => latest(b[2]) - latest(a[2]));
-    return `<ol class="cv">${items.map(([, name, years]) => {
-        const sub = name.match(/^(.*?)\s*\(([^)]+)\)$/);
-        return `<li>
-            <p class="cv-when">${esc(years)}</p>
-            <div class="cv-what"><p class="cv-title">${esc(sub ? sub[1] : name)}</p>${sub ? `<p class="cv-sub" lang="ko">${esc(sub[2])}</p>` : ''}</div>
-        </li>`;
-    }).join('')}</ol>`;
-}
-
-/** ### Memberships\n- ABBR (Full name)\n### Conference Organization\n- **Name** (2025) - Role, Place */
-function renderService(src) {
-    const parts = src.split(/^###\s+/m).map(s => s.trim()).filter(Boolean);
-    const rows = [];
-    let members = null;
-    for (const part of parts) {
-        const [heading, ...rest] = part.split('\n');
-        const items = mdListItems(rest.join('\n'));
-        if (/member/i.test(heading)) {
-            members = items.map(i => {
-                const m = i.match(/^([A-Z][A-Za-z&]+)\s*\((.+)\)$/);
-                return m ? `<li><abbr title="${esc(m[2])}">${esc(m[1])}</abbr></li>` : `<li>${md(i)}</li>`;
-            }).join('');
-        } else {
-            for (const i of items) {
-                const m = i.match(/^\*\*(.+?)\*\*\s*\(([^)]+)\)\s*[-–—]\s*(.+)$/);
-                if (m) {
-                    const [role, ...where] = m[3].split(',').map(s => s.trim());
-                    rows.push(`<li><p class="cv-when">${esc(m[2])}</p><div class="cv-what"><p class="cv-title">${esc(role)}, ${esc(m[1])}</p>${where.length ? `<p class="cv-sub">${esc(where.join(', '))}</p>` : ''}</div></li>`);
-                } else rows.push(`<li><p class="cv-when"></p><div class="cv-what">${md(i)}</div></li>`);
-            }
-        }
+/**
+ * Grouped CV rows, used by awards.md and services.md:
+ *   ### Group
+ *   - **Name (한글)** [when] - Description
+ * A group named "Earlier" is collapsed behind <details>.
+ */
+function parseGroups(src) {
+    const groups = [];
+    let cur = null;
+    for (const line of src.replace(/\r/g, '').split('\n')) {
+        const h = line.match(/^###\s+(.+)$/);
+        if (h) { cur = { heading: h[1].trim(), items: [] }; groups.push(cur); continue; }
+        const li = line.match(/^\s*[-*]\s+(.+)$/);
+        if (!li) continue;
+        if (!cur) { cur = { heading: '', items: [] }; groups.push(cur); }
+        const m = li[1].match(/^\*\*(.+?)\*\*\s*(?:\[([^\]]+)\])?\s*(?:[-–—]\s*(.+))?$/);
+        if (!m) { cur.items.push({ raw: li[1] }); continue; }
+        let [, name, when, desc] = m;
+        if (!when && desc && /^\d{4}/.test(desc)) { when = desc; desc = ''; }   // legacy "- **Name** - 2025"
+        const ko = name.match(/^(.*?)\s*\(([^)]*[\u3131-\uD79D][^)]*)\)$/);
+        cur.items.push({ name: ko ? ko[1] : name, ko: ko ? ko[2] : '', when: when || '', desc: desc || '' });
     }
-    if (members) rows.push(`<li><p class="cv-when">Member</p><div class="cv-what"><ul class="inline-list">${members}</ul></div></li>`);
-    return rows.length ? `<ol class="cv">${rows.join('')}</ol>` : fallback(src);
+    return groups.filter(g => g.items.length);
+}
+const groupRow = it => it.raw
+    ? `<li><p class="cv-when"></p><div class="cv-what">${md(it.raw)}</div></li>`
+    : `<li>
+        <p class="cv-when">${esc(range(it.when))}</p>
+        <div class="cv-what">
+            <p class="cv-title"${langAttr(it.name)}>${esc(it.name)}${it.ko ? ` <span class="cv-ko" lang="ko">${esc(it.ko)}</span>` : ''}</p>
+            ${it.desc ? `<p class="cv-sub"${langAttr(it.desc)}>${md(it.desc)}</p>` : ''}
+        </div>
+    </li>`;
+function renderGroups(src) {
+    const groups = parseGroups(src);
+    if (!groups.length) return fallback(src);
+    return groups.map((g, i) => {
+        const compact = /member/i.test(g.heading);
+        const row = compact
+            ? it => `<li><p class="cv-when">${esc(range(it.when))}</p><div class="cv-what"><p><span class="cv-title">${esc(it.name)}</span>${it.desc ? `<span class="cv-sub">, ${md(it.desc).toLowerCase()}</span>` : ''}</p></div></li>`
+            : groupRow;
+        const list = `<ol class="cv${compact ? ' cv-compact' : ''}">${g.items.map(row).join('')}</ol>`;
+        if (/^earlier/i.test(g.heading)) {
+            const years = g.items.flatMap(it => String(it.when || '').match(/\d{4}/g) || []).map(Number);
+            const span = years.length ? ` (${Math.min(...years)}–${Math.max(...years)})` : '';
+            return `<details class="cv-more"><summary>${esc(g.heading)}${span}</summary>${list}</details>`;
+        }
+        return `${g.heading ? `<h3 class="cv-group${i === 0 ? ' is-first' : ''}">${esc(g.heading)}</h3>` : ''}${list}`;
+    }).join('');
 }
 
 function renderContact() {
@@ -424,10 +439,11 @@ const SECTIONS = [
     },
     { id: 'patents', title: 'Patents', render: renderPatents },
     { id: 'experience', title: 'Experience', nav: true, render: () => renderCv(readContent('experiences.md')) },
-    { id: 'education', title: 'Education', nav: true, render: () => renderCv(readContent('education.md')) },
     { id: 'projects', title: 'Research projects', render: () => renderProjects(readContent('projects.md')) },
-    { id: 'awards', title: 'Awards', nav: true, render: () => renderAwards(readContent('awards.md')) },
-    { id: 'service', title: 'Service', render: () => renderService(readContent('services.md')) },
+    { id: 'teaching', title: 'Teaching', nav: true, render: () => renderCv(readContent('teaching.md')), meta: 'Teaching assistant<br>Seoul National University' },
+    { id: 'education', title: 'Education', nav: true, render: () => renderCv(readContent('education.md')) },
+    { id: 'awards', title: 'Awards', nav: true, render: () => renderGroups(readContent('awards.md')) },
+    { id: 'service', title: 'Service', render: () => renderGroups(readContent('services.md')) },
     { id: 'contact', title: 'Contact', nav: true, render: renderContact },
 ];
 
@@ -462,6 +478,8 @@ function jsonLd() {
         email: (contacts.find(c => c.url.startsWith('mailto:')) || {}).url,
         sameAs: contacts.filter(c => isExternal(c.url)).map(c => c.url),
         knowsAbout: research.map(r => r.title),
+        award: (parseGroups(readContent('awards.md')).find(g => /honou?rs/i.test(g.heading)) || { items: [] }).items
+            .filter(it => it.name).map(it => `${it.name}${it.ko ? ` (${it.ko})` : ''} (${range(it.when)})`),
     };
     const works = pubs.filter(p => p.type === 'journal' || p.type === 'conference').map(p => {
         const doi = ((bibByKey[p.bib] || '').match(/doi\s*=\s*\{([^}]+)\}/) || [])[1] || p.links?.doi;
@@ -473,7 +491,8 @@ function jsonLd() {
                 const [last, first] = a.split(',').map(s => s.trim());
                 return a === SELF ? { '@id': SITE_URL + '#person' } : { '@type': 'Person', name: first ? `${first} ${last}` : last };
             }),
-            datePublished: String(p.year),
+            datePublished: p.date ? (p.date instanceof Date ? p.date.toISOString() : String(p.date)).slice(0, 10) : String(p.year),
+            ...(p.abstract && { abstract: p.abstract }),
             inLanguage: hasHangul(p.title) ? 'ko' : 'en',
             isPartOf: p.venue ? { '@type': p.type === 'journal' ? 'Periodical' : 'Event', name: p.venue, ...(d.volume && { volumeNumber: d.volume }), ...(d.number && { issueNumber: d.number }) } : undefined,
         };

@@ -1,19 +1,18 @@
-
-**Ph.D.** [2023.03.-2027.02.(expected)]
+**Ph.D. in Artificial Intelligence** [2023.03.-2027.02.(expected)]
 - Interdisciplinary Program in Artificial Intelligence, Seoul National University
-- Field of Study: AI for Resilient Infrastructure
+- Research: AI for resilient infrastructure and wind engineering
 - Advisor: Prof. Thomas H.-K. Kang
 
-**M.S.** [2021.03.-2023.02.]
+**M.S. in Structural Engineering** [2021.03.-2023.02.]
 - Department of Architecture and Architectural Engineering, Seoul National University
-- Field of Study: Structural Engineering
-- Advisor: Prof. Thomas H.-K. Kang
 - Thesis: Machine Learning Application to Automated Impact-Echo Test for Concrete Structures
+- Advisor: Prof. Thomas H.-K. Kang
 
-**B.S.** [2016.03.-2021.02.]
+**B.S. in Architectural Engineering** [2016.03.-2021.02.]
 - Department of Architecture and Architectural Engineering, Seoul National University
-- Double Major in Department of Electrical and Computer Engineering, Seoul National University
+- Double major: Electrical and Computer Engineering (2017–2021)
 
-**High School Diploma** [2013.03.-2016.02.]
-- Korea Science Academy of KAIST
-- Science High School for the Gifted
+**Diploma** [2013.03.-2016.02.]
+- Korea Science Academy of KAIST, science high school for gifted students
+- Senior Vice President, 24th Student Council; Deputy Head of International Affairs, 23rd Student Council
+- Exchange programs at Moscow Chemical Lyceum, Russia (2014) and G.T. (Ellen Yeung) College, Hong Kong (2015)

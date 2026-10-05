@@ -1,6 +1,6 @@
+- **2026.09** SNU AI Fellowship for Fall 2026, my fourth semester as a fellow.
 - **2026** Paper on condition-mutated hard negatives for Korean building-code retrieval at JCDL 2026.
-- **2026** Received the SNU AI Fellowship for the second year.
 - **2025.10** Visiting researcher at the National Weather Center, University of Oklahoma (Oct–Nov), hosted by Prof. Yang Hong.
-- **2025** Journal papers published in *Journal of Nondestructive Evaluation*, *ACI Structural Journal*, and *Journal of Structural Engineering*.
-- **2025** Excellence Award, SNU AI Paper Competition.
-- **2025** Served on the organizing committee of the WEIK Annual Conference.
+- **2025.08** Impact-echo paper published in *Journal of Nondestructive Evaluation*, following papers in *Journal of Structural Engineering* (July) and *ACI Structural Journal* (April).
+- **2025.06** Excellence Award at the SNU AI Paper Competition.
+- **2025.05** Organizing committee member, 28th WEIK Annual Conference at SNU.
