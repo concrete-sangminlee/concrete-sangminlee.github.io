@@ -1,5 +1,5 @@
+- **2026.10** Paper on condition-mutated hard negatives for Korean building-code retrieval at JCDL 2026.
 - **2026.09** SNU AI Fellowship for Fall 2026, my fourth semester as a fellow.
-- **2026** Paper on condition-mutated hard negatives for Korean building-code retrieval at JCDL 2026.
 - **2025.10** Visiting researcher at the National Weather Center, University of Oklahoma (Oct–Nov), hosted by Prof. Yang Hong.
 - **2025.08** Impact-echo paper published in *Journal of Nondestructive Evaluation*, following papers in *Journal of Structural Engineering* (July) and *ACI Structural Journal* (April).
 - **2025.06** Excellence Award at the SNU AI Paper Competition.

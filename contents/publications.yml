@@ -93,6 +93,7 @@
   title: "CoMuRAG: Condition-mutated hard negatives for safety-sensitive Korean building-code retrieval"
   topic: llm
   venue: ACM/IEEE Joint Conference on Digital Libraries (JCDL 2026)
+  date: 2026-10
 
 - type: conference
   year: 2026

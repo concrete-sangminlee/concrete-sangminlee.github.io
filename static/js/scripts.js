@@ -114,6 +114,33 @@
     }
 
     // ---------------------------------------------------------------- publications
+    function escapeRe(t) { return t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+
+    /** Wrap matches of `terms` in <mark> inside el's text nodes. */
+    function highlight(el, terms) {
+        if (!terms.length) return;
+        var re = new RegExp('(' + terms.map(escapeRe).join('|') + ')', 'gi');
+        var walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, null);
+        var nodes = [];
+        while (walker.nextNode()) nodes.push(walker.currentNode);
+        nodes.forEach(function (node) {
+            var text = node.nodeValue;
+            re.lastIndex = 0;
+            if (!re.test(text)) return;
+            var frag = document.createDocumentFragment();
+            text.split(re).forEach(function (part, k) {
+                if (!part) return;
+                if (k % 2 === 1) {
+                    var m = document.createElement('mark');
+                    m.className = 'hl';
+                    m.textContent = part;
+                    frag.appendChild(m);
+                } else frag.appendChild(document.createTextNode(part));
+            });
+            node.parentNode.replaceChild(frag, node);
+        });
+    }
+
     function initPublications() {
         var groupsEl = $('#pub-groups');
         if (!groupsEl) return;
@@ -125,10 +152,30 @@
         var empty = $('#pub-empty');
         var topicNames = {};
         try { topicNames = JSON.parse(state.getAttribute('data-topics') || '{}'); } catch (e) { /* ignore */ }
+        var validFilters = tabs.map(function (b) { return b.getAttribute('data-filter'); });
+
+        // Original markup of the fields we highlight, so each search starts clean
+        var targets = [];
+        pubs.forEach(function (p) {
+            $$('.pub-title, .pub-authors, .pub-venue em', p).forEach(function (el) {
+                targets.push({ el: el, pub: p, html: el.innerHTML });
+            });
+        });
 
         var filter = 'all', topic = null, query = '';
 
-        function apply() {
+        function syncUrl() {
+            if (!window.history || !history.replaceState) return;
+            var params = new URLSearchParams(location.search);
+            ['type', 'topic', 'q'].forEach(function (k) { params.delete(k); });
+            if (filter !== 'all') params.set('type', filter);
+            if (topic) params.set('topic', topic);
+            if (query) params.set('q', query);
+            var qs = params.toString();
+            history.replaceState(history.state, '', location.pathname + (qs ? '?' + qs : '') + location.hash);
+        }
+
+        function apply(opts) {
             var terms = query.toLowerCase().split(/\s+/).filter(Boolean);
             var shown = 0;
             pubs.forEach(function (p) {
@@ -142,6 +189,11 @@
             groups.forEach(function (g) { g.hidden = !g.querySelector('.pub:not([hidden])'); });
             empty.hidden = shown > 0;
 
+            targets.forEach(function (t) {
+                t.el.innerHTML = t.html;
+                if (terms.length && !t.pub.hidden) highlight(t.el, terms);
+            });
+
             state.textContent = '';
             if (topic || query) {
                 var count = document.createElement('span');
@@ -149,6 +201,7 @@
                 state.appendChild(count);
             }
             if (topic) state.appendChild(makeToken(topicNames[topic] || topic, function () { setTopic(null); }));
+            if (!opts || !opts.silent) syncUrl();
         }
 
         function makeToken(label, onClear) {
@@ -164,21 +217,30 @@
             return t;
         }
 
-        function setFilter(f) {
-            filter = f;
-            tabs.forEach(function (b) { b.setAttribute('aria-pressed', String(b.getAttribute('data-filter') === f)); });
-            apply();
+        function setFilter(f, opts) {
+            filter = validFilters.indexOf(f) !== -1 ? f : 'all';
+            tabs.forEach(function (b) { b.setAttribute('aria-pressed', String(b.getAttribute('data-filter') === filter)); });
+            apply(opts);
         }
         function setTopic(t) {
-            topic = t;
-            if (t && filter === 'early') setFilter('all');
+            topic = t && topicNames[t] ? t : null;
+            if (topic && filter === 'early') setFilter('all');
             else apply();
+        }
+        function reset(opts) {
+            if (search) search.value = '';
+            query = ''; topic = null;
+            setFilter('all', opts);
         }
 
         tabs.forEach(function (b) { b.addEventListener('click', function () { setFilter(b.getAttribute('data-filter')); }); });
 
         if (search) {
-            search.addEventListener('input', function () { query = search.value.trim(); apply(); });
+            var timer;
+            search.addEventListener('input', function () {
+                clearTimeout(timer);
+                timer = setTimeout(function () { query = search.value.trim(); apply(); }, 80);
+            });
             search.addEventListener('keydown', function (e) {
                 if (e.key === 'Escape') { search.value = ''; query = ''; apply(); search.blur(); }
             });
@@ -194,64 +256,113 @@
         });
 
         document.addEventListener('click', function (e) {
-            var a = e.target.closest('[data-topic]');
-            if (a && a.tagName === 'A') {
-                setTopic(a.getAttribute('data-topic'));
-                return;
-            }
-            if (e.target.closest('[data-reset]')) {
-                if (search) search.value = '';
-                query = ''; topic = null;
-                setFilter('all');
-            }
+            var a = e.target.closest('a[data-topic]');
+            if (a) { setTopic(a.getAttribute('data-topic')); return; }
+            if (e.target.closest('[data-reset]')) reset();
         });
 
-        apply();
+        // Permalinks (#bibkey): make sure the target is visible, then scroll to it
+        function revealHash() {
+            var id = decodeURIComponent(location.hash.slice(1));
+            var el = id && document.getElementById(id);
+            if (!el || !el.classList.contains('pub')) return;
+            if (el.hidden) {
+                if (search) search.value = '';
+                query = ''; topic = null;
+                setFilter(el.getAttribute('data-type') === 'early' ? 'early' : 'all');
+            }
+            requestAnimationFrame(function () { el.scrollIntoView({ block: 'center' }); });
+        }
+        window.addEventListener('hashchange', revealHash);
+
+        // Initial state from the URL (?type=journal&topic=ndt&q=impact)
+        var params = new URLSearchParams(location.search);
+        if (params.get('q') && search) { search.value = params.get('q'); query = search.value.trim(); }
+        if (params.get('topic') && topicNames[params.get('topic')]) topic = params.get('topic');
+        setFilter(params.get('type') || 'all', { silent: true });
+        revealHash();
+
     }
 
-    // ---------------------------------------------------------------- BibTeX dialog
+    // ---------------------------------------------------------------- cite dialog
     function initCite() {
         var dialog = $('#cite-modal');
         var dataEl = $('#bib-data');
-        if (!dialog || !dataEl || typeof dialog.showModal !== 'function') {
-            // Old browsers: copy straight to the clipboard instead of opening a dialog
+        if (!dialog || !dataEl) return;
+        var data = {};
+        try { data = JSON.parse(dataEl.textContent || '{}'); } catch (e) { return; }
+        var pre = $('#cite-bib');
+        var sub = $('#cite-sub');
+        var copyBtn = $('#cite-copy');
+        var fmtBtns = $$('[data-format]', dialog);
+        var LABEL = { bib: 'BibTeX', apa: 'APA' };
+        var format = 'bib';
+        try { if (localStorage.getItem('citeFormat') === 'apa') format = 'apa'; } catch (e) { /* ignore */ }
+        var current = null, opener = null;
+
+        function render() {
+            if (!current) return;
+            pre.textContent = current[format];
+            pre.classList.toggle('is-apa', format === 'apa');
+            copyBtn.textContent = 'Copy ' + LABEL[format];
+            fmtBtns.forEach(function (b) { b.setAttribute('aria-pressed', String(b.getAttribute('data-format') === format)); });
+        }
+
+        if (typeof dialog.showModal !== 'function') {
             document.addEventListener('click', function (e) {
                 var b = e.target.closest('[data-cite]');
-                if (!b || !dataEl) return;
-                var bib = JSON.parse(dataEl.textContent || '{}')[b.getAttribute('data-cite')];
-                if (bib) copyText(bib).then(function (ok) { toast(ok ? 'BibTeX copied' : 'Copy failed'); });
+                var entry = b && data[b.getAttribute('data-cite')];
+                if (entry) copyText(entry.bib).then(function (ok) { toast(ok ? 'BibTeX copied' : 'Copy failed'); });
             });
             return;
         }
-        var bib = {};
-        try { bib = JSON.parse(dataEl.textContent || '{}'); } catch (e) { return; }
-        var pre = $('#cite-bib');
-        var sub = $('#cite-sub');
-        var opener = null;
 
         document.addEventListener('click', function (e) {
             var b = e.target.closest('[data-cite]');
             if (!b) return;
-            var text = bib[b.getAttribute('data-cite')];
-            if (!text) return;
+            current = data[b.getAttribute('data-cite')];
+            if (!current) return;
             opener = b;
             var item = b.closest('.pub');
             var title = item && $('.pub-title', item);
             sub.textContent = title ? title.textContent : '';
             if (title && title.getAttribute('lang')) sub.setAttribute('lang', title.getAttribute('lang'));
             else sub.removeAttribute('lang');
-            pre.textContent = text;
+            render();
             dialog.showModal();
+        });
+        fmtBtns.forEach(function (b) {
+            b.addEventListener('click', function () {
+                format = b.getAttribute('data-format');
+                try { localStorage.setItem('citeFormat', format); } catch (e) { /* ignore */ }
+                render();
+            });
         });
         dialog.addEventListener('click', function (e) {
             if (e.target === dialog || e.target.closest('[data-close]')) dialog.close();
         });
         dialog.addEventListener('close', function () { if (opener) opener.focus({ preventScroll: true }); });
-        $('#cite-copy').addEventListener('click', function () {
+        copyBtn.addEventListener('click', function () {
             copyText(pre.textContent).then(function (ok) {
-                toast(ok ? 'Copied to clipboard' : 'Copy failed. Select the text instead.');
+                toast(ok ? LABEL[format] + ' copied' : 'Copy failed. Select the text instead.');
                 if (ok) dialog.close();
             });
+        });
+    }
+
+    // ---------------------------------------------------------------- print
+    function initPrint() {
+        var opened = [];
+        window.addEventListener('beforeprint', function () {
+            opened = $$('details.cv-more:not([open])');
+            opened.forEach(function (d) { d.open = true; });
+        });
+        window.addEventListener('afterprint', function () {
+            opened.forEach(function (d) { d.open = false; });
+            opened = [];
+        });
+        document.addEventListener('click', function (e) {
+            if (e.target.closest('[data-print]')) window.print();
         });
     }
 
@@ -294,6 +405,7 @@
         initPublications();
         initCite();
         initAbstracts();
+        initPrint();
         initCopy();
         initMisc();
     }

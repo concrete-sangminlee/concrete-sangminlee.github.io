@@ -166,17 +166,35 @@ function generateBib(p) {
     return { key, text: `@${type}{${key},\n${body}\n}` };
 }
 
+/** APA 7 reference as plain text (no italics in clipboard text). */
+function apa(p) {
+    const doi = ((bibByKey[p.bib] || '').match(/doi\s*=\s*\{([^}]+)\}/) || [])[1] || p.links?.doi;
+    const title = String(p.title).replace(/[.?!]$/, '');
+    const details = p.details ? String(p.details).replace(/(\d)-(\d)/g, '$1–$2') : '';
+    let ref = `${p.authors} (${p.year}). `;
+    if (p.type === 'thesis') {
+        ref += `${title} [${p.note || 'Thesis'}, ${p.venue}].`;
+    } else if (p.type === 'journal') {
+        ref += `${title}. ${p.venue}${details ? `, ${details}` : ''}.`;
+    } else {
+        ref += `${title}${p.note ? ` [${p.note}]` : ''}. ${p.venue}${details ? `, ${details}` : ''}.`;
+    }
+    if (doi) ref += ` https://doi.org/${doi}`;
+    else if (p.links?.paper) ref += ` ${p.links.paper}`;
+    return ref;
+}
+
 const bibData = {};
 const generatedBib = [];
 for (const p of pubs) {
     if (p.bib && bibByKey[p.bib]) {
         p.bibKey = p.bib;
-        bibData[p.bib] = bibByKey[p.bib];
+        bibData[p.bib] = { bib: bibByKey[p.bib], apa: apa(p) };
     } else {
         if (p.bib) console.warn(`build.js: bib key "${p.bib}" not found in publications.bib, generating one`);
         const g = generateBib(p);
         p.bibKey = g.key;
-        bibData[g.key] = g.text;
+        bibData[g.key] = { bib: g.text, apa: apa(p) };
         generatedBib.push(g.text);
     }
 }
@@ -197,13 +215,13 @@ function renderPub(p) {
         const href = k === 'doi' && !isExternal(url) ? `https://doi.org/${url}` : url;
         links.push(`<a class="link" href="${esc(href)}" target="_blank" rel="noopener">${esc(LINK_LABELS[k] || k)}</a>`);
     }
-    links.push(`<button class="link js-only" type="button" data-cite="${esc(p.bibKey)}">BibTeX</button>`);
+    links.push(`<button class="link js-only" type="button" data-cite="${esc(p.bibKey)}">Cite</button>`);
 
     const absId = `abs-${p.bibKey}`;
     if (p.abstract) links.unshift(`<button class="link js-only" type="button" data-abstract="${absId}" aria-expanded="false" aria-controls="${absId}">Abstract</button>`);
 
     const search = [p.title, p.authors, p.venue, p.details, p.note, p.year].filter(Boolean).join(' ').toLowerCase();
-    return `<li class="pub" data-type="${p.type}"${p.topic ? ` data-topic="${p.topic}"` : ''} data-search="${esc(search)}">
+    return `<li class="pub" id="${esc(p.bibKey)}" data-type="${p.type}"${p.topic ? ` data-topic="${p.topic}"` : ''} data-search="${esc(search)}">
         <h4 class="pub-title"${langAttr(p.title)}>${esc(p.title)}</h4>
         <p class="pub-authors">${renderAuthors(p.authors)}</p>
         <p class="pub-venue">${venue.join('')}<span class="sep" aria-hidden="true">·</span><span class="pub-type${p.type === 'journal' ? ' is-journal' : ''}">${esc(typeLabel)}</span><span class="pub-links">${links.join('')}</span></p>
@@ -422,7 +440,7 @@ function renderIntro() {
                     </div>
                     <div class="intro-body">
                         <div class="bio prose">${marked.parse(readContent('home.md'))}</div>
-                        ${links ? `<ul class="intro-links">${links}</ul>` : ''}
+                        ${links ? `<ul class="intro-links">${links}<li class="js-only"><button type="button" data-print>${icon('printer')}Print CV</button></li></ul>` : ''}
                     </div>
                 </div>
             </div>
@@ -451,7 +469,7 @@ const sectionsHtml = SECTIONS.map(s => `<section class="section" id="${s.id}" ar
         <div class="wrap">
             <div class="row">
                 <header>
-                    <h2 class="section-title" id="${s.id}-title">${esc(s.title)}</h2>
+                    <h2 class="section-title" id="${s.id}-title"><a href="#${s.id}" class="anchor">${esc(s.title)}</a></h2>
                     ${s.meta ? `<p class="section-meta">${s.meta}</p>` : ''}
                 </header>
                 <div class="section-body">${s.render()}</div>
