@@ -7,6 +7,18 @@
     <priority>1.0</priority>
   </url>
   <url>
+    <loc>https://concrete-sangminlee.github.io/cv/</loc>
+    <lastmod>2026-10-05</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://concrete-sangminlee.github.io/cv/ko/</loc>
+    <lastmod>2026-10-05</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
     <loc>https://concrete-sangminlee.github.io/sequence-arena/</loc>
     <lastmod>2026-05-30</lastmod>
     <changefreq>weekly</changefreq>

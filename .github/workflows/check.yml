@@ -1,17 +1,13 @@
-name: Build and Deploy
+name: Check
 
+# Builds the site and CV PDFs on pull requests without deploying.
+# The PDFs are attached to the run as an artifact for review.
 on:
-  push:
+  pull_request:
     branches: [master]
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
-
-concurrency:
-  group: pages
-  cancel-in-progress: true
 
 jobs:
   build:
@@ -28,8 +24,6 @@ jobs:
 
       - run: npm run build
 
-      # CV PDFs: headless Chrome prints dist/cv/print-*.html with a locally
-      # installed Pretendard so Hangul renders identically to the website.
       - name: Install Pretendard
         run: |
           mkdir -p ~/.local/share/fonts
@@ -39,16 +33,7 @@ jobs:
 
       - run: npm run cv:pdf
 
-      - uses: actions/upload-pages-artifact@v5
+      - uses: actions/upload-artifact@v4
         with:
-          path: dist
-
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - id: deployment
-        uses: actions/deploy-pages@v5
+          name: cv-pdfs
+          path: dist/cv/*.pdf

@@ -22,14 +22,17 @@ Personal academic website for Sang Min Lee, Ph.D. Candidate in Artificial Intell
 
 All content lives in `contents/`:
 
-- `publications.yml`: every publication (type, year, authors, title, venue, topic, links). Counts, filters, BibTeX, and JSON-LD are generated from it.
+- `profile.yml`: education, experience, projects, patents, teaching, awards, certifications, service, skills. Every text field can have a Korean counterpart with the `_ko` suffix (`title_ko`, `notes_ko`, ...), which the Korean CV uses.
+- `publications.yml`: every publication. Optional `title_en` / `title_ko`, `authors_ko`, `venue_en` / `venue_ko`, `scope` (international | domestic), and `indexing` (SCIE | KCI) feed the CVs.
 - `publications.bib`: curated BibTeX for entries that reference it via `bib:`. The rest are generated.
 - `research.yml`: research areas. Each `id` matches a publication `topic`.
 - `news.md`: one line per item, `- **2026.03** Text` (month optional).
 - `config.yml`: name, role, description, contact links.
-- `teaching.md`: courses, in the same `**Title** [years]` block format as experiences.
-- `awards.md`, `services.md`: `### Group` headings with `- **Name** [when] - description` lines. A group named "Earlier" is collapsed.
-- `home.md`: bio. The other `*.md` files are education, experiences, projects, patents, awards, and services.
+- `home.md`: the homepage bio.
+
+## CVs
+
+The build writes an English CV at `/cv/` and a Korean CV at `/cv/ko/`, both generated from the same data as the homepage. In CI, `npm run cv:pdf` prints them to `/cv/Sang-Min-Lee-CV.pdf` and `/cv/Sang-Min-Lee-CV-ko.pdf` with headless Chrome and a locally installed Pretendard. To make the PDFs locally, run `npm run build && npm run cv:pdf` (set `CHROME=/path/to/chrome` if Chrome isn't on `PATH`).
 
 ## Build
 

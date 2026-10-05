@@ -1,0 +1,396 @@
+# CV data: the single source for the homepage, the English CV, and the Korean CV.
+#
+# Any text field can have a Korean counterpart with the suffix `_ko`
+# (title -> title_ko, notes -> notes_ko, ...). The Korean CV uses the `_ko`
+# value when present and falls back to the English one otherwise.
+#
+# Dates are "YYYY-MM" or "YYYY". `end: present` marks an ongoing entry and
+# `expected: true` marks a planned end date.
+# `cv: false` keeps an entry on the homepage but out of both CVs;
+# `web: false` does the opposite.
+
+education:
+  - degree: Ph.D. in Artificial Intelligence
+    degree_ko: 박사과정 (인공지능전공)
+    org: Interdisciplinary Program in Artificial Intelligence, Seoul National University
+    org_ko: 서울대학교 협동과정 인공지능전공
+    start: 2023-03
+    end: 2027-02
+    expected: true
+    notes:
+      - "Research: AI for resilient infrastructure and wind engineering"
+      - "Advisor: Prof. Thomas H.-K. Kang"
+    notes_ko:
+      - "연구 분야: 회복탄력적 인프라를 위한 인공지능, 풍공학"
+      - "지도교수: 강현구"
+
+  - degree: M.S. in Structural Engineering
+    degree_ko: 공학석사 (건축구조)
+    org: Department of Architecture and Architectural Engineering, Seoul National University
+    org_ko: 서울대학교 공과대학 건축학과
+    start: 2021-03
+    end: 2023-02
+    notes:
+      - "Thesis: Machine Learning Application to Automated Impact-Echo Test for Concrete Structures"
+      - "Advisor: Prof. Thomas H.-K. Kang"
+    notes_ko:
+      - "학위논문: Machine Learning Application to Automated Impact-Echo Test for Concrete Structures"
+      - "지도교수: 강현구"
+
+  - degree: B.S. in Architectural Engineering
+    degree_ko: 공학사 (건축공학)
+    org: Department of Architecture and Architectural Engineering, Seoul National University
+    org_ko: 서울대학교 공과대학 건축학과
+    start: 2016-03
+    end: 2021-02
+    notes:
+      - "Double major: Electrical and Computer Engineering (2017–2021)"
+    notes_ko:
+      - "복수전공: 서울대학교 공과대학 전기정보공학부 (2017–2021)"
+
+  - degree: Diploma
+    degree_ko: 졸업
+    org: Korea Science Academy of KAIST, science high school for gifted students
+    org_ko: KAIST 부설 한국과학영재학교
+    start: 2013-03
+    end: 2016-02
+    notes:
+      - Senior Vice President, 24th Student Council; Deputy Head of International Affairs, 23rd Student Council
+      - Exchange programs at Moscow Chemical Lyceum, Russia (2014) and G.T. (Ellen Yeung) College, Hong Kong (2015)
+    notes_ko:
+      - 제24대 학생회 부회장, 제23대 학생회 국제부 차장
+      - "교환학생: Moscow Chemical Lyceum, 러시아 (2014), G.T. (Ellen Yeung) College, 홍콩 (2015)"
+
+experience:
+  - title: Graduate Research Assistant
+    title_ko: 대학원 연구원
+    org: Hi-performance Structural Engineering Lab, Seoul National University
+    org_ko: 서울대학교 고성능구조공학연구실 (HpSE)
+    start: 2021-03
+    end: present
+    notes:
+      - "Advisor: Prof. Thomas H.-K. Kang"
+      - Machine learning for impact-echo testing, structural health monitoring, wind engineering, and building codes
+    notes_ko:
+      - "지도교수: 강현구"
+      - 임팩트 에코 검사, 구조 건전성 모니터링, 풍공학, 건축구조기준을 위한 기계학습 연구
+
+  - title: Visiting Researcher
+    title_ko: 방문연구원
+    org: National Weather Center, University of Oklahoma, Norman, OK, USA
+    org_ko: National Weather Center, University of Oklahoma (미국 오클라호마주 노먼)
+    start: 2025-10
+    end: 2025-11
+    notes:
+      - Hydrometeorology and Remote Sensing Lab, hosted by Prof. Yang Hong
+      - Visiting student, School of Civil Engineering and Environmental Sciences, Gallogly College of Engineering
+      - Collaborated on machine learning for remote sensing and wind engineering
+    notes_ko:
+      - Hydrometeorology and Remote Sensing Lab (Yang Hong 교수)
+      - School of Civil Engineering and Environmental Sciences 방문학생
+      - 원격탐사 및 풍공학 분야 기계학습 공동연구
+
+  - title: Machine Learning Engineer (Intern)
+    title_ko: 머신러닝 엔지니어 (인턴)
+    org: Gentoo, Waddle Corporation, Seoul, Korea
+    org_ko: 와들 (Gentoo), 서울
+    start: 2024-09
+    end: 2025-02
+    notes:
+      - Built an LLM-as-a-judge system with a user simulator and an LLM evaluator
+      - Aligned the LLM evaluator with human judgments
+    notes_ko:
+      - 사용자 시뮬레이터와 LLM 평가기를 포함한 LLM-as-a-Judge 시스템 개발
+      - LLM 평가기와 사람 평가 간 정렬
+
+  - title: Undergraduate Research Assistant
+    title_ko: 학부연구생
+    org: Seoul National University
+    org_ko: 서울대학교
+    start: 2018-12
+    end: 2021-02
+    notes:
+      - "Jan–Feb 2021, HpSE Lab: wind pressure coefficient prediction for wind-resistant building design"
+      - "Oct 2019 – Feb 2020, SNUCEM: AHP analysis for improving military dining facilities"
+      - "Dec 2018 – Feb 2019, AEPRL: designed and built an IoT device (hardware and software) that detects surface condensation indoors"
+    notes_ko:
+      - "2021.01–2021.02, HpSE 연구실: 내풍설계를 위한 풍압계수 예측"
+      - "2019.10–2020.02, SNUCEM: 군 급식시설 개선을 위한 AHP 분석"
+      - "2018.12–2019.02, AEPRL: 실내 표면결로 감지 IoT 장치 설계 및 제작 (하드웨어·소프트웨어)"
+
+  - title: Research Engineer (Intern)
+    title_ko: 연구원 (인턴)
+    org: Chungyeon Architects (친환경계획그룹 청연건축사사무소), Seoul, Korea
+    org_ko: 친환경계획그룹 청연건축사사무소, 서울
+    start: 2018-07
+    end: 2018-08
+    notes:
+      - Data analysis for building energy performance evaluation with ECO2, AutoCAD, and Python
+    notes_ko:
+      - ECO2, AutoCAD, Python을 활용한 건축물 에너지성능평가 데이터 분석
+
+projects:
+  - title: Hyper-converged Forensic Research Center for Infrastructure
+    title_ko: 초융합 인프라 포렌식 연구센터
+    funder: NRF Korea, funded by MSIT
+    funder_ko: 한국연구재단, 과학기술정보통신부
+    start: 2021
+    end: 2027
+  - title: Smart City Innovative Technology Demonstration Project
+    title_ko: 스마트시티 혁신기술 실증사업
+    funder: KAIA, funded by MOLIT
+    funder_ko: 국토교통과학기술진흥원, 국토교통부
+    start: 2024
+    end: 2025
+  - title: AI for Construction Research Project
+    title_ko: 건설 인공지능 연구과제
+    funder: SNU, funded by Sejong Construction
+    funder_ko: 서울대학교, 세종건설
+    start: 2024
+  - title: Outstanding Patent Prototype Development Project
+    title_ko: 우수특허 시제품 제작 지원사업
+    funder: Seoul National University
+    funder_ko: 서울대학교
+    start: 2023
+
+patents:
+  - title: AI-based defect detection system inside concrete members
+    title_ko: 인공지능 기반 콘크리트 부재 내부 결함 탐지 시스템
+    inventors: Lee, S. M., & Kang, T. H.-K.
+    inventors_ko: 이상민, 강현구
+    number: 10-2611457
+    year: 2023
+  - title: Wind load estimation system based on artificial intelligence
+    title_ko: 인공지능 기반 풍하중 추정 시스템
+    inventors: Lee, S. M., & Kang, T. H.-K.
+    inventors_ko: 이상민, 강현구
+    number: 10-2480382
+    year: 2022
+
+teaching:
+  - course: Architecture and AI
+    course_ko: 건축과 인공지능
+    start: 2022
+    end: 2024
+    terms: Spring 2022, 2023, and 2024
+    terms_ko: 2022·2023·2024년 1학기
+    note: Taught hands-on sessions on deep neural networks
+    note_ko: 심층신경망 실습 강의
+  - course: Introduction to IoT, AI, and Big Data
+    course_ko: IoT·인공지능·빅데이터 개론
+    start: 2021
+    end: 2022
+    terms: Spring and Fall 2021 and 2022; head TA in Fall 2022
+    terms_ko: 2021·2022년 1·2학기 (2022년 2학기 수석조교)
+    note: Evaluated IoT projects and ran Arduino UNO labs
+    note_ko: IoT 프로젝트 평가, Arduino UNO 실습
+  - course: IoT and Creative Engineering Design
+    course_ko: IoT 창의공학설계
+    start: 2021
+    end: 2022
+    terms: Fall 2021 and Spring 2022
+    terms_ko: 2021년 2학기, 2022년 1학기
+    note: Evaluated IoT projects; labs on Arduino UNO, Teensy, ESP32, and STM boards
+    note_ko: IoT 프로젝트 평가, Arduino UNO·Teensy·ESP32·STM 보드 실습
+  - course: Creative Engineering Design
+    course_ko: 창의공학설계
+    start: 2021
+    end: 2022
+    terms: Fall 2021 and Spring 2022
+    terms_ko: 2021년 2학기, 2022년 1학기
+    note: Evaluated IoT projects; labs on Arduino UNO and ESP32
+    note_ko: IoT 프로젝트 평가, Arduino UNO·ESP32 실습
+  - course: Structural Experiment and Material
+    course_ko: 건축구조실험 및 재료
+    start: 2022
+    terms: Spring 2022
+    terms_ko: 2022년 1학기
+    note: Euler buckling, truss deflection, and two-way shake-table seismic design experiments
+    note_ko: 오일러 좌굴, 트러스 처짐, 2방향 진동대 내진설계 실험
+  - course: Mechanics of Materials for Architectural Engineering
+    course_ko: 건축공학 재료역학
+    start: 2021
+    terms: Fall 2021
+    terms_ko: 2021년 2학기
+    note: Problem sessions on structural engineering fundamentals
+    note_ko: 구조공학 기초 문제풀이
+  - course: Prestressed Concrete
+    course_ko: 프리스트레스트 콘크리트
+    start: 2021
+    terms: Fall 2021
+    terms_ko: 2021년 2학기
+    note: Course management, with a focus on post-tensioned structures
+    note_ko: 포스트텐션 구조 중심의 수업 운영
+  - course: Computation in Architectural Engineering
+    course_ko: 건축공학 전산
+    start: 2021
+    terms: Spring 2021
+    terms_ko: 2021년 1학기
+    note: MATLAB labs for structural engineering students
+    note_ko: 구조공학 전공생 대상 MATLAB 실습
+
+awards:
+  - title: SNU AI Fellowship
+    title_ko: 서울대학교 인공지능대학원 지원 (SNU AI Fellowship)
+    by: Interdisciplinary Program in Artificial Intelligence, SNU
+    by_ko: 서울대학교 협동과정 인공지능전공
+    start: 2025
+    end: 2026
+    note: Four semesters, Spring 2025 to Fall 2026
+    note_ko: 2025년 1학기–2026년 2학기 (4개 학기)
+  - title: Excellence Award, SNU AI Paper Competition
+    title_ko: 서울대학교 인공지능대학원 논문경진대회 우수상
+    by: Interdisciplinary Program in Artificial Intelligence, SNU
+    by_ko: 서울대학교 협동과정 인공지능전공
+    start: 2025-06
+    note: Included travel support to attend NeurIPS
+    note_ko: NeurIPS 참가경비 지원 포함
+  - title: SNU AI Graduate School Scholarship
+    title_ko: 서울대학교 인공지능대학원 장학금
+    by: Interdisciplinary Program in Artificial Intelligence, SNU
+    by_ko: 서울대학교 협동과정 인공지능전공
+    start: 2023
+    end: 2024
+    note: Four semesters, Spring 2023 to Fall 2024
+    note_ko: 2023년 1학기–2024년 2학기 (4개 학기)
+  - title: Outstanding Teaching Assistant Award
+    title_ko: 서울대학교 우수 강의조교 표창
+    by: College of Engineering, SNU
+    by_ko: 서울대학교 공과대학
+    start: 2022-09
+    note: Fall 2022
+    note_ko: 2022학년도 2학기 응용과학 작은스승
+  - title: Outstanding Presentation Award
+    title_ko: 한국콘크리트학회 우수발표논문상
+    by: Korea Concrete Institute
+    by_ko: 한국콘크리트학회
+    start: 2022-05
+    note: Spring Conference 2022
+    note_ko: 2022년도 봄 학술대회
+  - title: 센구조 장학금
+    title_ko: 서울대학교 센구조 장학금
+    by: Department of Architecture and Architectural Engineering, SNU
+    by_ko: 서울대학교 건축학과
+    start: 2021-09
+    note: Fall 2021
+    note_ko: 2021년 2학기
+  - title: 관악회 장학금
+    title_ko: 서울대학교 관악회 장학금
+    by: Gwanakhoe, SNU
+    by_ko: 서울대학교 관악회
+    start: 2019
+    note: Spring and Fall 2019
+    note_ko: 2019년 1·2학기
+  # Earlier honors: on the homepage they are collapsed; they are not in the CVs.
+  - title: Commendation from the Mayor of Uiwang
+    title_ko: 의왕시장 공로상 표창
+    by: For leading the Uiwang Bugok center of 배움을 나누는 사람들
+    by_ko: 배움을 나누는 사람들 의왕 부곡교육장 대표교사
+    start: 2018-01
+    earlier: true
+  - title: Achievement Award
+    title_ko: KAIST 부설 한국과학영재학교 공로상
+    by: Korea Science Academy of KAIST, for student council service
+    by_ko: 학생회장단 졸업 기념
+    start: 2016-02
+    earlier: true
+  - title: Honorable Mention, Korea Olympiad in Informatics
+    title_ko: 한국정보올림피아드 고등부 장려상
+    by: High school division
+    start: 2013-01
+    earlier: true
+  - title: Gold Prize, Korea Physics Competition for Middle School Students
+    title_ko: 한국중학생물리대회 금상
+    by: Korean Physical Society
+    by_ko: 한국물리학회
+    start: 2012-08
+    earlier: true
+  - title: Silver Prize, Gyeonggi Middle School Math and Science Competition
+    title_ko: 경기도 중학생 수학과학경시대회 은상
+    by: Gyeonggi Provincial Office of Education
+    by_ko: 경기도교육청
+    start: 2012-06
+    earlier: true
+  - title: Gold Prize, Anyang Middle School Math and Science Competition
+    title_ko: 안양시 중학생 수학과학경시대회 금상
+    by: Anyang-Gwacheon Office of Education
+    by_ko: 안양과천교육지원청
+    start: 2012-04
+    earlier: true
+
+certifications:
+  - title: Big Data Analysis Engineer
+    title_ko: 빅데이터분석기사
+    by: Korea Data Agency
+    by_ko: 한국데이터산업진흥원
+    start: 2025-07
+
+service:
+  reviewing:
+    - title: Wind and Structures
+      role: Reviewer
+      role_ko: 심사위원
+      note: SCIE journal in wind engineering
+      note_ko: SCIE 등재 풍공학 학술지
+      start: 2024-01
+      end: present
+  organizing:
+    - title: 28th WEIK Annual Conference
+      title_ko: 제28회 한국풍공학회 2025년도 학술발표회 및 정기총회
+      role: Organizing committee member
+      role_ko: 조직위원
+      note: Held at Seoul National University
+      note_ko: 서울대학교 개최
+      start: 2025-05
+  memberships:
+    - title: Korea Concrete Institute (KCI)
+      title_ko: 한국콘크리트학회
+      role: Regular member
+      role_ko: 정회원
+      start: 2021-02
+    - title: American Concrete Institute (ACI)
+      role: Student member
+      role_ko: 학생회원
+      start: 2021-03
+    - title: Architectural Institute of Korea (AIK)
+      title_ko: 대한건축학회
+      role: Regular member
+      role_ko: 정회원
+      start: 2023-03
+    - title: Korea Institute for Structural Maintenance and Inspection (KSMI)
+      title_ko: 한국구조물진단유지관리공학회
+      role: Student member
+      role_ko: 학생회원
+      start: 2023-03
+    - title: Wind Engineering Institute of Korea (WEIK)
+      title_ko: 한국풍공학회
+      role: Student member
+      role_ko: 학생회원
+      start: 2023-03
+    - title: American Society of Civil Engineers (ASCE)
+      role: Student member
+      role_ko: 학생회원
+      start: 2025-03
+  outreach:
+    - title: 배움을 나누는 사람들
+      role: Mathematics teacher; lead teacher of the Uiwang Bugok center
+      role_ko: 정교사, 의왕부곡교육장 대표교사
+      note: Taught mathematics to students from low-income families
+      note_ko: 차상위계층 학생 대상 수학교육
+      start: 2016-07
+      end: 2018-01
+
+# Shown only in the Korean CV (병역사항). Set `show: true` to include it.
+military:
+  show: false
+  text: 전문연구요원 복무 중 (2025.03–)
+  note: 2025.08–2025.09 기초군사훈련 (육군훈련소)
+
+skills:
+  - "Programming: Python, MATLAB, C"
+  - "Embedded and IoT: Arduino UNO, ESP32, Teensy, STM boards"
+  - "Engineering tools: ECO2, AutoCAD, Microsoft Excel"
+skills_ko:
+  - "프로그래밍: Python, MATLAB, C"
+  - "임베디드·IoT: Arduino UNO, ESP32, Teensy, STM 보드"
+  - "엔지니어링 도구: ECO2, AutoCAD, Microsoft Excel"

@@ -2,6 +2,7 @@
 # the paper count and "papers" link are generated from it.
 - id: ndt
   title: Automated non-destructive testing
+  title_ko: 비파괴검사 자동화
   summary: >-
     Impact-echo testing can find defects hidden inside concrete, but reading
     the signals still takes an experienced inspector. I train models that
@@ -11,6 +12,7 @@
 
 - id: shm
   title: Structural health monitoring
+  title_ko: 구조 건전성 모니터링
   summary: >-
     Anomaly detection and system identification for buildings using deep
     support vector data description, and crack-image classifiers light
@@ -18,6 +20,7 @@
 
 - id: wind
   title: Data-driven wind engineering
+  title_ko: 데이터 기반 풍공학
   summary: >-
     Predicting façade wind pressures from fewer pressure taps, clustering taps
     by their time histories, reconstructing wind-load time series, and
@@ -25,6 +28,7 @@
 
 - id: llm
   title: Language models for building codes
+  title_ko: 건축기준을 위한 언어모델
   summary: >-
     Retrieval-augmented generation over structural and wind design codes,
     domain-specialised language models, and retrieval training with
@@ -32,6 +36,7 @@
 
 - id: materials
   title: Machine learning for concrete properties
+  title_ko: 콘크리트 물성 예측 기계학습
   summary: >-
     Earlier work comparing machine-learning models for the compressive
     strength of concrete and the shear strength of prestressed concrete.
