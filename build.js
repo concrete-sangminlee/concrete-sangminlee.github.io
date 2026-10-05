@@ -17,7 +17,7 @@ import sharp from 'sharp';
 import esbuild from 'esbuild';
 import { minify as minifyHTML } from 'html-minifier-terser';
 import * as F from './lib/format.js';
-import { renderCV } from './lib/cv.js';
+import { renderCV, CV_VARIANTS } from './lib/cv.js';
 
 const buildStart = Date.now();
 const CONTENT_DIR = 'contents';
@@ -600,19 +600,21 @@ fs.writeFileSync(
     curatedBib.trim() + '\n\n' + (generatedBib.length ? '% Generated from contents/publications.yml\n\n' + generatedBib.join('\n\n') + '\n' : '')
 );
 
-// CVs: /cv/ (English) and /cv/ko/ (Korean). The print-*.html variants have no
-// web-font link or toolbar; scripts/cv-pdf.sh turns them into PDFs and deletes them.
+// CVs (lib/cv.js): English and Korean, full and short. The print-*.html files
+// have no web-font link or toolbar; scripts/cv-pdf.sh prints each one to the
+// matching PDF and deletes it.
 {
     const cvCss = (await esbuild.transform(fs.readFileSync('static/css/cv.css', 'utf8'), { loader: 'css', minify: true })).code;
     const photo = 'data:image/jpeg;base64,' + fs.readFileSync('static/assets/img/photo.jfif').toString('base64');
     const ctx = { config, profile, pubs, research, buildDate: now, css: cvCss, photo };
-    fs.mkdirSync(path.join(DIST_DIR, 'cv/ko'), { recursive: true });
-    const write = async (file, html) => fs.writeFileSync(path.join(DIST_DIR, file),
-        await minifyHTML(html, { collapseWhitespace: true, conservativeCollapse: true, removeComments: true }));
-    await write('cv/index.html', renderCV('en', { ...ctx, mode: 'web' }));
-    await write('cv/ko/index.html', renderCV('ko', { ...ctx, mode: 'web' }));
-    await write('cv/print-en.html', renderCV('en', { ...ctx, mode: 'print' }));
-    await write('cv/print-ko.html', renderCV('ko', { ...ctx, mode: 'print' }));
+    const write = async (file, html) => {
+        fs.mkdirSync(path.dirname(path.join(DIST_DIR, file)), { recursive: true });
+        fs.writeFileSync(path.join(DIST_DIR, file), await minifyHTML(html, { collapseWhitespace: true, conservativeCollapse: true, removeComments: true }));
+    };
+    for (const v of CV_VARIANTS) {
+        await write(`${v.path}index.html`, renderCV(v.lang, { ...ctx, variant: v.variant, mode: 'web' }));
+        await write(`cv/print-${v.pdf.replace(/\.pdf$/, '')}.html`, renderCV(v.lang, { ...ctx, variant: v.variant, mode: 'print' }));
+    }
 }
 
 if (fs.existsSync('.well-known/security.txt')) fs.copyFileSync('.well-known/security.txt', path.join(DIST_DIR, 'security.txt'));

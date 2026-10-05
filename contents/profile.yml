@@ -6,8 +6,8 @@
 #
 # Dates are "YYYY-MM" or "YYYY". `end: present` marks an ongoing entry and
 # `expected: true` marks a planned end date.
-# `cv: false` keeps an entry on the homepage but out of both CVs;
-# `web: false` does the opposite.
+# `cv: false` keeps an entry on the homepage but out of the CVs, `web: false`
+# does the opposite, and `short: false` drops an entry from the short CVs.
 
 education:
   - degree: Ph.D. in Artificial Intelligence
@@ -54,6 +54,7 @@ education:
     org_ko: KAIST 부설 한국과학영재학교
     start: 2013-03
     end: 2016-02
+    short: false
     notes:
       - Senior Vice President, 24th Student Council; Deputy Head of International Affairs, 23rd Student Council
       - Exchange programs at Moscow Chemical Lyceum, Russia (2014) and G.T. (Ellen Yeung) College, Hong Kong (2015)
@@ -109,6 +110,7 @@ experience:
     org_ko: 서울대학교
     start: 2018-12
     end: 2021-02
+    short: false
     notes:
       - "Jan–Feb 2021, HpSE Lab: wind pressure coefficient prediction for wind-resistant building design"
       - "Oct 2019 – Feb 2020, SNUCEM: AHP analysis for improving military dining facilities"
@@ -124,6 +126,7 @@ experience:
     org_ko: 친환경계획그룹 청연건축사사무소, 서울
     start: 2018-07
     end: 2018-08
+    short: false
     notes:
       - Data analysis for building energy performance evaluation with ECO2, AutoCAD, and Python
     notes_ko:
