@@ -1,0 +1,39 @@
+name: Check
+
+# Builds the site and CV PDFs on pull requests without deploying.
+# The PDFs are attached to the run as an artifact for review.
+on:
+  pull_request:
+    branches: [master]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: '.nvmrc'
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm run build
+
+      - name: Install Pretendard
+        run: |
+          mkdir -p ~/.local/share/fonts
+          curl -fsSL -o ~/.local/share/fonts/PretendardVariable.ttf \
+            https://raw.githubusercontent.com/orioncactus/pretendard/v1.3.9/packages/pretendard/dist/public/variable/PretendardVariable.ttf
+          fc-cache -f
+
+      - run: npm run cv:pdf
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cv-pdfs
+          path: dist/cv/*.pdf
