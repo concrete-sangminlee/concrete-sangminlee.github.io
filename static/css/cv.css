@@ -11,6 +11,8 @@
     --font: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, "Apple SD Gothic Neo", "Malgun Gothic", "Segoe UI", Roboto, Arial, sans-serif;
 }
 .is-ko { --when: 35mm; }
+.is-en.is-short { --when: 32mm; }
+.is-ko.is-short { --when: 33mm; }
 
 * { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
@@ -46,8 +48,10 @@ em { font-style: normal; color: var(--ink-2); }
     color: var(--ink-2);
 }
 .cv-bar a:hover { color: var(--ink); }
-.cv-lang { display: inline-flex; gap: 12px; margin-left: auto; }
-.cv-lang [aria-current] { color: var(--ink); font-weight: 600; }
+.cv-seg { display: inline-flex; gap: 12px; }
+.cv-seg:first-of-type { margin-left: auto; }
+.cv-seg + .cv-seg { padding-left: 16px; border-left: 1px solid var(--rule); }
+.cv-seg [aria-current] { color: var(--ink); font-weight: 600; }
 .cv-dl {
     padding: 5px 12px;
     border-radius: 6px;
@@ -189,6 +193,15 @@ p.rs { margin-top: 0.2mm; }
     vertical-align: 0.06em;
 }
 .skills li { color: var(--ink-2); }
+.is-short { font-size: 9pt; }
+.is-short .s { margin-top: 4.2mm; }
+.is-short .s h2 { margin-bottom: 1.4mm; }
+.is-short .rows > .r { padding: 0.9mm 0; }
+.is-short .rows.compact > .r { padding: 0.45mm 0; }
+.is-short .pubs > li { padding: 0.6mm 0; }
+.skills .dot { color: var(--ink-3); }
+.more { margin-top: 1.6mm; color: var(--ink-3); font-size: 8.8pt; }
+.more a { color: var(--accent); }
 
 .cv-foot {
     margin-top: 7mm;
