@@ -10,6 +10,8 @@
 #   note     optional badge text (e.g. "Master's thesis")
 #   links    optional map of label -> URL (e.g. paper, doi)
 #   topic    optional research area id from research.yml (ndt | shm | wind | llm | materials)
+#   date     optional full publication date (YYYY-MM-DD)
+#   abstract optional abstract (shown behind an "Abstract" toggle)
 #   bib      optional key into publications.bib (curated BibTeX; otherwise generated)
 #
 # Entries are rendered in the order below, grouped by year (newest first).
@@ -25,6 +27,9 @@
   links:
     paper: https://link.springer.com/article/10.1007/s10921-025-01260-3
   bib: lee2025impactecho
+  date: 2025-08-11
+  abstract: >-
+    In this study, the feasibility of a machine learning model for the automatic classification of impact-echo testing results was investigated. A machine learning model with features such as instantaneous frequency and spectral entropy extracted from time series data was compared with two different approaches, including conventional peak frequency and a deep learning model. To construct a robust and flexible model, an open-source database from two organizations performed by different testing operators and equipment was used to train and develop the universal classifier. The model was evaluated for its ability to classify the type of defects as well as their presence, and the results showed that shallow delamination can be detected more accurately than other types of defects. The proposed machine learning model showed reliable and promising results and has the potential to improve the efficiency of impact-echo testing in concrete structures.
 
 - type: journal
   year: 2025
@@ -36,6 +41,9 @@
   links:
     paper: https://www.proquest.com/docview/3249300050?pq-origsite=gscholar&fromopenview=true&sourcetype=Scholarly%20Journals
   bib: lee2025lightweight
+  date: 2025-04-09
+  abstract: >-
+    In this study, the challenge of automating concrete crack image classification by developing a lightweight machine learning model that balances accuracy with computational efficiency was addressed. Traditional deep learning models, while accurate, suffer from high computational demands, limiting their practicality in on-site applications. This study's approach used the random forest (RF) classifier combined with histogram of oriented gradients (HOG) and local binary patterns (LBP) for feature extraction, offering a more feasible alternative for real-time structural health monitoring. Comparative analysis with the convolutional neural network (CNN) model highlights this model's significantly reduced size and inference times, with only a marginal compromise in accuracy. The results demonstrated that the RF models, particularly RF with LBP, are well-suited for integration into resource-constrained environments, paving the way for their deployment in portable, on-site diagnostic systems in civil engineering. This study contributed a novel perspective to the field, emphasizing the importance of efficient machine learning solutions in practical applications of structural health monitoring.
 
 - type: journal
   year: 2025
@@ -47,6 +55,9 @@
   links:
     paper: https://ascelibrary.org/doi/full/10.1061/JSENDH.STENG-14823
   bib: lee2025svdd
+  date: 2025-07-10
+  abstract: >-
+    Ensuring the structural integrity of building is critical for maintaining public safety, necessitating reliable methods for the detection of internal defects. In practice, however, obtaining data from compromised structures poses significant challenges because most available data come from buildings in normal condition. This study addresses this issue by introducing a novel, real-time defect detection approach for structural health monitoring using multiclass Deep Support Vector Data Description (SVDD), a semisupervised deep learning model. The proposed method leverages only normal condition data from the target structure for training, enabling the identification of anomalies without requiring prior defect data. Kernel density estimation (KDE) was integrated, a robust statistical technique, to further enhance the model's predictive accuracy. The proposed methodology was validated using publicly available data from a three-story shake table experiment, demonstrating superior performance compared to existing anomaly detection techniques. Although traditional machine learning methods for this task typically achieve a maximum average accuracy of 58.68%, the KDE-enhanced multiclass deep SVDD developed in this study significantly outperforms these methods, demonstrating a remarkable average accuracy of 88.11%. Comprehensive parameter optimization was conducted to determine the optimal model configuration. The defect detection framework presented in this study offers a significant advancement in real-time structural health monitoring, providing a powerful tool for the proactive maintenance and safety assurance of buildings.
 
 - type: journal
   year: 2023

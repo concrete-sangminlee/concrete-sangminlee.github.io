@@ -27,6 +27,8 @@ All content lives in `contents/`:
 - `research.yml`: research areas. Each `id` matches a publication `topic`.
 - `news.md`: one line per item, `- **2026.03** Text` (month optional).
 - `config.yml`: name, role, description, contact links.
+- `teaching.md`: courses, in the same `**Title** [years]` block format as experiences.
+- `awards.md`, `services.md`: `### Group` headings with `- **Name** [when] - description` lines. A group named "Earlier" is collapsed.
 - `home.md`: bio. The other `*.md` files are education, experiences, projects, patents, awards, and services.
 
 ## Build

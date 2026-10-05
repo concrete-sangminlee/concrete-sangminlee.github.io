@@ -255,6 +255,19 @@
         });
     }
 
+    // ---------------------------------------------------------------- abstracts
+    function initAbstracts() {
+        document.addEventListener('click', function (e) {
+            var b = e.target.closest('[data-abstract]');
+            if (!b) return;
+            var panel = document.getElementById(b.getAttribute('data-abstract'));
+            if (!panel) return;
+            var open = !panel.classList.contains('is-open');
+            panel.classList.toggle('is-open', open);
+            b.setAttribute('aria-expanded', String(open));
+        });
+    }
+
     // ---------------------------------------------------------------- misc
     function initCopy() {
         document.addEventListener('click', function (e) {
@@ -280,6 +293,7 @@
         initHeader();
         initPublications();
         initCite();
+        initAbstracts();
         initCopy();
         initMisc();
     }
