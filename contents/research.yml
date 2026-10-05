@@ -1,5 +1,6 @@
 # Research areas. `id` matches the `topic` field in publications.yml;
 # the paper count and "papers" link are generated from it.
+# title_ko / summary_ko are used on the Korean homepage and CV.
 - id: ndt
   title: Automated non-destructive testing
   title_ko: 비파괴검사 자동화
@@ -9,6 +10,8 @@
     classify impact-echo responses automatically and build an edge-AI system
     that runs them on site, including on liner-plate-backed concrete in
     nuclear containment buildings.
+  summary_ko: >-
+    임팩트 에코 검사는 콘크리트 내부에 숨은 결함을 찾을 수 있지만, 신호 해석에는 여전히 숙련된 검사자가 필요합니다. 임팩트 에코 응답을 자동으로 분류하는 모델을 학습시키고, 이를 현장에서 실행하는 엣지 AI 시스템을 개발합니다. 원전 격납건물의 라이너 플레이트 배면 콘크리트도 대상입니다.
 
 - id: shm
   title: Structural health monitoring
@@ -17,6 +20,8 @@
     Anomaly detection and system identification for buildings using deep
     support vector data description, and crack-image classifiers light
     enough to run on-device.
+  summary_ko: >-
+    심층 SVDD(support vector data description)를 활용한 건축물 이상 탐지와 시스템 식별, 그리고 기기에서 바로 실행할 수 있을 만큼 가벼운 균열 이미지 분류 모델을 연구합니다.
 
 - id: wind
   title: Data-driven wind engineering
@@ -25,6 +30,8 @@
     Predicting façade wind pressures from fewer pressure taps, clustering taps
     by their time histories, reconstructing wind-load time series, and
     estimating design wind speed from satellite imagery.
+  summary_ko: >-
+    적은 수의 풍압공으로 외벽 풍압을 예측하고, 시간이력에 따라 풍압공을 군집화하며, 풍하중 시간이력을 재구성하고, 위성사진으로 설계 기대풍속을 추정합니다.
 
 - id: llm
   title: Language models for building codes
@@ -33,6 +40,8 @@
     Retrieval-augmented generation over structural and wind design codes,
     domain-specialised language models, and retrieval training with
     condition-mutated hard negatives for safety-sensitive Korean code clauses.
+  summary_ko: >-
+    구조·풍하중 설계기준에 대한 검색 증강 생성(RAG), 분야 특화 언어모델, 그리고 안전과 직결된 한국어 기준 조항 검색을 위한 조건 변형 하드 네거티브 학습을 연구합니다.
 
 - id: materials
   title: Machine learning for concrete properties
@@ -40,3 +49,5 @@
   summary: >-
     Earlier work comparing machine-learning models for the compressive
     strength of concrete and the shear strength of prestressed concrete.
+  summary_ko: >-
+    콘크리트 압축강도와 프리스트레스트 콘크리트 전단강도를 예측하는 기계학습 모델을 비교한 초기 연구입니다.

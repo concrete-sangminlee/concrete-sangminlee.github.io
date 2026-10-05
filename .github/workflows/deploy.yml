@@ -28,7 +28,7 @@ jobs:
 
       - run: npm run build
 
-      # CV PDFs: headless Chrome prints dist/cv/print-*.html with a locally
+      # CV PDFs and social cards: headless Chrome renders dist/render/** with a locally
       # installed Pretendard so Hangul renders identically to the website.
       - name: Install Pretendard
         run: |
@@ -37,7 +37,7 @@ jobs:
             https://raw.githubusercontent.com/orioncactus/pretendard/v1.3.9/packages/pretendard/dist/public/variable/PretendardVariable.ttf
           fc-cache -f
 
-      - run: npm run cv:pdf
+      - run: npm run render
 
       - uses: actions/upload-pages-artifact@v5
         with:

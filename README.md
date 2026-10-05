@@ -20,19 +20,27 @@ Personal academic website for Sang Min Lee, Ph.D. Candidate in Artificial Intell
 
 ## Editing content
 
-All content lives in `contents/`:
+All content lives in `contents/`. Any text field can have a Korean counterpart with the `_ko` suffix (`title_ko`, `notes_ko`, ...), used by the Korean homepage and CVs.
 
-- `profile.yml`: education, experience, projects, patents, teaching, awards, certifications, service, skills. Every text field can have a Korean counterpart with the `_ko` suffix (`title_ko`, `notes_ko`, ...), which the Korean CV uses.
-- `publications.yml`: every publication. Optional `title_en` / `title_ko`, `authors_ko`, `venue_en` / `venue_ko`, `scope` (international | domestic), and `indexing` (SCIE | KCI) feed the CVs.
+- `profile.yml`: education, experience, projects, patents, teaching, awards, certifications, service, skills.
+- `publications.yml`: every publication. Optional `title_en` / `title_ko`, `authors_ko`, `venue_en` / `venue_ko`, `scope` (international | domestic), and `indexing` (SCIE | KCI) feed the CVs and the Korean page.
 - `publications.bib`: curated BibTeX for entries that reference it via `bib:`. The rest are generated.
 - `research.yml`: research areas. Each `id` matches a publication `topic`.
-- `news.md`: one line per item, `- **2026.03** Text` (month optional).
+- `news.yml`: homepage news (`date`, `text`, `text_ko`).
+- `home.md` / `home.ko.md`: the homepage bio.
 - `config.yml`: name, role, description, contact links.
-- `home.md`: the homepage bio.
+- `cv-variants.yml`: tailored CVs (see below).
 
-## CVs
+## Pages
 
-The build writes an English CV at `/cv/` and a Korean CV at `/cv/ko/`, both generated from the same data as the homepage. In CI, `npm run cv:pdf` prints them to `/cv/Sang-Min-Lee-CV.pdf` and `/cv/Sang-Min-Lee-CV-ko.pdf` with headless Chrome and a locally installed Pretendard. To make the PDFs locally, run `npm run build && npm run cv:pdf` (set `CHROME=/path/to/chrome` if Chrome isn't on `PATH`).
+| Page | Path |
+|---|---|
+| Homepage | `/` (English), `/ko/` (Korean) |
+| CV, full | `/cv/`, `/cv/ko/` |
+| CV, short (2 pages) | `/cv/short/`, `/cv/ko/short/` |
+| Tailored CVs | `/cv/<id>/` or `/cv/ko/<id>/`, defined in `contents/cv-variants.yml` (unlisted by default) |
+
+Every CV page has a PDF next to it in `/cv/`. `npm run render` prints the PDFs and renders the 1200×630 social preview images (`/static/og/og-en.png`, `og-ko.png`) with headless Chrome. CI does this on every push. To render locally, run `npm run build && npm run render` (set `CHROME=/path/to/chrome` if Chrome isn't on `PATH`; install Pretendard so Hangul matches the website).
 
 ## Build
 

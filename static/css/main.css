@@ -205,6 +205,18 @@ a { color: inherit; text-decoration: none; }
 }
 
 .header-actions { display: flex; align-items: center; gap: 4px; margin-right: -8px; }
+.lang-link {
+    margin-right: 6px;
+    padding: 4px 8px;
+    border: 1px solid var(--line-2);
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 550;
+    line-height: 1.2;
+    color: var(--text-2);
+    transition: color 0.15s ease, border-color 0.15s ease;
+}
+.lang-link:hover { color: var(--text); border-color: var(--text-3); }
 .icon-btn {
     display: inline-grid;
     place-items: center;
@@ -870,7 +882,7 @@ mark.hl {
     html { font-size: 11.5px; }
     body { font-size: 1rem; line-height: 1.5; }
     #news, .pub-foot { display: none !important; }
-    .site-header, .pub-controls, .pub-state, .pub-links, .pub-abs, .copy-btn, .skip-link,
+    .lang-link, .site-header, .pub-controls, .pub-state, .pub-links, .pub-abs, .copy-btn, .skip-link,
     .area-link, .site-footer .footer-links, .js-only, .modal, .toast { display: none !important; }
     .wrap { max-width: none; padding: 0; }
     :root { --label: 30mm; --gutter: 6mm; }

@@ -1,0 +1,20 @@
+# Tailored CVs, built next to the standard ones. Each gets a page and a PDF:
+#   English: /cv/<id>/ and /cv/Sang-Min-Lee-CV-<id>.pdf
+#   Korean:  /cv/ko/<id>/ and /cv/Sang-Min-Lee-CV-ko-<id>.pdf
+#
+#   id        url slug (a-z, 0-9, -)
+#   lang      en | ko                 (default en)
+#   base      short | full            (default short)
+#   title     document title and page footer
+#   topics    research ids from research.yml to keep, in display order
+#   group_by  topic | type            group publications by research area or by type
+#   listed    true lets search engines index the page (default: unlisted)
+#
+# Pages are unlisted by default: share the link or attach the PDF.
+
+- id: ml
+  lang: en
+  base: short
+  title: Sang Min Lee, CV (machine learning)
+  topics: [llm, ndt, shm, wind]
+  group_by: topic
