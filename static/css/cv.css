@@ -1,4 +1,6 @@
-/* CV: A4 document. The same rules drive the on-screen page and the PDF. */
+/* CV: A4 document. The same rules drive the on-screen page and the PDF.
+   No OpenType alternates (ss06, tabular-nums): Chrome embeds those glyphs
+   without a text mapping, which breaks copy-paste and CV parsers. */
 :root {
     --ink: #111113;
     --ink-2: #3c3d43;
@@ -21,7 +23,6 @@ body {
     line-height: 1.5;
     letter-spacing: -0.004em;
     -webkit-font-smoothing: antialiased;
-    font-feature-settings: "ss06";
 }
 .is-ko { word-break: keep-all; letter-spacing: -0.01em; }
 h1, h2, h3, p, ol, ul, dl, dd { margin: 0; }
@@ -145,7 +146,7 @@ em { font-style: normal; color: var(--ink-2); }
     break-inside: avoid;
 }
 .rows.compact > .r { padding: 0.7mm 0; }
-.r-when { color: var(--ink-3); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.r-when { color: var(--ink-3); white-space: nowrap; }
 .rt { font-weight: 650; letter-spacing: -0.01em; }
 .rs { color: var(--ink-2); }
 p.rs { margin-top: 0.2mm; }
@@ -173,7 +174,7 @@ p.rs { margin-top: 0.2mm; }
     padding: 0.9mm 0;
     break-inside: avoid;
 }
-.pubs .n { color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.pubs .n { color: var(--ink-3); }
 .pubs .ref { color: var(--ink-2); }
 .pubs .pt { color: var(--ink); font-weight: 600; }
 .pubs a { color: var(--accent); }
