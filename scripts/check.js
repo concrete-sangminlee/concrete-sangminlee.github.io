@@ -47,6 +47,7 @@ const isEnglish = file => {
     if (r === 'index.html') return true; // 404.html is bilingual by design
     if (r.startsWith('cv/') && !r.startsWith('cv/ko/')) return true;
     if (r.startsWith('publications/')) return true; // English papers; Korean ones are under ko/
+    if (r.startsWith('statements/')) return true;
     if (r.startsWith('render/pdf/')) return !/-ko(-|\.html$)/.test(path.basename(r));
     if (r.startsWith('render/png/')) return path.basename(r) !== 'og-ko.html';
     return false;

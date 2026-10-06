@@ -235,3 +235,22 @@ p.rs { margin-top: 0.2mm; }
     .cv-foot { display: none; }
     a { color: inherit !important; }
 }
+
+/* ------------------------------------------------------------- statements */
+.is-statement { font-size: 9.8pt; }
+.is-statement .sheet { padding: 18mm 20mm 16mm; }
+.mode-print.is-statement .sheet { padding: 0; }
+.st-title { margin-top: 7mm; font-size: 15pt; font-weight: 700; letter-spacing: -0.02em; }
+.st { color: var(--ink-2); line-height: 1.5; }
+.st h2 { margin-top: 5mm; font-size: 10.5pt; font-weight: 700; color: var(--ink); break-after: avoid; }
+.st p, .st ul { margin-top: 2.2mm; }
+.st h2 + p { margin-top: 1.4mm; }
+.st > p:first-child { margin-top: 4mm; }
+.st ul { padding-left: 5mm; list-style: disc; }
+.st li + li { margin-top: 0.6mm; }
+.st strong { color: var(--ink); font-weight: 650; }
+.st em { font-style: italic; color: inherit; }
+.st p { orphans: 3; widows: 3; }
+@media screen and (max-width: 820px) {
+    .is-statement .sheet { padding: 20px 16px 32px; }
+}

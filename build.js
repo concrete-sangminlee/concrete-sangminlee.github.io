@@ -24,6 +24,7 @@ import { renderCV, CV_VARIANTS, cvVariantsFrom } from './lib/cv.js';
 import { renderOgCard, renderIcon } from './lib/og.js';
 import { renderPaper, paperPath, hasPage } from './lib/paper.js';
 import { renderSitemap } from './lib/sitemap.js';
+import { renderStatement, STATEMENTS } from './lib/statement.js';
 
 const buildStart = Date.now();
 const CONTENT_DIR = 'contents';
@@ -204,6 +205,14 @@ if (fs.existsSync('.well-known/security.txt')) fs.copyFileSync('.well-known/secu
     for (const v of cvVariants) {
         writeDist(`${v.path}index.html`, await min(renderCV(v.lang, { ...ctx, variant: v.variant, spec: v, mode: 'web' })));
         writeDist(`render/pdf/${v.pdf.replace(/\.pdf$/, '')}.html`, await min(renderCV(v.lang, { ...ctx, variant: v.variant, spec: v, mode: 'print' })));
+    }
+    for (const s of STATEMENTS) {
+        const file = path.join(CONTENT_DIR, 'statements', s.file);
+        if (!fs.existsSync(file)) continue;
+        const md = fs.readFileSync(file, 'utf8');
+        const sctx = { config, css: cvCss, buildDate: now };
+        writeDist(`${s.path}index.html`, await min(renderStatement(s, md, { ...sctx, mode: 'web' })));
+        writeDist(`render/pdf/${s.pdf.replace(/\.pdf$/, '')}.html`, await min(renderStatement(s, md, { ...sctx, mode: 'print' })));
     }
     // render/png/<dir>/<name>[@WxH].html -> static/<dir>/<name>.png (default 1200x630)
     for (const lang of ['en', 'ko']) {
