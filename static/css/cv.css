@@ -251,6 +251,10 @@ p.rs { margin-top: 0.2mm; }
 .st strong { color: var(--ink); font-weight: 650; }
 .st em { font-style: italic; color: inherit; }
 .st p { orphans: 3; widows: 3; }
+.st table { width: 100%; margin-top: 3mm; border-collapse: collapse; font-size: 8.8pt; line-height: 1.4; break-inside: avoid; }
+.st th, .st td { padding: 1.1mm 2mm 1.1mm 0; text-align: left; vertical-align: top; border-bottom: 0.6pt solid var(--rule); }
+.st th { color: var(--ink); font-weight: 650; border-bottom-color: var(--ink-3); }
+.st td:first-child { color: var(--ink); white-space: nowrap; }
 @media screen and (max-width: 820px) {
     .is-statement .sheet { padding: 20px 16px 32px; }
 }
