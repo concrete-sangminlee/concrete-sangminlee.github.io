@@ -1,7 +1,8 @@
 name: Check
 
-# Builds the site and CV PDFs on pull requests without deploying.
-# The PDFs are attached to the run as an artifact for review.
+# Builds the site on pull requests without deploying: content checks, CV PDFs,
+# and a Lighthouse run. The rendered PDFs/images and the whole built site are
+# attached to the run as artifacts for review.
 on:
   pull_request:
     branches: [master]
@@ -14,6 +15,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0 # sitemap <lastmod> comes from git history
 
       - uses: actions/setup-node@v6
         with:
@@ -35,9 +38,21 @@ jobs:
 
       - run: npm run render
 
+      # Accessibility and best practices must stay >= 95; SEO and performance warn.
+      # Report links are printed in the log (temporary public storage).
+      - name: Lighthouse
+        run: npx --yes @lhci/cli@0.15.1 autorun
+
       - uses: actions/upload-artifact@v4
         with:
           name: rendered
           path: |
             dist/cv/*.pdf
             dist/static/og/*.png
+            dist/static/assets/icon-maskable-*.png
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: site
+          path: dist
+          retention-days: 7

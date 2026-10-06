@@ -1,0 +1,60 @@
+name: Maintenance
+
+# Weekly: publications on ORCID that are missing from contents/publications.yml,
+# and dead external links on the built site. Findings go into one open issue
+# ("Site maintenance report"), which is closed again once everything is clean.
+# On pull requests that change this job it only prints the report.
+on:
+  schedule:
+    - cron: '0 0 * * 1' # Mondays 09:00 KST
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - scripts/maintenance.js
+      - .github/workflows/maintenance.yml
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: '.nvmrc'
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm run build
+
+      - name: Report
+        id: report
+        run: |
+          node scripts/maintenance.js --out report.md | tee out.txt
+          echo "findings=$(sed -n 's/^FINDINGS=//p' out.txt)" >> "$GITHUB_OUTPUT"
+          cat report.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Update issue
+        if: github.event_name != 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          FINDINGS: ${{ steps.report.outputs.findings }}
+          REPO: ${{ github.repository }}
+        run: |
+          TITLE="Site maintenance report"
+          NUM=$(gh api "repos/$REPO/issues?state=open&per_page=100" --jq "[.[] | select(.title == \"$TITLE\" and (.pull_request | not))][0].number // empty")
+          if [ "${FINDINGS:-0}" -gt 0 ]; then
+            if [ -n "$NUM" ]; then
+              gh api -X PATCH "repos/$REPO/issues/$NUM" -F body=@report.md --silent
+            else
+              gh api "repos/$REPO/issues" -f title="$TITLE" -F body=@report.md --silent
+            fi
+          elif [ -n "$NUM" ]; then
+            gh api "repos/$REPO/issues/$NUM/comments" -f body="All clear as of $(date -u +%F)." --silent
+            gh api -X PATCH "repos/$REPO/issues/$NUM" -f state=closed --silent
+          fi
