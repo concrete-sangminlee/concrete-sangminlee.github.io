@@ -36,12 +36,3 @@ contact:
     url: 'https://github.com/concrete-sangminlee'
     icon: github
     intro: true
-  - label: Blog
-    label_ko: 블로그
-    value: concrete-sangminlee.github.io/blog
-    url: '/blog/'
-    icon: pen
-  - label: ThinkMany
-    value: concrete-sangminlee.github.io/thinkmany
-    url: '/thinkmany/'
-    icon: sparkles

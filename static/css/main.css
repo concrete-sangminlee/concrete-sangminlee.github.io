@@ -751,8 +751,6 @@ mark.hl {
     justify-content: space-between;
     gap: 8px 24px;
 }
-.footer-links { display: flex; flex-wrap: wrap; gap: 4px 18px; }
-.footer-links a:hover { color: var(--text); }
 
 /* ---------------------------------------------------------------- dialog + toast */
 .modal {
@@ -911,7 +909,7 @@ mark.hl {
     body { font-size: 1rem; line-height: 1.5; }
     #news, .pub-foot { display: none !important; }
     .lang-link, .site-header, .pub-controls, .pub-state, .pub-links, .pub-abs, .copy-btn, .skip-link,
-    .area-link, .site-footer .footer-links, .js-only, .modal, .toast { display: none !important; }
+    .area-link, .js-only, .modal, .toast { display: none !important; }
     .wrap { max-width: none; padding: 0; }
     :root { --label: 30mm; --gutter: 6mm; }
     .row { grid-template-columns: var(--label) minmax(0, 1fr) !important; }
