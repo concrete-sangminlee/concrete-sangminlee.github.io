@@ -384,7 +384,8 @@ service:
       start: 2016-07
       end: 2018-01
 
-# Shown only in the Korean CV (병역사항). Set `show: true` to include it.
+# Korean CVs only (병역사항). `show: true` adds it to every Korean CV; a tailored
+# CV can include it on its own by listing `military` in `sections` (cv-variants.yml).
 military:
   show: false
   text: 전문연구요원 복무 중 (2025.03–)
