@@ -54,15 +54,17 @@ export function newWorks(orcidJson, pubs) {
 async function checkOrcid() {
     const orcid = data.config.contact.find(c => c.icon === 'orcid')?.value;
     if (!orcid) return { section: '', findings: 0 };
-    let works;
+    let works, total;
     try {
         const res = await get(`https://pub.orcid.org/v3.0/${orcid}/works`, { headers: { Accept: 'application/json' } });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        works = newWorks(await res.json(), data.pubs);
+        const json = await res.json();
+        total = (json.group || []).length;
+        works = newWorks(json, data.pubs);
     } catch (err) {
         return { section: `## New publications\n\nCould not read ORCID record ${orcid}: ${err.message}\n`, findings: 0 };
     }
-    if (!works.length) return { section: `## New publications\n\nNone. Every work on ORCID ${orcid} is in \`contents/publications.yml\`.\n`, findings: 0 };
+    if (!works.length) return { section: `## New publications\n\nNone: all ${total} works on ORCID ${orcid} are in \`contents/publications.yml\`.\n`, findings: 0 };
     const rows = works.map(w => `- [ ] **${w.title}** (${w.year || 'n.d.'})${w.venue ? `, *${w.venue}*` : ''}${w.doi ? `, [doi:${w.doi}](https://doi.org/${w.doi})` : ''}${w.type ? ` · ${w.type.toLowerCase()}` : ''}`);
     return {
         section: `## New publications\n\nOn [ORCID ${orcid}](https://orcid.org/${orcid}) but not in \`contents/publications.yml\` (add them, with \`title_en\`/\`title_ko\` as needed):\n\n${rows.join('\n')}\n`,
@@ -91,7 +93,22 @@ function externalLinks(dist) {
     return links;
 }
 
+/** DOIs are checked against the DOI registry, not the publisher (which often blocks bots). */
+async function probeDoi(doi) {
+    for (let attempt = 0; attempt < 2; attempt++) {
+        try {
+            const res = await get(`https://doi.org/api/handles/${doi}`);
+            if (res.status === 200) return null;
+            if (res.status === 404) return 'DOI not registered';
+        } catch { /* retry */ }
+        await new Promise(r => setTimeout(r, 3000));
+    }
+    return 'unreachable: DOI registry did not answer';
+}
+
 async function probe(url) {
+    const doi = url.match(/^https?:\/\/(?:dx\.)?doi\.org\/(10\.[^?#]+)$/i);
+    if (doi) return probeDoi(decodeURIComponent(doi[1]));
     for (let attempt = 0; attempt < 2; attempt++) {
         try {
             let res = await get(url, { method: 'HEAD' });
@@ -99,7 +116,8 @@ async function probe(url) {
             if (res.status < 400 || [401, 403, 429].includes(res.status)) return null;
             if (attempt) return `HTTP ${res.status}`;
         } catch (err) {
-            if (attempt) return err.name === 'AbortError' ? 'timed out' : (err.cause?.code || err.message);
+            // No HTTP answer at all: often a site refusing automated clients, so flagged separately.
+            if (attempt) return `unreachable: ${err.name === 'AbortError' ? 'timed out' : (err.cause?.code || err.message)}`;
         }
         await new Promise(r => setTimeout(r, 3000));
     }
@@ -120,8 +138,13 @@ async function checkLinks() {
     }));
     if (!dead.length) return { section: `## External links\n\nAll ${links.length} reachable.\n`, findings: 0 };
     dead.sort((a, b) => a.url.localeCompare(b.url));
+    const list = items => items.map(d => `- [ ] ${d.url} (${d.why}), on \`${d.page}\``).join('\n');
+    const broken = dead.filter(d => !d.why.startsWith('unreachable'));
+    const unreachable = dead.filter(d => d.why.startsWith('unreachable'));
     return {
-        section: `## External links\n\n${dead.length} of ${links.length} links failed twice:\n\n${dead.map(d => `- [ ] ${d.url} (${d.why}), on \`${d.page}\``).join('\n')}\n`,
+        section: `## External links\n\nChecked ${links.length} links.\n`
+            + (broken.length ? `\n**Broken** (the server answered with an error):\n\n${list(broken)}\n` : '')
+            + (unreachable.length ? `\n**Unreachable** (no answer twice; the site may block automated requests, so check by hand):\n\n${list(unreachable)}\n` : ''),
         findings: dead.length,
     };
 }
