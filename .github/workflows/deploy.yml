@@ -28,6 +28,8 @@ jobs:
 
       - run: npm run build
 
+      - run: npm run check
+
       # CV PDFs and social cards: headless Chrome renders dist/render/** with a locally
       # installed Pretendard so Hangul renders identically to the website.
       - name: Install Pretendard
