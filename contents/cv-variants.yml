@@ -27,10 +27,11 @@
   group_by: topic
   sections: [experience, skills, publications, patents, education, awards, service]
 
+# Korean industry CV also shows military service (전문연구요원).
 - id: ml
   lang: ko
   base: short
   title: 이상민 이력서 (머신러닝)
   topics: [llm, ndt, shm, wind]
   group_by: topic
-  sections: [experience, skills, publications, patents, education, awards, service]
+  sections: [experience, skills, publications, patents, education, military, awards, service]
