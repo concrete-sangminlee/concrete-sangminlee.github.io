@@ -118,12 +118,6 @@ for (const lang of ['en', 'ko']) {
         'cite-copy': ko ? 'BibTeX 복사' : 'Copy BibTeX',
         'copyright-text': config['copyright-text'],
         'footer-updated': t.footerUpdated(now),
-        'footer-blog': t.footerLinks.blog,
-        'footer-source': t.footerLinks.source,
-        'cv-page': cvPath(lang),
-        'cv-label': t.cv,
-        'cv2-page': cvPath(other),
-        'cv2-label': t.cvOther,
     };
     const RAW = new Set(['copyright-text', 'footer-updated', 'root']);
     out = out.replace(/\{\{([\w-]+)\}\}/g, (m, k) => {
