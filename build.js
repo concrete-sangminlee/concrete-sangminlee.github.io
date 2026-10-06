@@ -25,7 +25,7 @@ import { renderOgCard, renderIcon } from './lib/og.js';
 import { renderPaper, paperPath, hasPage } from './lib/paper.js';
 import { renderSitemap } from './lib/sitemap.js';
 import { renderStatement, STATEMENTS } from './lib/statement.js';
-import { withFonts, copyFonts } from './lib/fonts.js';
+import { withFonts, buildFonts } from './lib/fonts.js';
 import { withCsp } from './lib/csp.js';
 
 const buildStart = Date.now();
@@ -68,6 +68,13 @@ const writeDist = (file, content) => {
 };
 // UI strings that scripts.js inserts, so the fonts cover them too.
 const scriptText = fs.readFileSync('static/js/scripts.js', 'utf8');
+// Pages with web fonts are written at the end: the font subsets are cut from the
+// text of all of them (lib/fonts.js), then each page gets its @font-face rules.
+const pagesWithFonts = [];
+const queuePage = (file, html, minifier, extraText = '') => pagesWithFonts.push({
+    file, html, minifier, extraText,
+    english: file !== '404.html' && /<html[^>]*\blang="en"/i.test(html),
+});
 
 // ==========================================================================
 // Homepages
@@ -132,7 +139,7 @@ for (const lang of ['en', 'ko']) {
     out = out.replace(cssRe, () => `\n<style>${mainCss}</style>`);
 
     // The cite dialog shows BibTeX/APA from bib-data, so its glyphs need faces too.
-    writeDist(ko ? 'ko/index.html' : 'index.html', await htmlMinify(withFonts(out, { extraText: scriptText + JSON.stringify(data.bibData) })));
+    queuePage(ko ? 'ko/index.html' : 'index.html', out, htmlMinify, scriptText + JSON.stringify(data.bibData));
 }
 
 // ==========================================================================
@@ -180,8 +187,7 @@ fs.rmSync(path.join(DIST_DIR, 'static/css'), { recursive: true, force: true });
 for (const f of ['robots.txt', 'manifest.json']) {
     if (fs.existsSync(f)) fs.copyFileSync(f, path.join(DIST_DIR, f));
 }
-writeDist('404.html', await htmlMinify(withFonts(fs.readFileSync('404.html', 'utf8'))));
-copyFonts(DIST_DIR);
+queuePage('404.html', fs.readFileSync('404.html', 'utf8'), htmlMinify);
 
 copyRecursive('apps/sequence-arena', path.join(DIST_DIR, 'sequence-arena'));
 
@@ -205,7 +211,7 @@ if (fs.existsSync('.well-known/security.txt')) fs.copyFileSync('.well-known/secu
     const ctx = { ...data, buildDate: now, css: cvCss, photo, variants: cvVariants };
     const min = html => minifyHTML(html, { collapseWhitespace: true, conservativeCollapse: true, removeComments: true });
     for (const v of cvVariants) {
-        writeDist(`${v.path}index.html`, await min(withFonts(renderCV(v.lang, { ...ctx, variant: v.variant, spec: v, mode: 'web' }))));
+        queuePage(`${v.path}index.html`, renderCV(v.lang, { ...ctx, variant: v.variant, spec: v, mode: 'web' }), min);
         writeDist(`render/pdf/${v.pdf.replace(/\.pdf$/, '')}.html`, await min(renderCV(v.lang, { ...ctx, variant: v.variant, spec: v, mode: 'print' })));
     }
     for (const s of STATEMENTS) {
@@ -213,7 +219,7 @@ if (fs.existsSync('.well-known/security.txt')) fs.copyFileSync('.well-known/secu
         if (!fs.existsSync(file)) continue;
         const md = fs.readFileSync(file, 'utf8');
         const sctx = { config, css: cvCss, buildDate: now };
-        writeDist(`${s.path}index.html`, await min(withFonts(renderStatement(s, md, { ...sctx, mode: 'web' }))));
+        queuePage(`${s.path}index.html`, renderStatement(s, md, { ...sctx, mode: 'web' }), min);
         writeDist(`render/pdf/${s.pdf.replace(/\.pdf$/, '')}.html`, await min(renderStatement(s, md, { ...sctx, mode: 'print' })));
     }
     // render/png/<dir>/<name>[@WxH].html -> static/<dir>/<name>.png (default 1200x630)
@@ -230,7 +236,7 @@ if (fs.existsSync('.well-known/security.txt')) fs.copyFileSync('.well-known/secu
 // ==========================================================================
 const paperPubs = data.pubs.filter(hasPage);
 for (const p of paperPubs) {
-    writeDist(`${paperPath(p)}index.html`, await htmlMinify(withFonts(renderPaper(p, data, { css: mainCss, siteUrl: SITE_URL }))));
+    queuePage(`${paperPath(p)}index.html`, renderPaper(p, data, { css: mainCss, siteUrl: SITE_URL }), htmlMinify);
 }
 
 writeDist('sitemap.xml', renderSitemap({
@@ -239,6 +245,13 @@ writeDist('sitemap.xml', renderSitemap({
     cvs: cvVariants.filter(v => !v.custom || v.listed).map(v => v.path),
     papers: paperPubs.map(paperPath),
 }));
+
+// ==========================================================================
+// Fonts: cut the subsets from every page's text, then finish and write the pages
+// ==========================================================================
+const faces = await buildFonts(pagesWithFonts, DIST_DIR);
+for (const p of pagesWithFonts) writeDist(p.file, await p.minifier(withFonts(p.html, faces, { extraText: p.extraText })));
+console.log(`Fonts: ${faces.map(f => `${f.name} ${f.cps.size} chars ${(f.bytes / 1024).toFixed(1)} KB`).join(', ')}`);
 
 // ==========================================================================
 function dirSize(dir) {

@@ -15,6 +15,7 @@ updates:
           - js-yaml
           - marked
           - pretendard
+          - subset-font
   - package-ecosystem: github-actions
     directory: /
     schedule:
