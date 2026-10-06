@@ -9,6 +9,7 @@
   },
   "scripts": {
     "build": "node build.js",
+    "check": "node scripts/check.js",
     "render": "bash scripts/render.sh"
   },
   "keywords": [
