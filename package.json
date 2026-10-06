@@ -24,11 +24,11 @@
   },
   "homepage": "https://concrete-sangminlee.github.io/",
   "devDependencies": {
-    "esbuild": "^0.28.1",
+    "esbuild": "^0.28.2",
     "html-minifier-terser": "^7.2.0",
-    "js-yaml": "^5.2.0",
-    "marked": "^18.0.5",
+    "js-yaml": "^5.4.2",
+    "marked": "^18.0.14",
     "pretendard": "^1.3.9",
-    "sharp": "^0.35.2"
+    "sharp": "^0.35.5"
   }
 }
