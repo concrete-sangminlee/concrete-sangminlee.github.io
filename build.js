@@ -21,7 +21,9 @@ import { loadData } from './lib/data.js';
 import { UI } from './lib/i18n.js';
 import { renderHome } from './lib/home.js';
 import { renderCV, CV_VARIANTS, cvVariantsFrom } from './lib/cv.js';
-import { renderOgCard } from './lib/og.js';
+import { renderOgCard, renderIcon } from './lib/og.js';
+import { renderPaper, paperPath, hasPage } from './lib/paper.js';
+import { renderSitemap } from './lib/sitemap.js';
 
 const buildStart = Date.now();
 const CONTENT_DIR = 'contents';
@@ -180,9 +182,6 @@ for (const f of ['robots.txt', '404.html', 'manifest.json']) {
 
 copyRecursive('apps/sequence-arena', path.join(DIST_DIR, 'sequence-arena'));
 
-if (fs.existsSync('sitemap.xml')) {
-    writeDist('sitemap.xml', fs.readFileSync('sitemap.xml', 'utf8').replace(/<lastmod>[^<]*<\/lastmod>/g, `<lastmod>${buildDate}</lastmod>`));
-}
 
 if (fs.existsSync('sw.js')) {
     const sw = fs.readFileSync('sw.js', 'utf8').replace('__CACHE_VERSION__', 'sml-' + Date.now());
@@ -206,10 +205,29 @@ if (fs.existsSync('.well-known/security.txt')) fs.copyFileSync('.well-known/secu
         writeDist(`${v.path}index.html`, await min(renderCV(v.lang, { ...ctx, variant: v.variant, spec: v, mode: 'web' })));
         writeDist(`render/pdf/${v.pdf.replace(/\.pdf$/, '')}.html`, await min(renderCV(v.lang, { ...ctx, variant: v.variant, spec: v, mode: 'print' })));
     }
+    // render/png/<dir>/<name>[@WxH].html -> static/<dir>/<name>.png (default 1200x630)
     for (const lang of ['en', 'ko']) {
-        writeDist(`render/png/og-${lang}.html`, renderOgCard(lang, { ...data, photo }));
+        writeDist(`render/png/og/og-${lang}.html`, renderOgCard(lang, { ...data, photo }));
+    }
+    for (const size of [192, 512]) {
+        writeDist(`render/png/assets/icon-maskable-${size}@${size}x${size}.html`, renderIcon());
     }
 }
+
+// ==========================================================================
+// Paper pages (Google Scholar citation tags) and the sitemap
+// ==========================================================================
+const paperPubs = data.pubs.filter(hasPage);
+for (const p of paperPubs) {
+    writeDist(`${paperPath(p)}index.html`, await htmlMinify(renderPaper(p, data, { css: mainCss, siteUrl: SITE_URL })));
+}
+
+writeDist('sitemap.xml', renderSitemap({
+    siteUrl: SITE_URL,
+    buildDate,
+    cvs: cvVariants.filter(v => !v.custom || v.listed).map(v => v.path),
+    papers: paperPubs.map(paperPath),
+}));
 
 // ==========================================================================
 function dirSize(dir) {
@@ -223,4 +241,5 @@ function dirSize(dir) {
 }
 console.log(`Publications: ${counts.journal} journal, ${counts.conference} conference, ${counts.thesis} thesis, ${counts.early} early`);
 console.log(`CVs: ${cvVariants.map(v => v.path).join(', ')}`);
+console.log(`Paper pages: ${paperPubs.length}`);
 console.log(`Build complete: dist/ (${(dirSize(DIST_DIR) / 1024).toFixed(1)} KB in ${((Date.now() - buildStart) / 1000).toFixed(2)}s)`);

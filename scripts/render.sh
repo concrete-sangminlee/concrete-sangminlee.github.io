@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Post-build rendering with headless Chrome:
 #   dist/render/pdf/<name>.html  ->  dist/cv/<name>.pdf          (CVs)
-#   dist/render/png/<name>.html  ->  dist/static/og/<name>.png   (1200x630 social cards)
+#   dist/render/png/<dir>/<name>[@WxH].html  ->  dist/static/<dir>/<name>.png
+#     (social cards in og/ at the default 1200x630, app icons in assets/)
 # then removes dist/render/.
 set -euo pipefail
 DIST="$(cd "$(dirname "$0")/.." && pwd)/dist"
@@ -17,7 +18,7 @@ fi
 FLAGS=(--headless=new --no-sandbox --disable-gpu --hide-scrollbars --run-all-compositor-stages-before-draw --virtual-time-budget=5000)
 
 shopt -s nullglob
-mkdir -p "$DIST/cv" "$DIST/static/og"
+mkdir -p "$DIST/cv"
 n=0
 for src in "$DIST"/render/pdf/*.html; do
   out="$DIST/cv/$(basename "${src%.html}").pdf"
@@ -25,9 +26,14 @@ for src in "$DIST"/render/pdf/*.html; do
   [ -s "$out" ] || { echo "render: failed to write $out" >&2; exit 1; }
   echo "render: ${out#$DIST/} ($(wc -c < "$out") bytes)"; n=$((n + 1))
 done
-for src in "$DIST"/render/png/*.html; do
-  out="$DIST/static/og/$(basename "${src%.html}").png"
-  "$CHROME" "${FLAGS[@]}" --window-size=1200,630 --screenshot="$out" "file://$src" 2>/dev/null
+for src in "$DIST"/render/png/*/*.html; do
+  name="$(basename "${src%.html}")"
+  size="1200x630"
+  if [[ "$name" == *@*x* ]]; then size="${name##*@}"; name="${name%@*}"; fi
+  dir="$DIST/static/$(basename "$(dirname "$src")")"
+  mkdir -p "$dir"
+  out="$dir/$name.png"
+  "$CHROME" "${FLAGS[@]}" --window-size="${size/x/,}" --screenshot="$out" "file://$src" 2>/dev/null
   [ -s "$out" ] || { echo "render: failed to write $out" >&2; exit 1; }
   echo "render: ${out#$DIST/} ($(wc -c < "$out") bytes)"; n=$((n + 1))
 done
