@@ -1,0 +1,78 @@
+// UI text in Korean and English. The browser language picks one; the menu can switch.
+
+export const STRINGS = {
+    en: {
+        title: 'Penguin Volley',
+        tagline: 'Beach volleyball on the ice',
+        vsCpu: '1P vs CPU',
+        twoP: '2P on one keyboard',
+        difficulty: 'CPU level',
+        easy: 'Easy', normal: 'Normal', hard: 'Hard',
+        points: 'Points to win',
+        sound: 'Sound',
+        on: 'On', off: 'Off',
+        langSwitch: 'Ko', langTitle: '한국어로 보기',
+        howTo: 'How to play',
+        howToBody: [
+            ['Player 1', 'A / D move · W jump · Space hit'],
+            ['Player 2', '← / → move · ↑ jump · Enter hit'],
+            ['Spike', 'Jump, then hit near the ball. Hold ↓ (S) to smash down, ↑ (W) to lob.'],
+            ['Dive', 'On the ground, hit while moving.'],
+            ['Touch', 'Use the on-screen buttons (player 1).'],
+        ],
+        install: 'Install app',
+        ready: 'Ready?',
+        point: n => `Point ${n}`,
+        cpu: 'CPU', p1: 'P1', p2: 'P2',
+        wins: n => `${n} wins!`,
+        youWin: 'You win!', youLose: 'CPU wins',
+        rematch: 'Play again', menu: 'Menu', resume: 'Resume', paused: 'Paused',
+        pause: 'Pause',
+        courtLabel: 'Penguin Volley court',
+        score: (a, b) => `Score ${a} to ${b}`,
+        keyboardOnly: 'Two-player mode needs a keyboard.',
+        rotate: 'Turn your phone sideways for a bigger court.',
+        offline: 'Ready to play offline.',
+        touchLeft: 'Move left', touchRight: 'Move right', touchJump: 'Jump', touchHit: 'Hit',
+    },
+    ko: {
+        title: '펭귄 발리',
+        tagline: '얼음 위의 비치 발리볼',
+        vsCpu: '1인 대 CPU',
+        twoP: '2인 대전 (한 키보드)',
+        difficulty: 'CPU 난이도',
+        easy: '쉬움', normal: '보통', hard: '어려움',
+        points: '승리 점수',
+        sound: '소리',
+        on: '켜기', off: '끄기',
+        langSwitch: 'En', langTitle: 'View in English',
+        howTo: '조작법',
+        howToBody: [
+            ['1P', 'A / D 이동 · W 점프 · Space 치기'],
+            ['2P', '← / → 이동 · ↑ 점프 · Enter 치기'],
+            ['스파이크', '점프한 뒤 공 가까이에서 치기. ↓(S)를 누르면 내리꽂기, ↑(W)를 누르면 높게 넘기기.'],
+            ['다이빙', '땅에서 이동하면서 치기.'],
+            ['터치', '화면 버튼으로 조작합니다 (1P).'],
+        ],
+        install: '앱 설치',
+        ready: '준비!',
+        point: n => `${n} 득점`,
+        cpu: 'CPU', p1: '1P', p2: '2P',
+        wins: n => `${n} 승리!`,
+        youWin: '승리!', youLose: 'CPU 승리',
+        rematch: '다시 하기', menu: '메뉴', resume: '계속하기', paused: '일시정지',
+        pause: '일시정지',
+        courtLabel: '펭귄 발리 경기장',
+        score: (a, b) => `점수 ${a} 대 ${b}`,
+        keyboardOnly: '2인 대전은 키보드가 필요합니다.',
+        rotate: '휴대폰을 가로로 돌리면 경기장이 더 커집니다.',
+        offline: '오프라인에서도 플레이할 수 있습니다.',
+        touchLeft: '왼쪽으로 이동', touchRight: '오른쪽으로 이동', touchJump: '점프', touchHit: '치기',
+    },
+};
+
+export function detectLang(saved) {
+    if (saved === 'ko' || saved === 'en') return saved;
+    const langs = navigator.languages?.length ? navigator.languages : [navigator.language || 'en'];
+    return langs.some(l => /^ko\b/i.test(l)) ? 'ko' : 'en';
+}
