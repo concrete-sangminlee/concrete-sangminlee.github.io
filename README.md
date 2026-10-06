@@ -46,7 +46,7 @@ npm run build  # outputs to dist/
 npm run check  # English pages English-only, links, CSP, fonts, JSON-LD, sitemap
 ```
 
-Pretendard is self-hosted from the `pretendard` npm package: each page inlines only the `@font-face` subsets its text uses and preloads the main ones (`lib/fonts.js`). Every page gets a Content-Security-Policy `<meta>` with hashes of its inline scripts, so `script-src` has no `'unsafe-inline'` (`lib/csp.js`). GitHub Pages cannot send headers, so `frame-ancestors` is not available.
+Pretendard is self-hosted and subset to the site's own text at build time (`lib/fonts.js`, `subset-font`): one Latin file, a tiny file for the Hangul on English pages, and one file with every other Hangul syllable the site uses (about 36, 2 and 60 KB). Each page inlines the `@font-face` rules it needs and preloads Latin (and Hangul on Korean pages). New content needs no font step: the next build cuts new subsets. Every page gets a Content-Security-Policy `<meta>` with hashes of its inline scripts, so `script-src` has no `'unsafe-inline'` (`lib/csp.js`). GitHub Pages cannot send headers, so `frame-ancestors` is not available.
 
 | Code | Role |
 |---|---|
