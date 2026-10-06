@@ -40,8 +40,11 @@ function walk(dir, out = []) {
     return out;
 }
 
-// Pages this repo generates (sequence-arena is a vendored app with its own checks).
-const pages = walk(DIST).filter(p => p.endsWith('.html') && !rel(p).startsWith('sequence-arena/'));
+// Pages this repo generates. Apps (apps/<name>/ -> /<name>/) are static bundles
+// with their own language, CSP and links, so they are not checked here.
+const APPS = fs.existsSync('apps') ? fs.readdirSync('apps').filter(n => fs.statSync(path.join('apps', n)).isDirectory()) : [];
+const isApp = r => APPS.some(a => r.startsWith(`${a}/`));
+const pages = walk(DIST).filter(p => p.endsWith('.html') && !isApp(rel(p)));
 
 // ------------------------------------------------------------------ 1. English only
 const isEnglish = file => {

@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <title>Penguin Volley</title>
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#8fd3ff"/>
+      <stop offset="1" stop-color="#2f86c8"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" fill="url(#sky)"/>
+  <ellipse cx="256" cy="440" rx="190" ry="40" fill="#eef8ff"/>
+  <!-- ball -->
+  <circle cx="372" cy="138" r="54" fill="#fff" stroke="#1f2a3c" stroke-width="8"/>
+  <path d="M332 104a64 64 0 0 1 0 68" fill="none" stroke="#2f7de1" stroke-width="12"/>
+  <path d="M412 104a64 64 0 0 0 0 68" fill="none" stroke="#ffcc33" stroke-width="12"/>
+  <!-- penguin -->
+  <ellipse cx="206" cy="428" rx="34" ry="14" fill="#f59f1a"/>
+  <ellipse cx="282" cy="428" rx="34" ry="14" fill="#f59f1a"/>
+  <ellipse cx="244" cy="300" rx="112" ry="140" fill="#1f2a3c"/>
+  <ellipse cx="266" cy="318" rx="76" ry="104" fill="#f8fbff"/>
+  <path d="M146 250h196v28H146z" fill="#e2483d"/>
+  <path d="M150 256c-34 10-52 40-60 74l28 6c6-24 18-44 38-56z" fill="#e2483d"/>
+  <ellipse cx="294" cy="214" rx="20" ry="24" fill="#fff"/>
+  <ellipse cx="242" cy="210" rx="16" ry="21" fill="#fff"/>
+  <circle cx="300" cy="218" r="10" fill="#111827"/>
+  <circle cx="246" cy="214" r="8" fill="#111827"/>
+  <path d="M312 238c40 4 64 12 68 22-22 10-48 10-68 6z" fill="#f59f1a"/>
+  <ellipse cx="328" cy="272" rx="14" ry="9" fill="#ff8ca0" opacity=".55"/>
+</svg>

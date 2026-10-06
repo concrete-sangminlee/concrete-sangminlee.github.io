@@ -13,6 +13,7 @@
 
 import fs from 'fs';
 import path from 'path';
+import crypto from 'crypto';
 import sharp from 'sharp';
 import esbuild from 'esbuild';
 import { minify as minifyHTML } from 'html-minifier-terser';
@@ -189,7 +190,24 @@ for (const f of ['robots.txt', 'manifest.json']) {
 }
 queuePage('404.html', fs.readFileSync('404.html', 'utf8'), htmlMinify);
 
-copyRecursive('apps/sequence-arena', path.join(DIST_DIR, 'sequence-arena'));
+// Static apps: apps/<name>/ is served at /<name>/, as is. A service worker that
+// contains __APP_VERSION__ gets a hash of the app's files, so a changed app gets
+// a fresh offline cache.
+const APPS = fs.existsSync('apps') ? fs.readdirSync('apps').filter(n => fs.statSync(path.join('apps', n)).isDirectory()) : [];
+for (const app of APPS) {
+    const src = path.join('apps', app);
+    const dest = path.join(DIST_DIR, app);
+    copyRecursive(src, dest);
+    const sw = path.join(dest, 'service-worker.js');
+    if (fs.existsSync(sw) && fs.readFileSync(sw, 'utf8').includes('__APP_VERSION__')) {
+        const hash = crypto.createHash('sha256');
+        const files = [];
+        const walk = d => fs.readdirSync(d).sort().forEach(f => (fs.statSync(path.join(d, f)).isDirectory() ? walk(path.join(d, f)) : files.push(path.join(d, f))));
+        walk(src);
+        for (const f of files) hash.update(f).update(fs.readFileSync(f));
+        fs.writeFileSync(sw, fs.readFileSync(sw, 'utf8').replaceAll('__APP_VERSION__', hash.digest('hex').slice(0, 12)));
+    }
+}
 
 
 if (fs.existsSync('sw.js')) {

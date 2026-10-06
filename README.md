@@ -4,7 +4,7 @@ Personal academic website for Sang Min Lee, Ph.D. Candidate in Artificial Intell
 
 **Website:** https://concrete-sangminlee.github.io
 
-**Static apps:** https://concrete-sangminlee.github.io/sequence-arena/
+**Static apps** (unlisted: not linked from the homepage, not in the sitemap): https://concrete-sangminlee.github.io/sequence-arena/, https://concrete-sangminlee.github.io/penguin-volley/
 
 ## About
 
@@ -59,7 +59,9 @@ Pretendard is self-hosted and subset to the site's own text at build time (`lib/
 | `lib/format.js`, `lib/i18n.js` | shared formatting, UI strings |
 | `scripts/check.js`, `scripts/render.sh` | post-build checks, headless Chrome rendering |
 | `scripts/maintenance.js` | weekly report (see below) |
-| `apps/sequence-arena/` | static bundle synced from its own source; copied to `/sequence-arena/` |
+| `apps/<name>/` | static apps, copied as-is to `/<name>/`; not checked by `npm run check`. A `service-worker.js` containing `__APP_VERSION__` gets a hash of the app's files |
+| `apps/sequence-arena/` | bundle synced from its own source |
+| `apps/penguin-volley/` | Penguin Volley, written here: plain ES modules, no build step, no image or sound files (canvas drawing, Web Audio). `js/physics.js` (deterministic, 60 Hz) and `js/ai.js` (CPU) have no DOM dependencies |
 
 ## CI
 

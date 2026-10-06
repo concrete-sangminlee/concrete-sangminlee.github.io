@@ -77,13 +77,16 @@ async function checkOrcid() {
 }
 
 // ------------------------------------------------------------------ 2. links
+// Apps under apps/ (served at /<name>/) are not part of the link check.
+const APPS = fs.existsSync('apps') ? fs.readdirSync('apps').filter(n => fs.statSync(path.join('apps', n)).isDirectory()) : [];
+
 function externalLinks(dist) {
     const links = new Map(); // url -> first page it appears on
     const walk = dir => {
         for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
             const p = path.join(dir, e.name);
             const r = path.relative(dist, p).split(path.sep).join('/');
-            if (e.isDirectory()) { if (r !== 'sequence-arena' && r !== 'render') walk(p); continue; }
+            if (e.isDirectory()) { if (!APPS.includes(r) && r !== 'render') walk(p); continue; }
             if (!p.endsWith('.html')) continue;
             const html = fs.readFileSync(p, 'utf8').replace(/<script\b[\s\S]*?<\/script>/gi, ' ');
             for (const m of html.matchAll(/\shref=["']?(https?:\/\/[^"'\s>]+)/gi)) {

@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; manifest-src 'self'; worker-src 'self'; media-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>Penguin Volley</title>
+    <meta name="description" content="Penguin Volley: two-player volleyball on the ice. Play the CPU or a friend on one keyboard, in the browser or offline.">
+    <meta name="robots" content="noindex">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
+    <meta name="color-scheme" content="light">
+    <meta name="theme-color" content="#2f86c8">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Penguin Volley">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="manifest" href="./manifest.webmanifest">
+    <link rel="icon" href="./icons/icon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
+    <link rel="stylesheet" href="./styles.css">
+    <link rel="modulepreload" href="./js/physics.js">
+    <link rel="modulepreload" href="./js/ai.js">
+    <link rel="modulepreload" href="./js/render.js">
+    <script type="module" src="./js/main.js"></script>
+</head>
+<body>
+    <main class="app">
+        <div class="stage">
+            <canvas id="court" role="img" aria-label="Penguin Volley court"></canvas>
+
+            <button class="hud-btn" id="pause-btn" type="button" data-i18n-label="pause">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14M16 5v14"/></svg>
+            </button>
+
+            <section class="overlay" id="menu" aria-labelledby="menu-title">
+                <div class="card">
+                    <h1 id="menu-title" data-i18n="title">Penguin Volley</h1>
+                    <p class="tagline" data-i18n="tagline">Beach volleyball on the ice</p>
+                    <div class="modes">
+                        <button class="btn btn-primary" type="button" data-mode="cpu" data-i18n="vsCpu">1P vs CPU</button>
+                        <button class="btn" type="button" data-mode="2p" data-i18n="twoP">2P on one keyboard</button>
+                    </div>
+                    <div class="opts">
+                        <div class="opt" role="group" aria-labelledby="lvl-label">
+                            <span class="opt-label" id="lvl-label" data-i18n="difficulty">CPU level</span>
+                            <span class="seg">
+                                <button type="button" data-level="easy" data-i18n="easy">Easy</button>
+                                <button type="button" data-level="normal" data-i18n="normal">Normal</button>
+                                <button type="button" data-level="hard" data-i18n="hard">Hard</button>
+                            </span>
+                        </div>
+                        <div class="opt" role="group" aria-labelledby="pts-label">
+                            <span class="opt-label" id="pts-label" data-i18n="points">Points to win</span>
+                            <span class="seg">
+                                <button type="button" data-points="5">5</button>
+                                <button type="button" data-points="10">10</button>
+                                <button type="button" data-points="15">15</button>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <button class="btn btn-small" id="sound" type="button" aria-pressed="true">Sound: On</button>
+                        <button class="btn btn-small" id="lang" type="button">Ko</button>
+                        <button class="btn btn-small" id="install" type="button" data-i18n="install" hidden>Install app</button>
+                    </div>
+                    <details class="howto">
+                        <summary data-i18n="howTo">How to play</summary>
+                        <ul id="howto-list"></ul>
+                    </details>
+                </div>
+            </section>
+
+            <section class="overlay" id="pause" aria-labelledby="pause-title" hidden>
+                <div class="card card-small">
+                    <h2 id="pause-title" data-i18n="paused">Paused</h2>
+                    <div class="modes">
+                        <button class="btn btn-primary" type="button" data-action="resume" data-i18n="resume">Resume</button>
+                        <button class="btn" type="button" data-action="menu" data-i18n="menu">Menu</button>
+                    </div>
+                </div>
+            </section>
+
+            <section class="overlay" id="over" aria-labelledby="over-title" hidden>
+                <div class="card card-small">
+                    <h2 id="over-title"></h2>
+                    <p class="final" id="over-score"></p>
+                    <div class="modes">
+                        <button class="btn btn-primary" type="button" data-action="rematch" data-i18n="rematch">Play again</button>
+                        <button class="btn" type="button" data-action="menu" data-i18n="menu">Menu</button>
+                    </div>
+                </div>
+            </section>
+
+            <p class="toast" id="toast" role="status"></p>
+        </div>
+
+        <div class="touch" id="touch">
+            <div class="pad">
+                <button type="button" data-key="left" data-i18n-label="touchLeft"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
+                <button type="button" data-key="right" data-i18n-label="touchRight"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>
+            </div>
+            <div class="pad">
+                <button type="button" data-key="up" data-i18n-label="touchJump"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 15l7-7 7 7"/></svg></button>
+                <button type="button" class="hit" data-key="hit" data-i18n-label="touchHit"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="6"/></svg></button>
+            </div>
+        </div>
+
+        <p class="rotate" data-i18n="rotate">Turn your phone sideways for a bigger court.</p>
+        <p class="sr-only" id="status" aria-live="polite"></p>
+        <noscript><p class="noscript">Penguin Volley needs JavaScript.</p></noscript>
+    </main>
+</body>
+</html>

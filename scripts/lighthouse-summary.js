@@ -25,7 +25,7 @@ for (const f of fs.readdirSync(dir).filter(x => /^lhr-.*\.json$/.test(x))) {
         for (const ref of r.categories[cat]?.auditRefs || []) {
             const a = r.audits[ref.id];
             if (!ref.weight || a.score === null || a.score >= 1) continue;
-            if (cat === 'seo' && page.startsWith('/statements/')) continue;
+            if (cat === 'seo' && /^\/(statements|penguin-volley)\//.test(page)) continue;
             const items = (a.details?.items || []).slice(0, 3).map(i => i.node?.snippet || i.node?.selector || i.url || '').filter(Boolean);
             notes.push(`- \`${page}\` ${cat}: **${a.id}** (${a.title})${items.length ? `\n${items.map(s => `  - \`${String(s).slice(0, 140)}\``).join('\n')}` : ''}`);
         }
@@ -36,6 +36,6 @@ for (const f of fs.readdirSync(dir).filter(x => /^lhr-.*\.json$/.test(x))) {
         notes.push(`- \`${page}\` performance ${Math.round(r.categories.performance.score * 100)}: LCP element \`${String(lcp || '?').slice(0, 120)}\`${blocking ? `; render-blocking: ${blocking}` : ''}`);
     }
 }
-const out = `### Lighthouse (mobile)\n\n${md}\n\nSEO is not asserted for /statements/ (noindex on purpose).\n${notes.length ? `\n${notes.join('\n')}\n` : ''}`;
+const out = `### Lighthouse (mobile)\n\n${md}\n\nSEO is not asserted for /statements/ and /penguin-volley/ (noindex on purpose).\n${notes.length ? `\n${notes.join('\n')}\n` : ''}`;
 console.log(out);
 if (process.env.GITHUB_STEP_SUMMARY) fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, out);
