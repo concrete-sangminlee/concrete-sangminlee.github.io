@@ -25,6 +25,8 @@ import { renderOgCard, renderIcon } from './lib/og.js';
 import { renderPaper, paperPath, hasPage } from './lib/paper.js';
 import { renderSitemap } from './lib/sitemap.js';
 import { renderStatement, STATEMENTS } from './lib/statement.js';
+import { withFonts, copyFonts } from './lib/fonts.js';
+import { withCsp } from './lib/csp.js';
 
 const buildStart = Date.now();
 const CONTENT_DIR = 'contents';
@@ -58,11 +60,14 @@ const htmlMinify = html => minifyHTML(html, {
 
 fs.rmSync(DIST_DIR, { recursive: true, force: true });
 fs.mkdirSync(DIST_DIR, { recursive: true });
+// Site pages get a CSP computed from their final bytes; render/ sources are printed locally.
 const writeDist = (file, content) => {
     const p = path.join(DIST_DIR, file);
     fs.mkdirSync(path.dirname(p), { recursive: true });
-    fs.writeFileSync(p, content);
+    fs.writeFileSync(p, file.endsWith('.html') && !file.startsWith('render/') ? withCsp(String(content)) : content);
 };
+// UI strings that scripts.js inserts, so the fonts cover them too.
+const scriptText = fs.readFileSync('static/js/scripts.js', 'utf8');
 
 // ==========================================================================
 // Homepages
@@ -132,7 +137,8 @@ for (const lang of ['en', 'ko']) {
     if (!cssRe.test(out)) fail('INLINE_CSS_HERE marker not found in index.html');
     out = out.replace(cssRe, () => `\n<style>${mainCss}</style>`);
 
-    writeDist(ko ? 'ko/index.html' : 'index.html', await htmlMinify(out));
+    // The cite dialog shows BibTeX/APA from bib-data, so its glyphs need faces too.
+    writeDist(ko ? 'ko/index.html' : 'index.html', await htmlMinify(withFonts(out, { extraText: scriptText + JSON.stringify(data.bibData) })));
 }
 
 // ==========================================================================
@@ -177,9 +183,11 @@ fs.rmSync(path.join(DIST_DIR, 'static/css'), { recursive: true, force: true });
     fs.writeFileSync(jsPath, result.code);
 }
 
-for (const f of ['robots.txt', '404.html', 'manifest.json']) {
+for (const f of ['robots.txt', 'manifest.json']) {
     if (fs.existsSync(f)) fs.copyFileSync(f, path.join(DIST_DIR, f));
 }
+writeDist('404.html', await htmlMinify(withFonts(fs.readFileSync('404.html', 'utf8'))));
+copyFonts(DIST_DIR);
 
 copyRecursive('apps/sequence-arena', path.join(DIST_DIR, 'sequence-arena'));
 
@@ -203,7 +211,7 @@ if (fs.existsSync('.well-known/security.txt')) fs.copyFileSync('.well-known/secu
     const ctx = { ...data, buildDate: now, css: cvCss, photo, variants: cvVariants };
     const min = html => minifyHTML(html, { collapseWhitespace: true, conservativeCollapse: true, removeComments: true });
     for (const v of cvVariants) {
-        writeDist(`${v.path}index.html`, await min(renderCV(v.lang, { ...ctx, variant: v.variant, spec: v, mode: 'web' })));
+        writeDist(`${v.path}index.html`, await min(withFonts(renderCV(v.lang, { ...ctx, variant: v.variant, spec: v, mode: 'web' }))));
         writeDist(`render/pdf/${v.pdf.replace(/\.pdf$/, '')}.html`, await min(renderCV(v.lang, { ...ctx, variant: v.variant, spec: v, mode: 'print' })));
     }
     for (const s of STATEMENTS) {
@@ -211,7 +219,7 @@ if (fs.existsSync('.well-known/security.txt')) fs.copyFileSync('.well-known/secu
         if (!fs.existsSync(file)) continue;
         const md = fs.readFileSync(file, 'utf8');
         const sctx = { config, css: cvCss, buildDate: now };
-        writeDist(`${s.path}index.html`, await min(renderStatement(s, md, { ...sctx, mode: 'web' })));
+        writeDist(`${s.path}index.html`, await min(withFonts(renderStatement(s, md, { ...sctx, mode: 'web' }))));
         writeDist(`render/pdf/${s.pdf.replace(/\.pdf$/, '')}.html`, await min(renderStatement(s, md, { ...sctx, mode: 'print' })));
     }
     // render/png/<dir>/<name>[@WxH].html -> static/<dir>/<name>.png (default 1200x630)
@@ -228,7 +236,7 @@ if (fs.existsSync('.well-known/security.txt')) fs.copyFileSync('.well-known/secu
 // ==========================================================================
 const paperPubs = data.pubs.filter(hasPage);
 for (const p of paperPubs) {
-    writeDist(`${paperPath(p)}index.html`, await htmlMinify(renderPaper(p, data, { css: mainCss, siteUrl: SITE_URL })));
+    writeDist(`${paperPath(p)}index.html`, await htmlMinify(withFonts(renderPaper(p, data, { css: mainCss, siteUrl: SITE_URL }))));
 }
 
 writeDist('sitemap.xml', renderSitemap({

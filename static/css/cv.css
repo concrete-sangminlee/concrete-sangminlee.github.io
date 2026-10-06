@@ -112,6 +112,12 @@ em { font-style: normal; color: var(--ink-2); }
     color: var(--ink-2);
 }
 .cv-contact div { display: flex; justify-content: flex-end; gap: 2mm; }
+/* On screen each contact link is a 24px touch target (WCAG 2.5.8); the PDF keeps the tight block. */
+@media screen {
+    .cv-contact { gap: 0; }
+    .cv-contact div { align-items: center; }
+    .cv-contact a { display: inline-flex; align-items: center; min-height: 24px; }
+}
 .cv-contact dt { color: var(--ink-3); }
 .cv-contact a:hover { color: var(--accent); }
 
@@ -182,6 +188,17 @@ p.rs { margin-top: 0.2mm; }
 .pubs .ref { color: var(--ink-2); }
 .pubs .pt { color: var(--ink); font-weight: 600; }
 .pubs a { color: var(--accent); }
+/* Links inside running text are underlined on screen, not only coloured (WCAG 1.4.1).
+   The PDF keeps plain text. */
+@media screen {
+    .pubs a, .more a, .st a, .cv-foot a {
+        text-decoration: underline;
+        text-decoration-thickness: 0.5pt;
+        text-underline-offset: 0.18em;
+        text-decoration-color: color-mix(in srgb, currentColor 45%, transparent);
+    }
+    .pubs a:hover, .more a:hover, .st a:hover, .cv-foot a:hover { text-decoration-color: currentColor; }
+}
 .idx {
     display: inline-block;
     padding: 0 1.2mm;

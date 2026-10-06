@@ -18,7 +18,7 @@ jobs:
         with:
           fetch-depth: 0 # sitemap <lastmod> comes from git history
 
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@v7
         with:
           node-version-file: '.nvmrc'
           cache: npm
@@ -29,21 +29,27 @@ jobs:
 
       - run: npm run check
 
+      # Headless Chrome prints the PDFs with the same Pretendard the site serves (npm package).
       - name: Install Pretendard
         run: |
           mkdir -p ~/.local/share/fonts
-          curl -fsSL -o ~/.local/share/fonts/PretendardVariable.ttf \
-            https://raw.githubusercontent.com/orioncactus/pretendard/v1.3.9/packages/pretendard/dist/public/variable/PretendardVariable.ttf
+          cp node_modules/pretendard/dist/public/variable/PretendardVariable.ttf ~/.local/share/fonts/
           fc-cache -f
 
       - run: npm run render
 
-      # Accessibility and best practices must stay >= 95; SEO and performance warn.
-      # Report links are printed in the log (temporary public storage).
+      # Thresholds in lighthouserc.json: accessibility, best practices and SEO 100,
+      # CLS <= 0.1 (errors); performance >= 90 (warning). Scores go to the job
+      # summary; full reports are linked in the log (temporary public storage).
       - name: Lighthouse
-        run: npx --yes @lhci/cli@0.15.1 autorun
+        run: |
+          npx --yes @lhci/cli@0.15.1 collect
+          node scripts/lighthouse-summary.js
+          npx --yes @lhci/cli@0.15.1 upload
+          npx --yes @lhci/cli@0.15.1 assert
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
+        if: always()
         with:
           name: rendered
           path: |
@@ -51,7 +57,8 @@ jobs:
             dist/static/og/*.png
             dist/static/assets/icon-maskable-*.png
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
+        if: always()
         with:
           name: site
           path: dist

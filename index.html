@@ -8,8 +8,7 @@
     <meta name="description" content="{{description}}" />
     <meta name="author" content="Sang Min Lee" />
     <meta name="robots" content="index, follow" />
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src 'self' https://cdn.jsdelivr.net; img-src 'self' data: https:; script-src 'self' 'unsafe-inline'; worker-src 'self'; connect-src 'self'; base-uri 'self'; form-action 'self'" />
-    <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+    <!-- Content-Security-Policy and referrer policy are added by build.js (lib/csp.js) -->
     <meta name="referrer" content="strict-origin-when-cross-origin" />
 
     <script>
@@ -49,9 +48,8 @@
     <link rel="icon" type="image/png" sizes="32x32" href="{{root}}static/assets/favicon-32.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="{{root}}static/assets/apple-touch-icon.png" />
 
-    <!-- Pretendard: one family for Latin and Hangul (dynamic subset, loads only the glyphs a page uses) -->
-    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+    <!-- Pretendard, self-hosted: build.js inlines the @font-face rules this page needs (lib/fonts.js) -->
+    <!-- @FONTS -->
 
     <!-- INLINE_CSS_HERE: build.js replaces this comment and the link below with an inline style tag -->
     <link rel="stylesheet" href="{{root}}static/css/main.css" />

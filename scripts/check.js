@@ -7,7 +7,9 @@
  *      Only the Korean name is allowed.
  *   2. Internal links resolve: every same-site href/src in the generated pages points
  *      to a file in dist/ (CV PDFs: to the page scripts/render.sh prints them from).
- *   3. Every sitemap URL resolves to a page in dist/.
+ *   3. Every page has a Content-Security-Policy, self-hosted fonts, and valid
+ *      JSON-LD (paper pages must have it).
+ *   4. Every sitemap URL resolves to a page in dist/.
  *
  * Exits non-zero with a list of problems. No dependencies.
  */
@@ -106,6 +108,19 @@ for (const file of pages.filter(p => !rel(p).startsWith('render/'))) {
         if (!exists(target)) broken.add(url);
     }
     if (broken.size) problems.push(`Broken links in ${rel(file)}: ${[...broken].join(', ')}`);
+}
+
+// ------------------------------------------------------------------ 2b. head: CSP, fonts, JSON-LD
+for (const file of pages.filter(p => !rel(p).startsWith('render/'))) {
+    const html = fs.readFileSync(file, 'utf8');
+    const r = rel(file);
+    if (!/<meta http-equiv="?Content-Security-Policy/i.test(html)) problems.push(`${r}: no Content-Security-Policy`);
+    if (/cdn\.jsdelivr\.net|fonts\.googleapis\.com/.test(html)) problems.push(`${r}: loads fonts or styles from a CDN`);
+    if (/<!-- @FONTS -->/.test(html)) problems.push(`${r}: font slot was not filled`);
+    for (const m of html.matchAll(/<script type="?application\/ld\+json"?[^>]*>([\s\S]*?)<\/script>/gi)) {
+        try { JSON.parse(m[1]); } catch (err) { problems.push(`${r}: invalid JSON-LD (${err.message})`); }
+    }
+    if (r.includes('publications/') && !/application\/ld\+json/.test(html)) problems.push(`${r}: paper page without JSON-LD`);
 }
 
 // ------------------------------------------------------------------ 3. sitemap
