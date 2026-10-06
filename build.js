@@ -138,7 +138,7 @@ for (const lang of ['en', 'ko']) {
     out = out.replace(cssRe, () => `\n<style>${mainCss}</style>`);
 
     // The cite dialog shows BibTeX/APA from bib-data, so its glyphs need faces too.
-    writeDist(ko ? 'ko/index.html' : 'index.html', await htmlMinify(withFonts(out, { extraText: scriptText + JSON.stringify(data.bibData), maxPreload: ko ? 3 : 2 })));
+    writeDist(ko ? 'ko/index.html' : 'index.html', await htmlMinify(withFonts(out, { extraText: scriptText + JSON.stringify(data.bibData) })));
 }
 
 // ==========================================================================
