@@ -122,7 +122,7 @@ experience:
 
   - title: Research Engineer (Intern)
     title_ko: 연구원 (인턴)
-    org: Chungyeon Architects (친환경계획그룹 청연건축사사무소), Seoul, Korea
+    org: Chungyeon Architects, Seoul, Korea
     org_ko: 친환경계획그룹 청연건축사사무소, 서울
     start: 2018-07
     end: 2018-08
@@ -270,14 +270,14 @@ awards:
     start: 2022-05
     note: Spring Conference 2022
     note_ko: 2022년도 봄 학술대회
-  - title: 센구조 장학금
+  - title: Sen Engineering Group Scholarship
     title_ko: 서울대학교 센구조 장학금
     by: Department of Architecture and Architectural Engineering, SNU
     by_ko: 서울대학교 건축학과
     start: 2021-09
     note: Fall 2021
     note_ko: 2021년 2학기
-  - title: 관악회 장학금
+  - title: Gwanakhoe Foundation
     title_ko: 서울대학교 관악회 장학금
     by: Gwanakhoe, SNU
     by_ko: 서울대학교 관악회
@@ -287,7 +287,7 @@ awards:
   # Earlier honors: on the homepage they are collapsed; they are not in the CVs.
   - title: Commendation from the Mayor of Uiwang
     title_ko: 의왕시장 공로상 표창
-    by: For leading the Uiwang Bugok center of 배움을 나누는 사람들
+    by: For leading the Uiwang Bugok center of Edushare Korea
     by_ko: 배움을 나누는 사람들 의왕 부곡교육장 대표교사
     start: 2018-01
     earlier: true
@@ -375,7 +375,8 @@ service:
       role_ko: 학생회원
       start: 2025-03
   outreach:
-    - title: 배움을 나누는 사람들
+    - title: Edushare Korea
+      title_ko: 배움을 나누는 사람들
       role: Mathematics teacher; lead teacher of the Uiwang Bugok center
       role_ko: 정교사, 의왕부곡교육장 대표교사
       note: Taught mathematics to students from low-income families
