@@ -9,12 +9,28 @@
 #   topics    research ids from research.yml to keep, in display order
 #   group_by  topic | type            group publications by research area or by type
 #   listed    true lets search engines index the page (default: unlisted)
+#   sections  which sections to include, in order (default: all, standard order):
+#             interests, education, experience, publications, patents, projects,
+#             teaching, awards, certifications, service, outreach, military, skills
+#             (short CVs fold certifications into awards)
 #
 # Pages are unlisted by default: share the link or attach the PDF.
+# Academic applications use the standard full CVs (/cv/, /cv/ko/).
 
+# Industry (ML engineer / research scientist): experience and skills first,
+# papers grouped by research area, no teaching.
 - id: ml
   lang: en
   base: short
   title: Sang Min Lee, CV (machine learning)
   topics: [llm, ndt, shm, wind]
   group_by: topic
+  sections: [experience, skills, publications, patents, education, awards, service]
+
+- id: ml
+  lang: ko
+  base: short
+  title: 이상민 이력서 (머신러닝)
+  topics: [llm, ndt, shm, wind]
+  group_by: topic
+  sections: [experience, skills, publications, patents, education, awards, service]

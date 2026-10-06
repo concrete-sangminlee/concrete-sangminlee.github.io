@@ -4,9 +4,6 @@
   "description": "Personal academic website for Sang Min Lee, Ph.D. Candidate in Artificial Intelligence at Seoul National University.",
   "main": "build.js",
   "type": "module",
-  "directories": {
-    "doc": "docs"
-  },
   "scripts": {
     "build": "node build.js",
     "check": "node scripts/check.js",

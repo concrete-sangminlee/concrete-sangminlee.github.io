@@ -3,7 +3,8 @@
  * Post-build checks on dist/. Run after `npm run build`, before `npm run render`.
  *
  *   1. English pages are English only: no Hangul in the visible text of the English
- *      homepage, CVs (web and print), and social card. Only the Korean name is allowed.
+ *      homepage, CVs (web and print), English paper pages, social card and icons.
+ *      Only the Korean name is allowed.
  *   2. Internal links resolve: every same-site href/src in the generated pages points
  *      to a file in dist/ (CV PDFs: to the page scripts/render.sh prints them from).
  *   3. Every sitemap URL resolves to a page in dist/.
@@ -45,8 +46,9 @@ const isEnglish = file => {
     const r = rel(file);
     if (r === 'index.html') return true; // 404.html is bilingual by design
     if (r.startsWith('cv/') && !r.startsWith('cv/ko/')) return true;
+    if (r.startsWith('publications/')) return true; // English papers; Korean ones are under ko/
     if (r.startsWith('render/pdf/')) return !/-ko(-|\.html$)/.test(path.basename(r));
-    if (r.startsWith('render/png/')) return path.basename(r) === 'og-en.html';
+    if (r.startsWith('render/png/')) return path.basename(r) !== 'og-ko.html';
     return false;
 };
 
