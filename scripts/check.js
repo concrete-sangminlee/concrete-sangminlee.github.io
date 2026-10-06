@@ -3,8 +3,7 @@
  * Post-build checks on dist/. Run after `npm run build`, before `npm run render`.
  *
  *   1. English pages are English only: no Hangul in the visible text of the English
- *      homepage, CVs (web and print), and social card. A few deliberate
- *      Korean strings (the link to the Korean pages, the Korean name) are allowed.
+ *      homepage, CVs (web and print), and social card. Only the Korean name is allowed.
  *   2. Internal links resolve: every same-site href/src in the generated pages points
  *      to a file in dist/ (CV PDFs: to the page scripts/render.sh prints them from).
  *   3. Every sitemap URL resolves to a page in dist/.
@@ -18,8 +17,8 @@ const DIST = 'dist';
 const SITE = 'https://concrete-sangminlee.github.io/';
 // Served from other repositories under the same domain.
 const EXTERNAL_PREFIXES = ['/blog/', '/thinkmany/'];
-// Korean text that belongs on English pages.
-const ALLOWED_KOREAN = ['한국어로 보기', '한국어', '국문 CV', '이상민'];
+// Korean text that belongs on English pages: the name shown next to "Sang Min Lee".
+const ALLOWED_KOREAN = ['이상민'];
 
 if (!fs.existsSync(DIST)) {
     console.error('check: dist/ not found (run npm run build first)');

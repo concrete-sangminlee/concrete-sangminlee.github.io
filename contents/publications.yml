@@ -360,6 +360,7 @@
   year: 2016
   authors: Lee, S. M., & Jeon, Y. C.
   title: GeoGebra를 활용한 Cycloid 곡선의 응용과 일반화에 대한 연구
+  title_en: Applications and generalization of the cycloid using GeoGebra
   authors_ko: 이상민, 전영철
   note_ko: 졸업연구
   venue: Korea Science Academy of KAIST
@@ -376,14 +377,17 @@
   year: 2015
   authors: Jeon, Y. C., Cha, S. H., Lee, S. M., & Jung, S. H.
   title: Boolean 환과 그 일반화에 대한 연구
+  title_en: Boolean rings and their generalization
   authors_ko: 전영철, 차성훈, 이상민, 정상현
   venue: 한국수학교육학회 뉴스레터
+  venue_en: Newsletter of the Korea Society of Mathematical Education
   details: 31(4), 11
 
 - type: early
   year: 2014
   authors: Lee, S. M., Lee, C. H., Jung, S. H., Jung, J. S., Kim, Y. G., Jeon, Y. C., & Cheon, J. A.
   title: 곱셈에 대한 교환법칙이 성립하지 않는 대수적 구조에 대한 연구
+  title_en: Algebraic structures with non-commutative multiplication
   authors_ko: 이상민, 이채훈, 정상현, 정주상, 김양균, 전영철, 천정애
   note_ko: R&E 보고서
   venue: Korea Science Academy of KAIST
@@ -393,6 +397,8 @@
   year: 2014
   authors: Jeon, Y. C., Kim, Y. G., Lee, S. M., Lee, C. H., Jung, S. H., & Jung, J. S.
   title: 정역의 일반화에 대한 연구
+  title_en: A generalization of integral domains
   authors_ko: 전영철, 김양균, 이상민, 이채훈, 정상현, 정주상
   venue: 한국수학교육학회 뉴스레터
+  venue_en: Newsletter of the Korea Society of Mathematical Education
   details: 30(5), 17
