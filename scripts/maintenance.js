@@ -20,6 +20,10 @@ const args = process.argv.slice(2);
 const outFile = args.includes('--out') ? args[args.indexOf('--out') + 1] : null;
 const data = loadData('contents', msg => { throw new Error(msg); });
 const UA = 'Mozilla/5.0 (compatible; site-maintenance; +https://concrete-sangminlee.github.io/)';
+// Links that are known to fail the automated check and are correct as they are.
+const IGNORE_LINKS = new Set([
+    'https://doi.org/10.1061/JSENDH.STENG-14823', // lee2025svdd, J. Struct. Eng.: confirmed by the author
+]);
 
 async function get(url, { method = 'GET', timeout = 20000, headers = {} } = {}) {
     const ctrl = new AbortController();
@@ -84,7 +88,7 @@ function externalLinks(dist) {
             const html = fs.readFileSync(p, 'utf8').replace(/<script\b[\s\S]*?<\/script>/gi, ' ');
             for (const m of html.matchAll(/\shref=["']?(https?:\/\/[^"'\s>]+)/gi)) {
                 const url = m[1].replace(/&amp;/g, '&');
-                if (url.startsWith('https://concrete-sangminlee.github.io/')) continue;
+                if (url.startsWith('https://concrete-sangminlee.github.io/') || IGNORE_LINKS.has(url)) continue;
                 if (!links.has(url)) links.set(url, r);
             }
         }
