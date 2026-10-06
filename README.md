@@ -43,8 +43,10 @@ Every CV page has a PDF next to it in `/cv/`. `npm run render` prints the PDFs a
 ```sh
 npm ci
 npm run build  # outputs to dist/
-npm run check  # English pages English-only, internal links, sitemap
+npm run check  # English pages English-only, links, CSP, fonts, JSON-LD, sitemap
 ```
+
+Pretendard is self-hosted from the `pretendard` npm package: each page inlines only the `@font-face` subsets its text uses and preloads the main ones (`lib/fonts.js`). Every page gets a Content-Security-Policy `<meta>` with hashes of its inline scripts, so `script-src` has no `'unsafe-inline'` (`lib/csp.js`). GitHub Pages cannot send headers, so `frame-ancestors` is not available.
 
 | Code | Role |
 |---|---|
@@ -52,6 +54,8 @@ npm run check  # English pages English-only, internal links, sitemap
 | `lib/data.js` | loads and validates `contents/`; BibTeX keys, APA strings, counts |
 | `lib/home.js`, `lib/cv.js`, `lib/paper.js` | homepage, CVs, paper pages |
 | `lib/og.js`, `lib/sitemap.js` | social cards and icons, sitemap |
+| `lib/fonts.js`, `lib/csp.js` | self-hosted font subsets, Content-Security-Policy |
+| `lib/statement.js` | research and teaching statements |
 | `lib/format.js`, `lib/i18n.js` | shared formatting, UI strings |
 | `scripts/check.js`, `scripts/render.sh` | post-build checks, headless Chrome rendering |
 | `scripts/maintenance.js` | weekly report (see below) |
@@ -59,7 +63,7 @@ npm run check  # English pages English-only, internal links, sitemap
 
 ## CI
 
-- **Pull requests** (`check.yml`): build, `npm run check`, render, and Lighthouse (accessibility and best practices must stay at 95+). The PDFs and the whole built site are attached to the run.
+- **Pull requests** (`check.yml`): build, `npm run check`, render, and Lighthouse on six pages: accessibility, best practices and SEO must be 100 (SEO not checked for the noindex statements), CLS at most 0.1; performance below 90 warns. Scores appear in the job summary. The PDFs and the whole built site are attached to the run.
 - **Push to `master`** (`deploy.yml`): build, check, render, deploy to GitHub Pages.
 - **Mondays** (`maintenance.yml`): lists works on ORCID that are missing from `publications.yml` and dead external links, in an issue titled "Site maintenance report". The issue closes itself when everything is clean. Run it any time from the Actions tab.
 
