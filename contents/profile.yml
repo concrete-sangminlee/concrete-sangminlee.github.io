@@ -91,19 +91,6 @@ experience:
       - School of Civil Engineering and Environmental Sciences 방문학생
       - 원격탐사 및 풍공학 분야 기계학습 공동연구
 
-  - title: Machine Learning Engineer (Intern)
-    title_ko: 머신러닝 엔지니어 (인턴)
-    org: Waddle Corporation, Seoul, Korea
-    org_ko: 와들, 서울
-    start: 2024-09
-    end: 2025-02
-    notes:
-      - Built an LLM-as-a-judge system with a user simulator and an LLM evaluator
-      - Aligned the LLM evaluator with human judgments
-    notes_ko:
-      - 사용자 시뮬레이터와 LLM 평가기를 포함한 LLM-as-a-Judge 시스템 개발
-      - LLM 평가기와 사람 평가 간 정렬
-
   - title: Undergraduate Research Assistant
     title_ko: 학부연구생
     org: Seoul National University
