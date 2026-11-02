@@ -1,0 +1,27 @@
+name: Penguin Volley browser verification
+on: push
+jobs:
+  browser:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: '.nvmrc'
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - name: Browser verification
+        run: |
+          mkdir -p pv-artifacts
+          cd dist
+          python3 -m http.server 8795 >/tmp/pv-http.log 2>&1 &
+          cd ..
+          CHROME=$(command -v google-chrome || command -v google-chrome-stable || command -v chromium)
+          CHROME="$CHROME" node scripts/tmp-pv-browser.mjs
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: penguin-volley-browser-screenshots
+          path: pv-artifacts
+          retention-days: 1
