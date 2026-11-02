@@ -3,7 +3,7 @@
 // Difficulty changes how often it re-plans, how accurately it reads the ball,
 // how often it attacks and how well it picks a spike; it never moves faster
 // than a person can.
-import { GROUND, NET, BALL_R, HOME_X, moveBall, hitCircle, spikeVelocity, makeRng } from './physics.js';
+import { GROUND, NET, BALL_R, HOME_X, moveBall, hitCircle, spikeVelocity, predictLanding, makeRng } from './physics.js';
 
 // react: frames before the CPU responds after the opponent touches the ball
 // (a person needs roughly 150-300 ms).
@@ -52,15 +52,7 @@ function spikeWindow(ball, side, px, reach) {
     return null;
 }
 
-/** Where a ball with this velocity lands: { x, side } (side 0 = left court). */
-function landing(ball) {
-    const b = { ...ball };
-    for (let t = 1; t <= 200; t++) {
-        moveBall(b, noRng, null);
-        if (b.y + BALL_R >= GROUND) return { x: b.x, side: b.x < NET.x ? 0 : 1, t };
-    }
-    return null;
-}
+const landing = ball => predictLanding(ball);
 
 /** Keys for a spike: the best of the options that land in the other court, or a random one. */
 function chooseSpike(ai, world) {
@@ -91,9 +83,8 @@ export function aiInput(ai, world) {
     const input = { left: false, right: false, up: false, down: false, hit: false };
 
     // The opponent just touched the ball: keep the old plan for a moment.
-    const touchId = `${b.lastSide}:${b.touches}:${world.players[1 - ai.side].cooldown > 0}`;
-    if (b.lastSide === 1 - ai.side && touchId !== ai.lastTouch) ai.timer = Math.max(ai.timer, cfg.react);
-    ai.lastTouch = touchId;
+    if (b.lastSide === 1 - ai.side && b.touchSeq !== ai.lastTouch) ai.timer = Math.max(ai.timer, cfg.react);
+    ai.lastTouch = b.touchSeq;
 
     if (--ai.timer <= 0) {
         ai.timer = cfg.replan;

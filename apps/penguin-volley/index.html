@@ -21,15 +21,23 @@
     <link rel="modulepreload" href="./js/physics.js">
     <link rel="modulepreload" href="./js/ai.js">
     <link rel="modulepreload" href="./js/render.js">
+    <link rel="modulepreload" href="./js/input.js">
+    <link rel="modulepreload" href="./js/audio.js">
+    <link rel="modulepreload" href="./js/i18n.js">
+    <link rel="modulepreload" href="./js/stats.js">
     <script type="module" src="./js/main.js"></script>
 </head>
 <body>
     <main class="app">
+        <div class="playfield">
         <div class="stage">
             <canvas id="court" role="img" aria-label="Penguin Volley court"></canvas>
 
             <button class="hud-btn" id="pause-btn" type="button" data-i18n-label="pause">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14M16 5v14"/></svg>
+            </button>
+            <button class="hud-btn hud-right" type="button" data-action="fullscreen" aria-label="Full screen">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
             </button>
 
             <section class="overlay" id="menu" aria-labelledby="menu-title">
@@ -40,6 +48,8 @@
                         <button class="btn btn-primary" type="button" data-mode="cpu" data-i18n="vsCpu">1P vs CPU</button>
                         <button class="btn" type="button" data-mode="2p" data-i18n="twoP">2P on one keyboard</button>
                     </div>
+                    <details class="setup" id="setup">
+                        <summary data-i18n="settings">Settings</summary>
                     <div class="opts">
                         <div class="opt" role="group" aria-labelledby="lvl-label">
                             <span class="opt-label" id="lvl-label" data-i18n="difficulty">CPU level</span>
@@ -57,15 +67,35 @@
                                 <button type="button" data-points="15">15</button>
                             </span>
                         </div>
+                        <div class="opt" role="group" aria-labelledby="spd-label">
+                            <span class="opt-label" id="spd-label" data-i18n="speed">Speed</span>
+                            <span class="seg">
+                                <button type="button" data-speed="normal" data-i18n="speedNormal">Normal</button>
+                                <button type="button" data-speed="slow" data-i18n="speedSlow">Slow</button>
+                            </span>
+                        </div>
                     </div>
                     <div class="row">
                         <button class="btn btn-small" id="sound" type="button" aria-pressed="true">Sound: On</button>
+                        <button class="btn btn-small" id="guide" type="button" aria-pressed="false">Landing guide: Off</button>
+                        <button class="btn btn-small" id="vibration" type="button" aria-pressed="true">Vibration: On</button>
+                        <button class="btn btn-small" type="button" data-action="fullscreen" data-text>Full screen</button>
                         <button class="btn btn-small" id="lang" type="button">Ko</button>
                         <button class="btn btn-small" id="install" type="button" data-i18n="install" hidden>Install app</button>
                     </div>
+                    </details>
                     <details class="howto">
                         <summary data-i18n="howTo">How to play</summary>
                         <ul id="howto-list"></ul>
+                    </details>
+                    <details class="howto records">
+                        <summary data-i18n="records">Records</summary>
+                        <table>
+                            <thead><tr><th scope="col" data-i18n="recLevel">CPU</th><th scope="col" data-i18n="recWins">Won</th><th scope="col" data-i18n="recLosses">Lost</th></tr></thead>
+                            <tbody id="rec-body"></tbody>
+                        </table>
+                        <ul id="rec-extra"></ul>
+                        <button class="link" id="rec-reset" type="button" data-i18n="recReset">Reset records</button>
                     </details>
                 </div>
             </section>
@@ -84,6 +114,7 @@
                 <div class="card card-small">
                     <h2 id="over-title"></h2>
                     <p class="final" id="over-score"></p>
+                    <p class="record" id="over-record"></p>
                     <div class="modes">
                         <button class="btn btn-primary" type="button" data-action="rematch" data-i18n="rematch">Play again</button>
                         <button class="btn" type="button" data-action="menu" data-i18n="menu">Menu</button>
@@ -92,9 +123,8 @@
             </section>
 
             <p class="toast" id="toast" role="status"></p>
-        </div>
 
-        <div class="touch" id="touch">
+            <div class="touch" id="touch">
             <div class="pad">
                 <button type="button" data-key="left" data-i18n-label="touchLeft"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
                 <button type="button" data-key="right" data-i18n-label="touchRight"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>
@@ -104,8 +134,9 @@
                 <button type="button" class="hit" data-key="hit" data-i18n-label="touchHit"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="6"/></svg></button>
             </div>
         </div>
+        </div>
+        </div>
 
-        <p class="rotate" data-i18n="rotate">Turn your phone sideways for a bigger court.</p>
         <p class="sr-only" id="status" aria-live="polite"></p>
         <noscript><p class="noscript">Penguin Volley needs JavaScript.</p></noscript>
     </main>

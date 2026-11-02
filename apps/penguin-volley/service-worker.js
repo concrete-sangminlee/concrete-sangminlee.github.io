@@ -14,6 +14,7 @@ const FILES = [
     './js/input.js',
     './js/audio.js',
     './js/i18n.js',
+    './js/stats.js',
     './icons/icon.svg',
     './icons/icon-192.png',
     './icons/icon-512.png',
@@ -47,6 +48,6 @@ self.addEventListener('fetch', e => {
                 }
                 return res;
             }))
-            .catch(() => caches.match('./index.html')),
+            .catch(() => e.request.mode === 'navigate' ? caches.match('./index.html') : Response.error()),
     );
 });

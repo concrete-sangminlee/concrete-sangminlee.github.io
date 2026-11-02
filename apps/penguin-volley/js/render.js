@@ -11,9 +11,10 @@ export function createRenderer(canvas) {
     let bg = null;
 
     function resize() {
-        const rect = canvas.getBoundingClientRect();
+        // Layout width, not the on-screen box: the game may be rotated 90° on phones.
+        const cssWidth = canvas.clientWidth || canvas.getBoundingClientRect().width;
         const dpr = Math.min(window.devicePixelRatio || 1, 2.5);
-        const w = Math.max(320, Math.round(rect.width * dpr));
+        const w = Math.max(320, Math.round(cssWidth * dpr));
         canvas.width = w;
         canvas.height = Math.round(w * H / W);
         scale = canvas.width / W;
@@ -26,15 +27,22 @@ export function createRenderer(canvas) {
         ctx.setTransform(scale, 0, 0, scale, 0, 0);
         if (s.shake > 0 && !s.reducedMotion) ctx.translate((Math.random() - 0.5) * s.shake, (Math.random() - 0.5) * s.shake);
         drawClouds(ctx, s.t);
+        if (s.guide) drawGuide(ctx, s.guide, s.t);
         drawNet(ctx);
         const b = s.world.ball;
         drawShadow(ctx, b.x, b.y);
         s.world.players.forEach(p => drawShadow(ctx, p.x, p.y - 40, 34));
         s.world.players.forEach(p => drawPenguin(ctx, p, s.t, s.poses?.[p.side]));
         drawParticles(ctx, s.particles);
-        if (!s.hideBall) drawBall(ctx, b);
+        if (s.trail?.length) drawTrail(ctx, s.trail);
+        if (!s.hideBall) drawBall(ctx, b, s.squash);
         if (s.scores) drawScore(ctx, s);
-        if (s.message) drawMessage(ctx, s.message, s.messageAge);
+        if (s.message) drawMessage(ctx, s.message, s.messageAge, s.hint);
+        if (s.flash > 0) {
+            ctx.setTransform(1, 0, 0, 1, 0, 0);
+            ctx.fillStyle = `rgba(255, 255, 255, ${s.flash})`;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
     }
 
     return { resize, draw };
@@ -150,9 +158,44 @@ function drawShadow(g, x, y, base = BALL_R) {
     g.fill();
 }
 
-function drawBall(g, b) {
+/** Where the ball will land: a ring on the ice in the colour of that court's player. */
+function drawGuide(g, guide, t) {
+    const pulse = 1 + Math.sin(t * 0.25) * 0.08;
+    g.save();
+    g.translate(guide.x, GROUND + 2);
+    g.scale(pulse, pulse);
+    g.globalAlpha = 0.85;
+    g.strokeStyle = SCARF[guide.side];
+    g.lineWidth = 3;
+    g.setLineDash([6, 5]);
+    g.beginPath();
+    g.ellipse(0, 0, 24, 7, 0, 0, Math.PI * 2);
+    g.stroke();
+    g.setLineDash([]);
+    g.fillStyle = SCARF[guide.side];
+    g.beginPath();
+    g.ellipse(0, 0, 5, 2, 0, 0, Math.PI * 2);
+    g.fill();
+    g.restore();
+}
+
+function drawTrail(g, trail) {
+    trail.forEach((p, i) => {
+        const k = (i + 1) / trail.length;
+        g.fillStyle = `rgba(255, 255, 255, ${0.35 * k})`;
+        g.beginPath();
+        g.arc(p.x, p.y, BALL_R * (0.45 + 0.5 * k), 0, Math.PI * 2);
+        g.fill();
+    });
+}
+
+function drawBall(g, b, squash = 0) {
     g.save();
     g.translate(b.x, b.y);
+    if (squash > 0) {
+        g.translate(0, BALL_R * 0.3 * squash);
+        g.scale(1 + 0.3 * squash, 1 - 0.3 * squash);
+    }
     g.rotate(b.angle);
     g.fillStyle = '#ffffff';
     g.beginPath();
@@ -326,7 +369,7 @@ function drawScore(g, s) {
     }
 }
 
-function drawMessage(g, text, age = 30) {
+function drawMessage(g, text, age = 30, hint = null) {
     const k = Math.min(1, age / 10);
     g.save();
     g.translate(W / 2, 175);
@@ -340,5 +383,27 @@ function drawMessage(g, text, age = 30) {
     g.strokeText(text, 0, 0);
     g.fillStyle = '#ffffff';
     g.fillText(text, 0, 0);
+    if (hint) {
+        // Controls reminder for the first matches: one line per player.
+        g.font = `700 17px ${FONT}`;
+        const lines = Array.isArray(hint) ? hint : [hint];
+        const w = Math.max(...lines.map(l => g.measureText(l).width)) + 32;
+        const h = lines.length * 26 + 14;
+        g.fillStyle = 'rgba(31, 42, 60, 0.82)';
+        roundRect(g, -w / 2, 42, w, h, 12);
+        g.fill();
+        g.fillStyle = '#ffffff';
+        lines.forEach((l, i) => g.fillText(l, 0, 42 + 20 + i * 26));
+    }
     g.restore();
+}
+
+function roundRect(g, x, y, w, h, r) {
+    g.beginPath();
+    g.moveTo(x + r, y);
+    g.arcTo(x + w, y, x + w, y + h, r);
+    g.arcTo(x + w, y + h, x, y + h, r);
+    g.arcTo(x, y + h, x, y, r);
+    g.arcTo(x, y, x + w, y, r);
+    g.closePath();
 }
