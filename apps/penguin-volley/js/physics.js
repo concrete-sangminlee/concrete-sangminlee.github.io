@@ -56,11 +56,21 @@ export function createPlayer(side) {
         input: NO_INPUT,
         prev: NO_INPUT,
         squash: 0, // landing squash, decays (visual only)
+        autoSpike: false,
     };
 }
 
 export function createBall(server) {
-    return { x: server === 0 ? 170 : 630, y: 110, vx: 0, vy: 0, angle: 0, touches: 0, lastSide: -1 };
+    return {
+        x: server === 0 ? 170 : 630,
+        y: 110,
+        vx: 0,
+        vy: 0,
+        angle: 0,
+        touches: 0,
+        touchSeq: 0,
+        lastSide: -1,
+    };
 }
 
 export function createWorld(seed = 1, server = 0) {
@@ -111,7 +121,10 @@ function stepPlayer(p, input, events) {
     case 'air':
         p.vx = dir * PLAYER.speed;
         if (dir) p.face = dir;
-        if (pressed('hit')) p.spike = SPIKE_WINDOW;
+        // Hit spikes. Pressing jump again also spikes (one-thumb play on phones):
+        // that spike picks its own direction, since "up" is held on purpose.
+        if (pressed('hit')) { p.spike = SPIKE_WINDOW; p.autoSpike = false; }
+        else if (pressed('up')) { p.spike = SPIKE_WINDOW; p.autoSpike = true; }
         break;
     case 'dive':
         p.vx *= 0.965;
@@ -241,7 +254,9 @@ function touchBall(p, b, events) {
     const inp = p.input;
     let type = 'hit';
     if (p.state === 'air' && p.spike > 0) {
-        const v = spikeVelocity(p.side, inp);
+        // Jump-button spike: smash down near the net, drive it flat from further back.
+        const keys = p.autoSpike ? { down: Math.abs(p.x - NET.x) < 160, up: false, left: false, right: false } : inp;
+        const v = spikeVelocity(p.side, keys);
         b.vx = v.vx;
         b.vy = v.vy;
         p.spike = 0;
@@ -262,8 +277,20 @@ function touchBall(p, b, events) {
     clampSpeed(b);
     p.cooldown = HIT_COOLDOWN;
     b.touches = b.lastSide === p.side ? b.touches + 1 : 1;
+    b.touchSeq++;
     b.lastSide = p.side;
     events.push({ type, side: p.side, x: b.x, y: b.y, power: Math.hypot(b.vx, b.vy) });
+}
+
+/** Where the ball lands if nobody touches it: { x, side, t } (side 0 = left court), or null. */
+export function predictLanding(ball, maxSteps = 200) {
+    const b = { ...ball };
+    const fixed = () => 0.5;
+    for (let t = 1; t <= maxSteps; t++) {
+        moveBall(b, fixed, null);
+        if (b.y + BALL_R >= GROUND) return { x: b.x, side: b.x < NET.x ? 0 : 1, t };
+    }
+    return null;
 }
 
 /**

@@ -26,12 +26,17 @@ body {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 12px;
     padding: max(8px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right)) max(8px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left));
+    overflow: hidden;
+}
+.playfield {
+    width: 100%;
+    display: grid;
+    place-items: center;
 }
 .stage {
     position: relative;
-    width: min(100%, calc((100vh - 16px - var(--touch-h)) * 16 / 9), 1280px);
+    width: min(100%, calc((var(--avail-h, 100vh) - 16px - var(--touch-h)) * 16 / 9), 1280px);
     aspect-ratio: 16 / 9;
     border-radius: 14px;
     overflow: hidden;
@@ -39,7 +44,7 @@ body {
     background: #8fd3ff;
 }
 @supports (height: 100dvh) {
-    .stage { width: min(100%, calc((100dvh - 16px - var(--touch-h)) * 16 / 9), 1280px); }
+    :root { --avail-h: 100dvh; }
 }
 canvas { display: block; width: 100%; height: 100%; touch-action: none; }
 
@@ -52,6 +57,8 @@ canvas { display: block; width: 100%; height: 100%; touch-action: none; }
     padding: 12px;
     background: rgba(18, 53, 90, 0.28);
     overflow: auto;
+    z-index: 10;
+    overscroll-behavior: contain;
 }
 .card {
     width: min(100%, 440px);
@@ -82,11 +89,14 @@ h2 { font-size: 1.5rem; font-weight: 850; }
 .btn-primary { background: var(--ink); color: #fff; }
 .btn-primary:hover { background: #2c3b52; }
 .btn-small { min-height: 36px; padding: 0 14px; font-size: 0.88rem; border-width: 1.5px; }
-.btn:focus-visible, .seg button:focus-visible, .howto summary:focus-visible, .hud-btn:focus-visible {
+.btn:focus-visible, .seg button:focus-visible, .setup summary:focus-visible, .howto summary:focus-visible, .hud-btn:focus-visible, .touch button:focus-visible {
     outline: 3px solid var(--sun);
     outline-offset: 2px;
 }
-.opts { display: grid; gap: 8px; margin: 16px 0 12px; }
+.opts { display: grid; gap: 8px; margin: 10px 0 12px; }
+.setup { margin-top: 12px; text-align: left; }
+.setup > summary { min-height: 34px; line-height: 34px; cursor: pointer; text-align: center; font-size: 0.88rem; font-weight: 750; }
+.setup > .row { margin-top: 10px; }
 .opt { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .opt-label { font-size: 0.9rem; font-weight: 700; color: var(--ink-2); }
 .seg { display: inline-flex; padding: 3px; border-radius: 999px; background: #e3eef7; }
@@ -107,6 +117,13 @@ h2 { font-size: 1.5rem; font-weight: 850; }
 .howto summary { cursor: pointer; font-weight: 700; text-align: center; color: var(--ink); min-height: 32px; line-height: 32px; }
 .howto ul { margin: 6px 0 0; padding-left: 1.1em; line-height: 1.55; }
 .howto b { color: var(--ink); }
+.records table { width: 100%; margin-top: 6px; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+.records th, .records td { padding: 4px 6px; text-align: center; border-bottom: 1px solid #e3eef7; }
+.records th:first-child { text-align: left; }
+.records ul { list-style: none; padding: 0; }
+.link { min-height: 32px; margin-top: 4px; padding: 0; border: 0; background: none; color: var(--ink-2); font: 600 0.82rem var(--font); text-decoration: underline; cursor: pointer; }
+.record { margin: -6px 0 12px; color: #b7791f; font-weight: 800; }
+.record:empty { display: none; }
 
 /* ---------------------------------------------------------------- HUD */
 .hud-btn {
@@ -121,8 +138,10 @@ h2 { font-size: 1.5rem; font-weight: 850; }
     border-radius: 50%;
     background: rgba(255, 255, 255, 0.8);
     cursor: pointer;
+    z-index: 5;
 }
-.hud-btn svg { width: 20px; height: 20px; fill: none; stroke: var(--ink); stroke-width: 3; stroke-linecap: round; }
+.hud-btn svg { width: 20px; height: 20px; fill: none; stroke: var(--ink); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+.hud-btn.hud-right { left: auto; right: 10px; }
 .is-playing .hud-btn { display: grid; }
 .toast {
     position: absolute;
@@ -138,50 +157,71 @@ h2 { font-size: 1.5rem; font-weight: 850; }
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.2s, transform 0.2s;
+    z-index: 20;
 }
 .toast.is-on { opacity: 1; transform: translate(-50%, 0); }
 
-/* ---------------------------------------------------------------- touch controls */
+/* ---------------------------------------------------------------- phones */
+/* A portrait phone rotates only an active match. The landing menu stays upright.
+   If fullscreen orientation lock works (Android), the media query changes to
+   landscape and this fallback turns itself off. */
+html.is-rotated, html.is-rotated body { height: 100%; overflow: hidden; }
+html.is-rotated .app { padding: 0; min-height: 100%; }
+html.is-rotated .playfield {
+    position: fixed;
+    top: 0;
+    left: 100vw;
+    width: 100vh;
+    height: 100vw;
+    padding:
+        max(6px, env(safe-area-inset-right))
+        max(6px, env(safe-area-inset-bottom))
+        max(6px, env(safe-area-inset-left))
+        max(6px, env(safe-area-inset-top));
+    transform: rotate(90deg);
+    transform-origin: top left;
+    --avail-h: 100vw;
+}
+@supports (height: 100dvh) {
+    html.is-rotated .playfield { width: 100dvh; }
+}
+
+/* Touch buttons float over the court's bottom corners. The big ▲ is the main
+   button: jump, and in the air jump again to spike. ● hits and dives. */
 .touch { display: none; }
-.rotate { display: none; }
 @media (hover: none) and (pointer: coarse) {
-    :root { --touch-h: 96px; }
+    .app { position: relative; }
+    .stage { border-radius: 10px; }
     .touch {
+        position: absolute;
+        inset: 0;
         display: flex;
         justify-content: space-between;
-        width: min(100%, 1280px);
-        padding: 0 6px;
+        align-items: flex-end;
+        padding: 0 max(12px, env(safe-area-inset-right)) max(8px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
+        pointer-events: none;
+        z-index: 4;
         user-select: none;
         -webkit-user-select: none;
     }
     body:not(.is-playing) .touch { visibility: hidden; }
-    .pad { display: flex; gap: 12px; }
+    .pad { display: flex; align-items: flex-end; gap: 10px; pointer-events: auto; }
     .touch button {
-        width: 76px;
-        height: 76px;
+        width: clamp(64px, 11vmax, 84px);
+        height: clamp(64px, 11vmax, 84px);
         display: grid;
         place-items: center;
         border: 0;
         border-radius: 50%;
-        background: rgba(255, 255, 255, 0.85);
+        background: rgba(255, 255, 255, 0.6);
         box-shadow: 0 6px 16px -8px rgba(0, 0, 0, 0.6);
         touch-action: none;
+        -webkit-touch-callout: none;
     }
-    .touch button.hit { background: var(--sun); }
-    .touch button.is-down { transform: scale(0.94); background: #fff; }
-    .touch svg { width: 32px; height: 32px; fill: none; stroke: var(--ink); stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; }
-}
-@media (hover: none) and (pointer: coarse) and (orientation: portrait) {
-    .rotate { display: block; margin: 0; color: #d7ecfb; font-size: 0.85rem; text-align: center; }
-}
-@media (hover: none) and (pointer: coarse) and (orientation: landscape) and (max-height: 520px) {
-    /* Landscape phones: buttons float over the court's bottom corners. */
-    :root { --touch-h: 0px; }
-    .app { position: relative; }
-    .touch { position: fixed; left: 0; right: 0; bottom: max(10px, env(safe-area-inset-bottom)); width: 100%; padding: 0 max(14px, env(safe-area-inset-left)); pointer-events: none; }
-    .touch .pad { pointer-events: auto; }
-    .touch button { width: 64px; height: 64px; background: rgba(255, 255, 255, 0.55); }
-    .touch button.hit { background: rgba(255, 204, 51, 0.8); }
+    .touch button[data-key="up"] { width: clamp(76px, 13vmax, 100px); height: clamp(76px, 13vmax, 100px); background: rgba(255, 204, 51, 0.85); }
+    .touch button.hit { width: clamp(52px, 9vmax, 68px); height: clamp(52px, 9vmax, 68px); margin-bottom: 30px; }
+    .touch button.is-down { transform: scale(0.92); background: #fff; }
+    .touch svg { width: 40%; height: 40%; fill: none; stroke: var(--ink); stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; }
 }
 
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
@@ -189,3 +229,28 @@ h2 { font-size: 1.5rem; font-weight: 850; }
 @media (prefers-reduced-motion: reduce) {
     .toast { transition: none; }
 }
+
+/* The menu is portrait and scroll-safe before a phone match starts. */
+@media (hover: none) and (pointer: coarse) and (orientation: portrait) {
+    html:not(.is-rotated) body:not(.is-playing) .playfield { height: calc(var(--avail-h, 100vh) - 16px); max-width: 520px; }
+    html:not(.is-rotated) body:not(.is-playing) .stage { width: 100%; height: 100%; aspect-ratio: auto; }
+    html:not(.is-rotated) body:not(.is-playing) canvas { opacity: 0.42; }
+}
+
+/* Short landscape screens: compact menu; details keep settings, instructions
+   and records reachable without making the card taller than the court. */
+@media (max-height: 620px) and (min-width: 560px) {
+    .overlay { place-items: start center; padding: 6px; }
+    .card { width: min(100%, 420px); padding: 10px 14px; margin: auto; }
+    h1 { font-size: 1.45rem; }
+    .tagline { margin: 1px 0 7px; font-size: 0.8rem; }
+    .modes { grid-template-columns: 1fr 1fr; gap: 6px; }
+    .btn { min-height: 38px; font-size: 0.88rem; }
+    .setup, .howto { margin-top: 5px; }
+    .setup > summary, .howto summary { min-height: 28px; line-height: 28px; }
+    .opts { gap: 5px; margin: 5px 0; }
+    .seg button { min-height: 30px; }
+    .card-small .modes { grid-template-columns: 1fr; }
+}
+
+html.is-rotated .touch { padding: 0 12px 8px; }
