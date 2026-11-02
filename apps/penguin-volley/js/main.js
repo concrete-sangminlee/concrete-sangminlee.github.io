@@ -574,7 +574,6 @@ function bindUI() {
     else portrait.addListener(onOrientation);
     if (coarsePointer.addEventListener) coarsePointer.addEventListener('change', () => { applyText(); updateRotation(); });
     if (!isTouch()) $('#vibration').hidden = true;
-    if (isTouch()) $('#setup').open = false;
 
     let installEvent = null;
     addEventListener('beforeinstallprompt', e => {
