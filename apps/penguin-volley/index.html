@@ -47,6 +47,7 @@
                     <div class="modes">
                         <button class="btn btn-primary" type="button" data-mode="cpu" data-i18n="vsCpu">1P vs CPU</button>
                         <button class="btn" type="button" data-mode="2p" data-i18n="twoP">2P on one keyboard</button>
+                        <button class="btn" type="button" data-mode="practice" data-i18n="practice">Serve practice</button>
                     </div>
                     <details class="setup" id="setup">
                         <summary data-i18n="settings">Settings</summary>
@@ -67,6 +68,14 @@
                                 <button type="button" data-points="15">15</button>
                             </span>
                         </div>
+                        <div class="opt" role="group" aria-labelledby="rules-label">
+                            <span class="opt-label" id="rules-label" data-i18n="rules">Rules</span>
+                            <span class="seg">
+                                <button type="button" data-rules="arcade" data-i18n="arcade">Arcade</button>
+                                <button type="button" data-rules="competitive" data-i18n="competitive">Competitive</button>
+                            </span>
+                        </div>
+                        <p class="opt-help" id="rules-help"></p>
                         <div class="opt" role="group" aria-labelledby="spd-label">
                             <span class="opt-label" id="spd-label" data-i18n="speed">Speed</span>
                             <span class="seg">
@@ -82,6 +91,7 @@
                         <button class="btn btn-small" type="button" data-action="fullscreen" data-text>Full screen</button>
                         <button class="btn btn-small" id="lang" type="button">Ko</button>
                         <button class="btn btn-small" id="install" type="button" data-i18n="install" hidden>Install app</button>
+                        <button class="btn btn-small" id="update" type="button" data-i18n="update" hidden>Update app</button>
                     </div>
                     </details>
                     <details class="howto">
@@ -91,7 +101,7 @@
                     <details class="howto records">
                         <summary data-i18n="records">Records</summary>
                         <table>
-                            <thead><tr><th scope="col" data-i18n="recLevel">CPU</th><th scope="col" data-i18n="recWins">Won</th><th scope="col" data-i18n="recLosses">Lost</th></tr></thead>
+                            <thead><tr><th scope="col" data-i18n="recLevel">CPU</th><th scope="col" data-i18n="recArcade">Arcade</th><th scope="col" data-i18n="recCompetitive">Competitive</th></tr></thead>
                             <tbody id="rec-body"></tbody>
                         </table>
                         <ul id="rec-extra"></ul>
@@ -100,7 +110,15 @@
                 </div>
             </section>
 
-            <section class="overlay" id="pause" aria-labelledby="pause-title" hidden>
+            <section class="overlay" id="install-help" role="dialog" aria-modal="true" aria-labelledby="install-help-title" aria-describedby="install-help-text" hidden>
+                <div class="card card-small">
+                    <h2 id="install-help-title" data-i18n="installHelpTitle">Install Penguin Volley</h2>
+                    <p id="install-help-text" data-i18n="installHelpText">In Safari, open the Share menu, then choose Add to Home Screen.</p>
+                    <button class="btn btn-primary" id="install-help-close" type="button" data-action="close-install-help" data-i18n="close">Close</button>
+                </div>
+            </section>
+
+            <section class="overlay" id="pause" role="dialog" aria-modal="true" aria-labelledby="pause-title" hidden>
                 <div class="card card-small">
                     <h2 id="pause-title" data-i18n="paused">Paused</h2>
                     <div class="modes">
@@ -110,7 +128,7 @@
                 </div>
             </section>
 
-            <section class="overlay" id="over" aria-labelledby="over-title" hidden>
+            <section class="overlay" id="over" role="dialog" aria-modal="true" aria-labelledby="over-title" hidden>
                 <div class="card card-small">
                     <h2 id="over-title"></h2>
                     <p class="final" id="over-score"></p>
@@ -137,6 +155,13 @@
         </div>
         </div>
 
+        <section class="sr-only" id="game-status" aria-labelledby="game-status-title">
+            <h2 id="game-status-title" data-i18n="gameStatus">Game status</h2>
+            <p><span data-i18n="scoreLabel">Score</span>: <span id="game-status-score">0 to 0</span></p>
+            <p><span data-i18n="phaseLabel">Phase</span>: <span id="game-status-phase">Menu</span></p>
+            <p><span data-i18n="serverLabel">Server</span>: <span id="game-status-server">Not selected</span></p>
+            <p><span data-i18n="eventLabel">Last event</span>: <span id="game-status-last-event">Game opened</span></p>
+        </section>
         <p class="sr-only" id="status" aria-live="polite"></p>
         <noscript><p class="noscript">Penguin Volley needs JavaScript.</p></noscript>
     </main>

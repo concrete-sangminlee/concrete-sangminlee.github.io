@@ -8,9 +8,9 @@ import { GROUND, NET, BALL_R, HOME_X, moveBall, hitCircle, spikeVelocity, predic
 // react: frames before the CPU responds after the opponent touches the ball
 // (a person needs roughly 150-300 ms).
 const LEVELS = {
-    easy: { replan: 14, noise: 40, attack: 0.3, dive: false, pick: 0, reach: 40, react: 18 },
-    normal: { replan: 7, noise: 18, attack: 0.65, dive: true, pick: 0.6, reach: 52, react: 13 },
-    hard: { replan: 3, noise: 5, attack: 0.95, dive: true, pick: 1, reach: 62, react: 9 },
+    easy: { replan: 14, noise: 40, attack: 0.3, dive: false, pick: 0, reach: 40, react: 18, serveRead: 0.15 },
+    normal: { replan: 7, noise: 18, attack: 0.65, dive: true, pick: 0.6, reach: 52, react: 13, serveRead: 0.55 },
+    hard: { replan: 3, noise: 5, attack: 0.95, dive: true, pick: 1, reach: 62, react: 9, serveRead: 0.85 },
 };
 export const AI_LEVELS = Object.keys(LEVELS);
 
@@ -23,6 +23,26 @@ const SPIKES = [
 
 export function createAI(side, level = 'normal', seed = 7) {
     return { side, cfg: LEVELS[level] || LEVELS.normal, rng: makeRng(seed), timer: 0, plan: null, jumpArmed: true, hitArmed: true, upLast: false, hitLast: false };
+}
+
+/**
+ * Choose a short, neutral, or deep serve using only AI-owned seeded state.
+ * Better levels more often read whether the receiver is near or far from the
+ * net; this function only returns controls and never changes the world.
+ */
+export function aiServeInput(ai, world) {
+    const input = { left: false, right: false, up: false, down: false, hit: false };
+    let serve;
+    if (ai.rng() < ai.cfg.serveRead) {
+        const receiver = world.players[1 - ai.side];
+        const depth = Math.abs(receiver.x - NET.x);
+        serve = depth < 150 ? 'deep' : depth > 210 ? 'short' : 'neutral';
+    } else {
+        serve = ['short', 'neutral', 'deep'][Math.floor(ai.rng() * 3)];
+    }
+    input.down = serve === 'short';
+    input.up = serve === 'deep';
+    return input;
 }
 
 /** Where (and in how many frames) the ball reaches contact height on `side`, or null. */
@@ -122,12 +142,12 @@ export function aiInput(ai, world) {
     // the top of the jump (the penguin rises for about 20 frames).
     if (p.state === 'ground' && ballMine && ai.jumpArmed) {
         const meet = spikeWindow(b, ai.side, p.x, cfg.reach);
-        if (meet) {
+        if (meet && ai.rng() < cfg.attack) {
+            // A declined attack remains available while the window is open.
+            // Disarm only after an actual jump input has been chosen.
             ai.jumpArmed = false;
-            if (ai.rng() < cfg.attack) {
-                input.up = true;
-                ai.plan = { x: meet.x - toNet * 12, t: meet.t };
-            }
+            input.up = true;
+            ai.plan = { x: meet.x - toNet * 12, t: meet.t };
         }
     }
     if (p.state === 'ground' && !(ballMine && b.y < GROUND - 160)) ai.jumpArmed = true;

@@ -89,9 +89,10 @@ h2 { font-size: 1.5rem; font-weight: 850; }
 .btn-primary { background: var(--ink); color: #fff; }
 .btn-primary:hover { background: #2c3b52; }
 .btn-small { min-height: 36px; padding: 0 14px; font-size: 0.88rem; border-width: 1.5px; }
-.btn:focus-visible, .seg button:focus-visible, .setup summary:focus-visible, .howto summary:focus-visible, .hud-btn:focus-visible, .touch button:focus-visible {
-    outline: 3px solid var(--sun);
+.btn:focus-visible, .seg button:focus-visible, .setup summary:focus-visible, .howto summary:focus-visible, .hud-btn:focus-visible, .touch button:focus-visible, .link:focus-visible {
+    outline: 3px solid #075bb5;
     outline-offset: 2px;
+    box-shadow: 0 0 0 2px #fff;
 }
 .opts { display: grid; gap: 8px; margin: 10px 0 12px; }
 .setup { margin-top: 12px; text-align: left; }
@@ -99,6 +100,7 @@ h2 { font-size: 1.5rem; font-weight: 850; }
 .setup > .row { margin-top: 10px; }
 .opt { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .opt-label { font-size: 0.9rem; font-weight: 700; color: var(--ink-2); }
+.opt-help { margin: -3px 0 0; text-align: right; font-size: 0.76rem; color: var(--ink-2); }
 .seg { display: inline-flex; padding: 3px; border-radius: 999px; background: #e3eef7; }
 .seg button {
     min-width: 52px;
@@ -122,8 +124,9 @@ h2 { font-size: 1.5rem; font-weight: 850; }
 .records th:first-child { text-align: left; }
 .records ul { list-style: none; padding: 0; }
 .link { min-height: 32px; margin-top: 4px; padding: 0; border: 0; background: none; color: var(--ink-2); font: 600 0.82rem var(--font); text-decoration: underline; cursor: pointer; }
-.record { margin: -6px 0 12px; color: #b7791f; font-weight: 800; }
+.record { margin: -6px 0 12px; color: #744700; font-weight: 800; }
 .record:empty { display: none; }
+#install-help-text { margin: 10px 0 16px; line-height: 1.55; color: var(--ink-2); }
 
 /* ---------------------------------------------------------------- HUD */
 .hud-btn {
@@ -245,6 +248,7 @@ html.is-rotated .playfield {
     h1 { font-size: 1.45rem; }
     .tagline { margin: 1px 0 7px; font-size: 0.8rem; }
     .modes { grid-template-columns: 1fr 1fr; gap: 6px; }
+    .modes > :nth-child(3) { grid-column: 1 / -1; }
     .btn { min-height: 38px; font-size: 0.88rem; }
     .setup, .howto { margin-top: 5px; }
     .setup > summary, .howto summary { min-height: 28px; line-height: 28px; }
@@ -254,3 +258,8 @@ html.is-rotated .playfield {
 }
 
 html.is-rotated .touch { padding: 0 12px 8px; }
+
+@media (forced-colors: active) {
+    .btn, .seg, .seg button, .hud-btn, .touch button, .card { border: 1px solid ButtonText; }
+    .btn:focus-visible, .seg button:focus-visible, .setup summary:focus-visible, .howto summary:focus-visible, .hud-btn:focus-visible, .touch button:focus-visible { outline: 3px solid Highlight; box-shadow: none; }
+}

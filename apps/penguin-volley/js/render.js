@@ -26,17 +26,23 @@ export function createRenderer(canvas) {
         if (bg) ctx.drawImage(bg, 0, 0);
         ctx.setTransform(scale, 0, 0, scale, 0, 0);
         if (s.shake > 0 && !s.reducedMotion) ctx.translate((Math.random() - 0.5) * s.shake, (Math.random() - 0.5) * s.shake);
-        drawClouds(ctx, s.t);
-        if (s.guide) drawGuide(ctx, s.guide, s.t);
+        const animT = s.reducedMotion ? 0 : s.t;
+        drawClouds(ctx, animT);
+        if (s.target) drawTarget(ctx, s.target, animT);
+        if (s.guide) drawGuide(ctx, s.guide, animT);
+        if (s.phase === 'serve') drawServeAim(ctx, s.world.ball, s.server, animT);
         drawNet(ctx);
         const b = s.world.ball;
         drawShadow(ctx, b.x, b.y);
         s.world.players.forEach(p => drawShadow(ctx, p.x, p.y - 40, 34));
-        s.world.players.forEach(p => drawPenguin(ctx, p, s.t, s.poses?.[p.side]));
+        s.world.players.forEach(p => drawPenguin(ctx, p, animT, s.poses?.[p.side]));
         drawParticles(ctx, s.particles);
         if (s.trail?.length) drawTrail(ctx, s.trail);
         if (!s.hideBall) drawBall(ctx, b, s.squash);
-        if (s.scores) drawScore(ctx, s);
+        if (s.scores) {
+            drawScore(ctx, s);
+            if (s.maxTouches) drawTouches(ctx, s.world.ball, s.maxTouches);
+        }
         if (s.message) drawMessage(ctx, s.message, s.messageAge, s.hint);
         if (s.flash > 0) {
             ctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -156,6 +162,60 @@ function drawShadow(g, x, y, base = BALL_R) {
     g.beginPath();
     g.ellipse(x, GROUND + 2, base * 1.1 * k, 5 * k, 0, 0, Math.PI * 2);
     g.fill();
+}
+
+/** Practice target zone. */
+function drawTarget(g, target, t) {
+    const pulse = 1 + Math.sin(t * 0.18) * 0.06;
+    g.save();
+    g.translate(target.x, GROUND + 1);
+    g.scale(pulse, pulse);
+    g.fillStyle = 'rgba(255, 204, 51, 0.3)';
+    g.strokeStyle = '#d89a00';
+    g.lineWidth = 4;
+    g.beginPath();
+    g.ellipse(0, 0, target.width / 2, 13, 0, 0, Math.PI * 2);
+    g.fill();
+    g.stroke();
+    g.fillStyle = '#d89a00';
+    g.beginPath();
+    g.arc(0, 0, 5, 0, Math.PI * 2);
+    g.fill();
+    g.restore();
+}
+
+/** Three serve choices fan out from the held ball. */
+function drawServeAim(g, ball, side, t) {
+    const dir = side === 0 ? 1 : -1;
+    g.save();
+    g.globalAlpha = 0.55 + Math.sin(t * 0.2) * 0.12;
+    g.strokeStyle = SCARF[side];
+    g.fillStyle = SCARF[side];
+    g.lineWidth = 3;
+    g.setLineDash([7, 6]);
+    for (const [dx, dy] of [[125, -52], [145, -10], [105, 32]]) {
+        g.beginPath();
+        g.moveTo(ball.x + dir * 23, ball.y);
+        g.quadraticCurveTo(ball.x + dir * dx * 0.55, ball.y + dy - 25, ball.x + dir * dx, ball.y + dy);
+        g.stroke();
+    }
+    g.setLineDash([]);
+    g.restore();
+}
+
+/** Competitive-rule touch counter under the score of the side in possession. */
+function drawTouches(g, ball, max) {
+    if (ball.lastSide < 0 || ball.touches < 1) return;
+    const x = ball.lastSide === 0 ? W * 0.25 : W * 0.75;
+    g.save();
+    g.translate(x - (max - 1) * 8, 93);
+    for (let i = 0; i < max; i++) {
+        g.fillStyle = i < ball.touches ? SCARF[ball.lastSide] : 'rgba(53,80,106,0.25)';
+        g.beginPath();
+        g.arc(i * 16, 0, 5, 0, Math.PI * 2);
+        g.fill();
+    }
+    g.restore();
 }
 
 /** Where the ball will land: a ring on the ice in the colour of that court's player. */
