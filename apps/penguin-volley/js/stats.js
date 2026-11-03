@@ -9,11 +9,13 @@ const record = value => ({ w: nonnegative(value?.w), l: nonnegative(value?.l) })
 function empty() {
     return {
         cpu: Object.fromEntries(LEVELS.map(l => [l, { w: 0, l: 0 }])),
+        competitive: Object.fromEntries(LEVELS.map(l => [l, { w: 0, l: 0 }])),
         streak: 0,
         bestStreak: 0,
         longestRally: 0,
         spikes: 0,
         matches2p: 0,
+        practiceBest: 0,
     };
 }
 
@@ -25,11 +27,13 @@ export function loadStats() {
         return {
             ...base,
             cpu: Object.fromEntries(LEVELS.map(l => [l, record(s.cpu?.[l])])),
+            competitive: Object.fromEntries(LEVELS.map(l => [l, record(s.competitive?.[l])])),
             streak: nonnegative(s.streak),
             bestStreak: nonnegative(s.bestStreak),
             longestRally: nonnegative(s.longestRally),
             spikes: nonnegative(s.spikes),
             matches2p: nonnegative(s.matches2p),
+            practiceBest: Math.min(10, nonnegative(s.practiceBest)),
         };
     } catch {
         return empty();
@@ -41,10 +45,11 @@ function store(s) {
 }
 
 /** Record a finished match. Returns { stats, newBest: string[] } (which records improved). */
-export function recordMatch(stats, { mode, level, won, longestRally, spikes }) {
+export function recordMatch(stats, { mode, level, rules = 'arcade', won, longestRally, spikes }) {
     const newBest = [];
     if (mode === 'cpu') {
-        const r = stats.cpu[level] || (stats.cpu[level] = { w: 0, l: 0 });
+        const group = rules === 'competitive' ? stats.competitive : stats.cpu;
+        const r = group[level] || (group[level] = { w: 0, l: 0 });
         if (won) {
             r.w++;
             stats.streak++;
@@ -66,6 +71,13 @@ export function recordMatch(stats, { mode, level, won, longestRally, spikes }) {
     }
     store(stats);
     return { stats, newBest };
+}
+
+export function recordPractice(stats, hits) {
+    const improved = hits > stats.practiceBest;
+    stats.practiceBest = Math.max(stats.practiceBest, Math.min(10, nonnegative(hits)));
+    store(stats);
+    return { stats, improved };
 }
 
 export function resetStats() {

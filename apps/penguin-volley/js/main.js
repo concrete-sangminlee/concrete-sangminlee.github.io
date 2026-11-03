@@ -1,16 +1,17 @@
 // Penguin Volley: game flow, menus and the main loop.
-import { createWorld, stepWorld, resetRally, predictLanding, NO_INPUT, GROUND } from './physics.js';
-import { createAI, aiInput } from './ai.js';
+import { createWorld, stepWorld, resetRally, placeServe, launchServe, predictLanding, NO_INPUT, GROUND } from './physics.js';
+import { createAI, aiInput, aiServeInput } from './ai.js';
 import { createRenderer } from './render.js';
 import { createInput } from './input.js';
 import { createAudio } from './audio.js';
 import { STRINGS, detectLang } from './i18n.js';
-import { loadStats, recordMatch, resetStats, LEVELS } from './stats.js';
+import { loadStats, recordMatch, recordPractice, resetStats, LEVELS } from './stats.js';
 
 const STORE = 'penguin-volley';
 const $ = sel => document.querySelector(sel);
 const $$ = sel => [...document.querySelectorAll(sel)];
-const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const motionPreference = matchMedia('(prefers-reduced-motion: reduce)');
+let reducedMotion = motionPreference.matches;
 const coarsePointer = matchMedia('(hover: none) and (pointer: coarse)');
 const portrait = matchMedia('(orientation: portrait)');
 const isTouch = () => coarsePointer.matches;
@@ -31,6 +32,7 @@ function load() {
         speed: oneOf(raw.speed, Object.keys(SPEED), 'normal'),
         guide: typeof raw.guide === 'boolean' ? raw.guide : isTouch(),
         vibration: typeof raw.vibration === 'boolean' ? raw.vibration : true,
+        rules: oneOf(raw.rules, ['arcade', 'competitive'], 'arcade'),
         matchesStarted: finiteInt(raw.matchesStarted, 0),
     };
 }
@@ -54,7 +56,7 @@ const input = createInput({
 
 const game = {
     mode: 'demo',     // demo (attract, behind the menu) | cpu | 2p
-    phase: 'menu',    // menu | ready | play | point | over | paused
+    phase: 'menu',    // menu | ready | serve | play | point | over | paused
     resumePhase: null,
     world: createWorld(Date.now() & 0xffff, 0),
     ais: [],
@@ -77,10 +79,17 @@ const game = {
     longestRally: 0,
     spikes: 0,
     showHints: false,
+    serveFrames: 0,
+    pointReason: null,
+    practice: null,
+    target: null,
+    lastEvent: 'opened',
+    pausedEvent: null,
 };
 
 function resetForRally(server) {
     resetRally(game.world, server);
+    placeServe(game.world, server);
     const seed = (Math.random() * 1e9) | 0;
     if (game.mode === 'demo') game.ais = [createAI(0, 'normal', seed), createAI(1, 'normal', seed ^ 0x5bd1e995)];
     else if (game.mode === 'cpu') game.ais = [null, createAI(1, settings.level, seed)];
@@ -91,18 +100,25 @@ function startDemo() {
     game.mode = 'demo';
     game.world = createWorld((Math.random() * 1e9) | 0, 0);
     resetForRally(0);
+    launchServe(game.world, 0, aiServeInput(game.ais[0], game.world));
     game.scores = [0, 0];
     game.phase = 'menu';
     game.message = null;
     game.hint = null;
     game.whistle = 0;
     game.freeze = 0;
+    game.practice = null;
+    game.target = null;
+    game.lastEvent = 'menu';
     game.poses = null;
     game.trail = [];
+    announce();
 }
 
 function startMatch(mode) {
+    input.reset();
     game.mode = mode;
+    returnFocus = null;
     game.world = createWorld((Math.random() * 1e9) | 0, 0);
     game.ais = [];
     game.scores = [0, 0];
@@ -114,6 +130,10 @@ function startMatch(mode) {
     game.rallyTouches = 0;
     game.longestRally = 0;
     game.spikes = 0;
+    game.pointReason = null;
+    game.practice = mode === 'practice' ? { attempts: 0, hits: 0, total: 10 } : null;
+    game.target = null;
+    game.lastEvent = 'ready';
     game.showHints = settings.matchesStarted < HINT_MATCHES;
     game.whistle = 0;
     game.freeze = 0;
@@ -125,6 +145,7 @@ function startMatch(mode) {
     document.body.classList.add('is-playing');
     document.activeElement?.blur?.();
     if (mode === '2p' && isTouch() && input.padCount < 2) toast(t().keyboardOnly);
+    if (mode === 'practice') game.target = nextTarget();
     updateRotation();
     if (isTouch()) enterLandscape();
     announce();
@@ -139,15 +160,21 @@ function setPhase(phase, timer = 0, message = null, hint = null) {
 }
 
 function readyPhase(frames, opening = false) {
-    const matchPoint = game.scores.some(s => s === settings.points - 1);
+    const a = game.scores[0];
+    const b = game.scores[1];
+    const competitive = settings.rules === 'competitive' && game.mode !== 'practice';
+    const deuce = competitive && a >= settings.points - 1 && b >= settings.points - 1 && a === b;
+    const matchPoint = game.mode !== 'practice' && !deuce && [0, 1].some(side => game.scores[side] >= settings.points - 1 && game.scores[side] > game.scores[1 - side]);
     const hint = opening && game.showHints ? hintText() : null;
-    setPhase('ready', frames + (hint ? 50 : 0), matchPoint ? t().matchPoint : t().ready, hint);
+    game.lastEvent = 'ready';
+    setPhase('ready', frames + (hint ? 50 : 0), deuce ? t().deuce : matchPoint ? t().matchPoint : t().ready, hint);
     announce();
 }
 
 /** Controls reminder for the devices in use. */
 function hintText() {
     const s = t();
+    if (game.mode === 'practice') return s.hintServe;
     if (game.mode === '2p') {
         if (input.padCount >= 2) return [`${s.p1}: ${s.hintPad}`, `${s.p2}: ${s.hintPad}`];
         return [s.hintKeys1, s.hintKeys2];
@@ -157,7 +184,20 @@ function hintText() {
     return s.hintCpuKeys;
 }
 
-const labels = () => (game.mode === 'cpu' ? [t().p1, t().cpu] : [t().p1, t().p2]);
+const labels = () => {
+    if (game.mode === 'cpu') return [t().p1, t().cpu];
+    if (game.mode === 'practice') return [t().hits, t().attempts];
+    return [t().p1, t().p2];
+};
+const maxTouches = () => settings.rules === 'competitive' && game.mode !== 'demo' && game.mode !== 'practice' ? 3 : 0;
+const wonMatch = side => game.scores[side] >= settings.points
+    && (settings.rules !== 'competitive' || game.scores[side] - game.scores[1 - side] >= 2);
+
+function nextTarget() {
+    const centers = [480, 600, 720];
+    const n = (game.practice?.attempts || 0) % centers.length;
+    return { x: centers[(n + ((Math.random() * centers.length) | 0)) % centers.length], side: 1, width: 82 };
+}
 
 // ------------------------------------------------------------------ simulation
 function inputs() {
@@ -181,18 +221,28 @@ function step() {
     switch (game.phase) {
     case 'menu': {
         const res = stepWorld(game.world, inputs());
-        if (res.scorer >= 0) resetForRally(res.scorer);
+        if (res.scorer >= 0) {
+            resetForRally(res.scorer);
+            launchServe(game.world, res.scorer, aiServeInput(game.ais[res.scorer], game.world));
+        }
         break;
     }
     case 'ready':
-        // Everyone waits for the referee.
-        if (--game.timer <= 0) setPhase('play');
+        // Everyone waits for the referee; then the server chooses a serve.
+        if (--game.timer <= 0) beginServe();
+        break;
+    case 'serve':
+        stepServe();
         break;
     case 'play': {
-        const res = stepWorld(game.world, inputs());
+        const controls = game.mode === 'practice' ? [NO_INPUT, NO_INPUT] : inputs();
+        const res = stepWorld(game.world, controls, { maxTouches: maxTouches(), allowContacts: game.mode !== 'practice' });
         res.events.forEach(onEvent);
         updateTrail();
-        if (res.scorer >= 0) onPoint(res.scorer);
+        if (res.scorer >= 0) {
+            if (game.mode === 'practice') onPracticeLanding();
+            else onPoint(res.scorer, res.reason);
+        }
         break;
     }
     case 'point':
@@ -201,10 +251,12 @@ function step() {
         if (--game.timer <= 0) {
             if (game.winner >= 0) {
                 setPhase('over');
-                finishMatch();
+                if (game.mode === 'practice') finishPractice();
+                else finishMatch();
                 showOverlay('over');
             } else {
                 resetForRally(game.server);
+                if (game.mode === 'practice') game.target = nextTarget();
                 game.trail = [];
                 readyPhase(50);
             }
@@ -218,8 +270,50 @@ function step() {
 function stepPlayersOnly(playerInputs) {
     const b = game.world.ball;
     const keep = { ...b };
-    stepWorld(game.world, playerInputs);
+    stepWorld(game.world, playerInputs, { allowContacts: false });
     Object.assign(b, keep);
+}
+
+function beginServe() {
+    input.reset();
+    game.serveFrames = 0;
+    game.lastEvent = 'serve';
+    setPhase('serve', 240, t().serve, t().serveHint);
+    announce();
+}
+
+function stepServe() {
+    game.serveFrames++;
+    const aiServing = game.mode === 'demo' || (game.mode === 'cpu' && game.server === 1);
+    let serve = null;
+    if (aiServing && game.serveFrames >= 35) serve = aiServeInput(game.ais[game.server], game.world);
+    else if (!aiServing) {
+        const controls = input.read(game.mode === 'cpu' || game.mode === 'practice');
+        const current = controls[game.server] || controls[0];
+        if ((current.hit && game.serveFrames > 8) || game.timer <= 0) serve = current;
+    }
+    if (serve) {
+        launchServe(game.world, game.server, serve);
+        game.lastEvent = 'served';
+        setPhase('play');
+        audio.play('hit');
+        announce();
+        return;
+    }
+    game.timer--;
+}
+
+function onPracticeLanding() {
+    const p = game.practice;
+    const x = game.world.ball.x;
+    const hit = Math.abs(x - game.target.x) <= game.target.width / 2;
+    p.attempts++;
+    if (hit) p.hits++;
+    game.scores = [p.hits, p.attempts];
+    game.lastEvent = hit ? 'targetHit' : 'targetMiss';
+    game.winner = p.attempts >= p.total ? 0 : -1;
+    setPhase('point', hit ? 65 : 55, hit ? t().targetHit : t().targetMiss);
+    announce();
 }
 
 function updateTrail() {
@@ -267,20 +361,39 @@ function onEvent(e) {
     case 'wall':
         audio.play('wall');
         break;
+    case 'clash':
+        audio.play('spike');
+        game.shake = 5;
+        game.flash = reducedMotion ? 0 : 0.14;
+        burst(e.x, e.y, 12, '#ffffff', 3.5);
+        game.lastEvent = 'clash';
+        break;
+    case 'touchFault':
+        game.lastEvent = 'touchFault';
+        break;
+    case 'iceWind':
+        game.message = t().iceWind;
+        game.messageAge = 0;
+        game.lastEvent = 'iceWind';
+        audio.play('whistle');
+        announce();
+        break;
     }
 }
 
-function onPoint(scorer) {
+function onPoint(scorer, reason = 'ground') {
     const b = game.world.ball;
-    audio.play('ground');
-    burst(b.x, GROUND - 4, 18, '#ffffff', 4);
+    audio.play(reason === 'touchFault' ? 'whistle' : 'ground');
+    burst(b.x, reason === 'touchFault' ? b.y : GROUND - 4, 18, reason === 'touchFault' ? '#ff8b80' : '#ffffff', 4);
     game.shake = 4;
     game.trail = [];
     game.scores[scorer]++;
     game.server = scorer;
+    game.pointReason = reason;
+    game.lastEvent = reason === 'touchFault' ? 'touchFault' : 'point';
     game.longestRally = Math.max(game.longestRally, game.rallyTouches);
     game.rallyTouches = 0;
-    if (game.scores[scorer] >= settings.points) {
+    if (wonMatch(scorer)) {
         game.winner = scorer;
         game.poses = scorer === 0 ? ['win', 'lose'] : ['lose', 'win'];
         audio.play('win');
@@ -289,7 +402,8 @@ function onPoint(scorer) {
     } else {
         game.whistle = 15;
         buzz(40);
-        setPhase('point', 90, t().point(labels()[scorer]));
+        const pointMessage = reason === 'touchFault' ? t().touchFault(labels()[1 - scorer]) : t().point(labels()[scorer]);
+        setPhase('point', 90, pointMessage);
     }
     announce();
 }
@@ -298,6 +412,7 @@ function finishMatch() {
     const res = recordMatch(stats, {
         mode: game.mode,
         level: settings.level,
+        rules: settings.rules,
         won: game.winner === 0,
         longestRally: game.longestRally,
         spikes: game.spikes,
@@ -307,6 +422,13 @@ function finishMatch() {
     if (res.newBest.includes('rally')) notes.push(t().newRecordRally(stats.longestRally));
     if (res.newBest.includes('streak')) notes.push(t().newRecordStreak(stats.bestStreak));
     $('#over-record').textContent = notes.join(' · ');
+    renderRecords();
+}
+
+function finishPractice() {
+    const res = recordPractice(stats, game.practice.hits);
+    stats = res.stats;
+    $('#over-record').textContent = res.improved ? t().newPracticeBest(stats.practiceBest) : '';
     renderRecords();
 }
 
@@ -357,6 +479,7 @@ function frame(now) {
     }
     const inMatch = game.mode !== 'demo';
     const b = game.world.ball;
+    const displayScores = game.mode === 'practice' && game.practice ? [game.practice.hits, game.practice.attempts] : game.scores;
     let guide = null;
     if (settings.guide && inMatch && game.phase === 'play' && (b.vx || b.vy)) {
         const land = predictLanding(b);
@@ -372,9 +495,12 @@ function frame(now) {
         squash: game.phase === 'point' && game.messageAge < 14 ? 1 - game.messageAge / 14 : 0,
         guide,
         reducedMotion,
-        scores: inMatch ? game.scores : null,
+        scores: inMatch ? displayScores : null,
         labels: labels(),
         server: inMatch && game.phase !== 'over' ? game.server : -1,
+        phase: game.phase,
+        maxTouches: maxTouches(),
+        target: game.mode === 'practice' ? game.target : null,
         message: game.phase === 'paused' ? null : game.message,
         hint: game.phase === 'ready' ? game.hint : null,
         messageAge: game.messageAge,
@@ -421,30 +547,58 @@ async function toggleFullscreen() {
 }
 
 // ------------------------------------------------------------------ UI
+let activeDialog = null;
+let returnFocus = null;
+let installEvent = null;
+let updateWorker = null;
+let reloadForUpdate = false;
+
+const dialogNames = new Set(['pause', 'over', 'install-help']);
+const focusable = root => [...root.querySelectorAll('button:not([hidden]):not([disabled]), [href], [tabindex]:not([tabindex="-1"])')]
+    .filter(el => !el.closest('[hidden]'));
+
+function setGameplayInert(on) {
+    [canvas, $('#pause-btn'), $('.hud-right'), $('#touch')].forEach(el => { if (el) el.inert = on; });
+}
+
 function showOverlay(name) {
+    if (dialogNames.has(name) && !activeDialog) returnFocus = document.activeElement;
+    activeDialog = dialogNames.has(name) ? $(`#${name}`) : null;
+    if (!activeDialog && name === 'menu') returnFocus = null;
     $$('.overlay').forEach(o => { o.hidden = o.id !== name; });
+    setGameplayInert(!!activeDialog);
     document.body.classList.toggle('is-playing', !name || name === 'pause');
     if (name === 'over') {
         const w = game.winner;
-        $('#over-title').textContent = game.mode === 'cpu' ? (w === 0 ? t().youWin : t().youLose) : t().wins(labels()[w]);
-        $('#over-score').textContent = `${game.scores[0]} : ${game.scores[1]}`;
-        setTimeout(() => $('#over [data-action="rematch"]').focus(), 600); // not on the same key press
+        $('#over-title').textContent = game.mode === 'practice' ? t().practiceComplete
+            : game.mode === 'cpu' ? (w === 0 ? t().youWin : t().youLose)
+                : t().wins(labels()[w]);
+        $('#over-score').textContent = game.mode === 'practice' ? `${game.practice.hits} / ${game.practice.total}` : `${game.scores[0]} : ${game.scores[1]}`;
     }
-    if (name === 'pause') $('#pause [data-action="resume"]').focus();
+    if (activeDialog) requestAnimationFrame(() => focusable(activeDialog)[0]?.focus());
 }
 
 function pause() {
     if (game.phase === 'paused' || game.mode === 'demo' || game.phase === 'over') return;
     game.resumePhase = game.phase;
+    game.pausedEvent = game.lastEvent;
     game.phase = 'paused';
+    game.lastEvent = 'paused';
+    input.reset();
     showOverlay('pause');
+    announce();
 }
 
 function resume() {
     if (game.phase !== 'paused') return;
     game.phase = game.resumePhase;
+    game.lastEvent = game.pausedEvent || (game.phase === 'serve' ? 'serve' : 'point');
+    game.pausedEvent = null;
     showOverlay(null);
-    document.activeElement?.blur?.();
+    input.reset();
+    (returnFocus?.isConnected ? returnFocus : $('#pause-btn')).focus?.();
+    returnFocus = null;
+    announce();
 }
 
 function toMenu() {
@@ -452,6 +606,7 @@ function toMenu() {
     game.whistle = 0;
     showOverlay('menu');
     document.body.classList.remove('is-playing');
+    input.reset();
     leaveLandscape();
     $('#menu [data-mode="cpu"]').focus();
 }
@@ -465,16 +620,28 @@ function toast(text) {
 }
 
 function announce() {
+    const s = t();
+    const score = game.mode === 'practice' && game.practice
+        ? `${game.practice.hits} / ${game.practice.total}`
+        : s.score(game.scores[0], game.scores[1]);
+    const phase = s[`phase${game.phase[0].toUpperCase()}${game.phase.slice(1)}`] || game.phase;
+    const server = game.mode === 'demo' || game.phase === 'menu' ? s.notSelected : labels()[game.server];
+    const event = s[`event${game.lastEvent[0].toUpperCase()}${game.lastEvent.slice(1)}`] || game.lastEvent;
+    $('#game-status-score').textContent = score;
+    $('#game-status-phase').textContent = phase;
+    $('#game-status-server').textContent = server;
+    $('#game-status-last-event').textContent = event;
     if (game.mode === 'demo') $('#status').textContent = '';
-    else $('#status').textContent = [t().score(game.scores[0], game.scores[1]), game.message || '', game.hint ? (Array.isArray(game.hint) ? game.hint.join('. ') : game.hint) : ''].filter(Boolean).join('. ');
+    else $('#status').textContent = [score, game.message || '', game.hint ? (Array.isArray(game.hint) ? game.hint.join('. ') : game.hint) : ''].filter(Boolean).join('. ');
 }
 
 function renderRecords() {
     const s = t();
     const rows = LEVELS.map(l => {
         const tr = document.createElement('tr');
-        const r = stats.cpu[l];
-        for (const v of [s[l], r.w, r.l]) {
+        const a = stats.cpu[l];
+        const c = stats.competitive[l];
+        for (const v of [s[l], `${a.w}–${a.l}`, `${c.w}–${c.l}`]) {
             const td = document.createElement(v === s[l] ? 'th' : 'td');
             td.textContent = String(v);
             tr.append(td);
@@ -482,7 +649,12 @@ function renderRecords() {
         return tr;
     });
     $('#rec-body').replaceChildren(...rows);
-    $('#rec-extra').replaceChildren(...[s.recStreak(stats.bestStreak), s.recRally(stats.longestRally), s.recSpikes(stats.spikes)].map(text => {
+    $('#rec-extra').replaceChildren(...[
+        s.recStreak(stats.bestStreak),
+        s.recRally(stats.longestRally),
+        s.recSpikes(stats.spikes),
+        s.recPractice(stats.practiceBest),
+    ].map(text => {
         const li = document.createElement('li');
         li.textContent = text;
         return li;
@@ -515,6 +687,8 @@ function applyText() {
     $$('[data-level]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.level === settings.level)));
     $$('[data-points]').forEach(b => b.setAttribute('aria-pressed', String(Number(b.dataset.points) === settings.points)));
     $$('[data-speed]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.speed === settings.speed)));
+    $$('[data-rules]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.rules === settings.rules)));
+    $('#rules-help').textContent = settings.rules === 'competitive' ? s.rulesCompetitiveHelp : s.rulesArcadeHelp;
     const fs = !!document.fullscreenElement;
     $$('[data-action="fullscreen"]').forEach(b => {
         b.setAttribute('aria-label', fs ? s.exitFullscreen : s.fullscreen);
@@ -537,6 +711,7 @@ function bindUI() {
     pick('level', 'level');
     pick('points', 'points', Number);
     pick('speed', 'speed');
+    pick('rules', 'rules');
     $('#sound').addEventListener('click', () => {
         audio.enabled = !audio.enabled;
         settings.sound = audio.enabled;
@@ -559,44 +734,98 @@ function bindUI() {
     document.addEventListener('fullscreenchange', () => { applyText(); updateRotation(); });
     $('#pause-btn').addEventListener('click', () => (game.phase === 'paused' ? resume() : pause()));
     addEventListener('keydown', e => {
+        if (e.key === 'Tab' && activeDialog) {
+            const list = focusable(activeDialog);
+            if (!list.length) return;
+            const first = list[0];
+            const last = list[list.length - 1];
+            if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+            else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+            return;
+        }
+        if (e.code === 'Escape' && activeDialog?.id === 'install-help') {
+            e.preventDefault();
+            closeInstallHelp();
+            return;
+        }
         if (e.code === 'Escape' || e.code === 'KeyP') {
             if (game.phase === 'paused') resume();
             else pause();
         }
     });
-    document.addEventListener('visibilitychange', () => { if (document.hidden) pause(); });
+    document.addEventListener('visibilitychange', () => {
+        input.reset();
+        if (document.hidden) pause();
+    });
     // The first touch or key unlocks audio (browsers require a user gesture).
     addEventListener('pointerdown', () => audio.unlock(), { once: true });
     addEventListener('keydown', () => audio.unlock(), { once: true });
     input.bindTouch($('#touch'));
-    const onOrientation = () => updateRotation();
+    const onOrientation = () => { input.reset(); updateRotation(); };
     if (portrait.addEventListener) portrait.addEventListener('change', onOrientation);
     else portrait.addListener(onOrientation);
-    if (coarsePointer.addEventListener) coarsePointer.addEventListener('change', () => { applyText(); updateRotation(); });
+    if (coarsePointer.addEventListener) coarsePointer.addEventListener('change', () => { input.reset(); applyText(); updateRotation(); });
+    const onMotion = e => { reducedMotion = e.matches; if (reducedMotion) { game.trail = []; game.flash = 0; game.shake = 0; game.freeze = 0; } };
+    if (motionPreference.addEventListener) motionPreference.addEventListener('change', onMotion);
+    else motionPreference.addListener(onMotion);
     if (!isTouch()) $('#vibration').hidden = true;
 
-    let installEvent = null;
+    const installed = matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+    const ios = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    if (ios && !installed) $('#install').hidden = false;
     addEventListener('beforeinstallprompt', e => {
         e.preventDefault();
         installEvent = e;
         $('#install').hidden = false;
     });
     $('#install').addEventListener('click', async () => {
-        if (!installEvent) return;
+        if (!installEvent) {
+            showOverlay('install-help');
+            return;
+        }
         installEvent.prompt();
         await installEvent.userChoice.catch(() => null);
         installEvent = null;
         $('#install').hidden = true;
     });
+    $('#install-help-close').addEventListener('click', closeInstallHelp);
+    $('#update').addEventListener('click', () => {
+        if (!updateWorker) return;
+        reloadForUpdate = true;
+        updateWorker.postMessage({ type: 'SKIP_WAITING' });
+    });
+    addEventListener('appinstalled', () => {
+        installEvent = null;
+        $('#install').hidden = true;
+        toast(t().offline);
+    });
+}
+
+function closeInstallHelp() {
+    const focus = returnFocus;
+    showOverlay('menu');
+    (focus?.isConnected ? focus : $('#install')).focus?.();
+    returnFocus = null;
+}
+
+function offerUpdate(worker) {
+    updateWorker = worker;
+    $('#update').hidden = false;
+    toast(t().updateReady);
 }
 
 function registerWorker() {
     if (!('serviceWorker' in navigator) || !window.isSecureContext) return;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (reloadForUpdate) location.reload();
+    });
     navigator.serviceWorker.register('./service-worker.js').then(reg => {
+        if (reg.waiting) offerUpdate(reg.waiting);
         reg.addEventListener('updatefound', () => {
             const w = reg.installing;
             w?.addEventListener('statechange', () => {
-                if (w.state === 'activated' && !navigator.serviceWorker.controller) toast(t().offline);
+                if (w.state === 'installed' && navigator.serviceWorker.controller) offerUpdate(w);
+                else if (w.state === 'activated' && !navigator.serviceWorker.controller) toast(t().offline);
             });
         });
     }).catch(() => { /* offline support is optional */ });

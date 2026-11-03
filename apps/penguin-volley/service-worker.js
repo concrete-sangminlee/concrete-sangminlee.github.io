@@ -23,7 +23,13 @@ const FILES = [
 ];
 
 self.addEventListener('install', e => {
-    e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES)).then(() => self.skipWaiting()));
+    // With no active worker, the first install proceeds to activation normally.
+    // Updates wait until the page explicitly accepts them via SKIP_WAITING.
+    e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES)));
+});
+
+self.addEventListener('message', e => {
+    if (e.data?.type === 'SKIP_WAITING') e.waitUntil(self.skipWaiting());
 });
 
 self.addEventListener('activate', e => {
@@ -40,14 +46,17 @@ self.addEventListener('fetch', e => {
     const url = new URL(e.request.url);
     if (url.origin !== location.origin) return;
     e.respondWith(
-        caches.match(e.request, { ignoreSearch: e.request.mode === 'navigate' })
-            .then(hit => hit || fetch(e.request).then(res => {
-                if (res.ok && url.pathname.startsWith(new URL('./', location).pathname)) {
-                    const copy = res.clone();
-                    caches.open(CACHE).then(c => c.put(e.request, copy));
-                }
-                return res;
-            }))
-            .catch(() => e.request.mode === 'navigate' ? caches.match('./index.html') : Response.error()),
+        caches.open(CACHE).then(cache =>
+            cache.match(e.request, { ignoreSearch: e.request.mode === 'navigate' })
+                .then(hit => hit || fetch(e.request).then(res => {
+                    if (res.ok && url.pathname.startsWith(new URL('./', location).pathname)) {
+                        return cache.put(e.request, res.clone()).then(() => res);
+                    }
+                    return res;
+                }))
+                .catch(() => e.request.mode === 'navigate'
+                    ? cache.match('./index.html')
+                    : Response.error()),
+        ),
     );
 });

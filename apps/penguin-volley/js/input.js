@@ -28,8 +28,34 @@ function padState(pad) {
 export function createInput({ isActive, onPadChange }) {
     const keys = [blank(), blank()];
     const touch = blank();
+    const touchButtons = new Map();
     let lastStart = false;
     let touchUsed = false;
+
+    function clear(state) {
+        Object.keys(state).forEach(name => { state[name] = false; });
+    }
+
+    function syncTouch(name) {
+        touch[name] = [...touchButtons.values()].some(state =>
+            state.name === name && (state.pointers.size > 0 || state.pulse),
+        );
+    }
+
+    function reset() {
+        keys.forEach(clear);
+        clear(touch);
+        lastStart = false;
+        touchUsed = false;
+        touchButtons.forEach((state, btn) => {
+            state.pointers.clear();
+            state.pulse = false;
+            state.suppressClick = false;
+            clearTimeout(state.pulseTimer);
+            clearTimeout(state.suppressTimer);
+            btn.classList.remove('is-down');
+        });
+    }
 
     function setKey(code, down) {
         KEYS.forEach((map, i) => {
@@ -42,19 +68,65 @@ export function createInput({ isActive, onPadChange }) {
         if (!e.repeat) setKey(e.code, true);
     });
     addEventListener('keyup', e => setKey(e.code, false));
-    addEventListener('blur', () => keys.forEach(k => Object.keys(k).forEach(n => { k[n] = false; })));
+    addEventListener('blur', reset);
     addEventListener('gamepadconnected', e => onPadChange?.(e.gamepad, true));
     addEventListener('gamepaddisconnected', e => onPadChange?.(e.gamepad, false));
 
     function bindTouch(root) {
         root.querySelectorAll('[data-key]').forEach(btn => {
-            const name = btn.dataset.key;
-            const on = e => { e.preventDefault(); touch[name] = true; touchUsed = true; btn.classList.add('is-down'); btn.setPointerCapture?.(e.pointerId); };
-            const off = e => { e.preventDefault(); touch[name] = false; btn.classList.remove('is-down'); };
+            if (touchButtons.has(btn)) return;
+            const state = {
+                name: btn.dataset.key,
+                pointers: new Set(),
+                pulse: false,
+                pulseTimer: 0,
+                suppressClick: false,
+                suppressTimer: 0,
+            };
+            touchButtons.set(btn, state);
+
+            const syncButton = () => {
+                const pressed = state.pointers.size > 0 || state.pulse;
+                btn.classList.toggle('is-down', pressed);
+                syncTouch(state.name);
+            };
+            const on = e => {
+                e.preventDefault();
+                state.pointers.add(e.pointerId);
+                state.suppressClick = true;
+                clearTimeout(state.suppressTimer);
+                state.suppressTimer = setTimeout(() => { state.suppressClick = false; }, 1000);
+                touchUsed = true;
+                syncButton();
+                btn.setPointerCapture?.(e.pointerId);
+            };
+            const off = e => {
+                e.preventDefault();
+                state.pointers.delete(e.pointerId);
+                syncButton();
+            };
             btn.addEventListener('pointerdown', on);
             btn.addEventListener('pointerup', off);
             btn.addEventListener('pointercancel', off);
             btn.addEventListener('lostpointercapture', off);
+            btn.addEventListener('click', e => {
+                // Pointer activation already produced held input. Keyboard and assistive
+                // technology clicks have no preceding pointer and need a short pulse.
+                if (state.suppressClick || e.detail > 0) {
+                    state.suppressClick = false;
+                    clearTimeout(state.suppressTimer);
+                    return;
+                }
+                e.preventDefault();
+                touchUsed = true;
+                state.pulse = true;
+                clearTimeout(state.pulseTimer);
+                state.pulseTimer = setTimeout(() => {
+                    state.pulse = false;
+                    syncButton();
+                }, 100);
+                syncButton();
+            });
             btn.addEventListener('contextmenu', e => e.preventDefault());
         });
     }
@@ -85,6 +157,7 @@ export function createInput({ isActive, onPadChange }) {
     return {
         read,
         bindTouch,
+        reset,
         startPressed,
         get touchUsed() { return touchUsed; },
         get padCount() { return pads().length; },

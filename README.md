@@ -61,7 +61,7 @@ Pretendard is self-hosted and subset to the site's own text at build time (`lib/
 | `scripts/maintenance.js` | weekly report (see below) |
 | `apps/<name>/` | static apps, copied as-is to `/<name>/`; not checked by `npm run check`. A `service-worker.js` containing `__APP_VERSION__` gets a hash of the app's files |
 | `apps/sequence-arena/` | bundle synced from its own source |
-| `apps/penguin-volley/` | Penguin Volley, written here: plain ES modules, no build step, no image or sound files (canvas drawing, Web Audio). CPU levels, same-keyboard 2P, gamepads, phone touch controls with automatic landscape fallback, local records, haptics, offline PWA. `js/physics.js` (deterministic, 60 Hz) and `js/ai.js` (CPU) have no DOM dependencies |
+| `apps/penguin-volley/` | Penguin Volley, written here: plain ES modules, no build step, no image or sound files (canvas drawing, Web Audio). Arcade/competitive rules, controlled serves, serve practice, CPU levels, same-keyboard 2P, gamepads, phone touch controls with automatic landscape fallback, local records, haptics, offline PWA. `js/physics.js` (deterministic, 60 Hz) and `js/ai.js` (CPU) have no DOM dependencies |
 
 ## CI
 
