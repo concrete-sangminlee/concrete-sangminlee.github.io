@@ -290,7 +290,7 @@ function stepServe() {
     else if (!aiServing) {
         const controls = input.read(game.mode === 'cpu' || game.mode === 'practice');
         const current = controls[game.server] || controls[0];
-        if ((current.hit && game.serveFrames > 8) || game.timer <= 0) serve = current;
+        if (current.hit || game.timer <= 0) serve = current;
     }
     if (serve) {
         launchServe(game.world, game.server, serve);
