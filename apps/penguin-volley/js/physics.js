@@ -21,6 +21,9 @@ const BALL_MAX = 19;
 const NET_BOUNCE = 0.8;
 const HIT_COOLDOWN = 10;   // frames a player cannot touch the ball again
 const SPIKE_WINDOW = 10;   // frames after pressing hit in the air that a touch is a spike
+const SWING_WINDOW = 10;   // contact-eligible frames after a standing hit press
+const PERFECT_SWING_START = 4;
+const PERFECT_SWING_END = 5;
 const DIVE_FRAMES = 22;
 const RECOVER_FRAMES = 16;
 const DIVE_SPEED = 10.5;
@@ -51,6 +54,8 @@ export function createPlayer(side) {
         state: 'ground', // ground | air | dive | recover
         timer: 0,
         spike: 0,
+        swing: 0,
+        swingAge: 0,
         cooldown: 0,
         face: side === 0 ? 1 : -1,
         input: NO_INPUT,
@@ -121,6 +126,9 @@ export function launchServe(world, side, input = NO_INPUT, power = 1) {
     const velocity = serveVelocity(server, input, power);
     b.vx = velocity.vx;
     b.vy = velocity.vy;
+    // The serve button can still be held on the first rally frame. Preserve only
+    // that edge so launching a serve does not also begin a standing swing.
+    world.players[server].prev = { ...world.players[server].prev, hit: !!input.hit };
     return b;
 }
 
@@ -140,6 +148,10 @@ function stepPlayer(p, input, events) {
     p.input = input;
     if (p.cooldown > 0) p.cooldown--;
     if (p.spike > 0) p.spike--;
+    if (p.swing > 0) {
+        p.swing--;
+        p.swingAge++;
+    }
     if (p.squash > 0) p.squash *= 0.8;
 
     switch (p.state) {
@@ -149,12 +161,19 @@ function stepPlayer(p, input, events) {
         if (pressed('hit') && dir !== 0) {
             p.state = 'dive';
             p.timer = DIVE_FRAMES;
+            p.swing = 0;
+            p.swingAge = 0;
             p.vx = dir * DIVE_SPEED;
             p.vy = -3.5;
             p.face = dir;
             events.push({ type: 'dive', side: p.side, x: p.x, y: p.y });
+        } else if (pressed('hit')) {
+            p.swing = SWING_WINDOW;
+            p.swingAge = 0;
         } else if (pressed('up')) {
             p.state = 'air';
+            p.swing = 0;
+            p.swingAge = 0;
             p.vy = PLAYER.jumpV;
             events.push({ type: 'jump', side: p.side, x: p.x, y: p.y });
         }
@@ -294,6 +313,34 @@ export function spikeVelocity(side, inp) {
     return { vx, vy };
 }
 
+/** Timing grade for a zero-based standing swing age. */
+export function standingHitGrade(age) {
+    return age >= PERFECT_SWING_START && age <= PERFECT_SWING_END ? 'perfect' : 'good';
+}
+
+/**
+ * Bounded velocity for a standing power hit. Up/down choose the arc; holding
+ * toward the net drives it flatter, while holding away pulls it shorter.
+ * @param {0 | 1} side
+ * @param {{ up?: boolean, down?: boolean, left?: boolean, right?: boolean }} inp
+ * @param {'perfect' | 'good'} [grade]
+ */
+export function standingHitVelocity(side, inp, grade = 'good') {
+    const toNet = side === 0 ? 1 : -1;
+    const vertical = (inp.down ? 1 : 0) - (inp.up ? 1 : 0);
+    const held = (inp.right ? 1 : 0) - (inp.left ? 1 : 0);
+    const horizontal = held * toNet; // 1 = toward, -1 = away
+    let x = 1;
+    let y = -0.32;
+    if (vertical < 0) { x = 0.76; y = -0.65; }
+    else if (vertical > 0) { x = 0.78; y = 0.62; }
+    if (horizontal > 0) x *= 1.18;
+    else if (horizontal < 0) x *= 0.7;
+    const length = Math.hypot(x, y);
+    const speed = grade === 'perfect' ? 18.5 : 16;
+    return { vx: toNet * speed * x / length, vy: speed * y / length };
+}
+
 function contactCandidate(p, b) {
     if (p.cooldown > 0) return null;
     const h = hitCircle(p);
@@ -321,7 +368,15 @@ function touchBall(p, b, events, contact = contactCandidate(p, b)) {
     const toNet = p.side === 0 ? 1 : -1;
     const inp = p.input;
     let type = 'hit';
-    if (p.state === 'air' && p.spike > 0) {
+    let grade;
+    if (p.state === 'ground' && p.swing > 0) {
+        grade = standingHitGrade(p.swingAge);
+        const v = standingHitVelocity(p.side, inp, grade);
+        b.vx = v.vx;
+        b.vy = v.vy;
+        p.swing = 0;
+        type = 'powerHit';
+    } else if (p.state === 'air' && p.spike > 0) {
         // Jump-button spike: smash down near the net, drive it flat from further back.
         const keys = p.autoSpike ? { down: Math.abs(p.x - NET.x) < 160, up: false, left: false, right: false } : inp;
         const v = spikeVelocity(p.side, keys);
@@ -347,7 +402,9 @@ function touchBall(p, b, events, contact = contactCandidate(p, b)) {
     b.touches = b.lastSide === p.side ? b.touches + 1 : 1;
     b.touchSeq++;
     b.lastSide = p.side;
-    events.push({ type, side: p.side, x: b.x, y: b.y, power: Math.hypot(b.vx, b.vy) });
+    const event = { type, side: p.side, x: b.x, y: b.y, power: Math.hypot(b.vx, b.vy) };
+    if (grade) event.grade = grade;
+    events.push(event);
     return true;
 }
 
@@ -369,6 +426,7 @@ function clashBall(players, b, contacts, events) {
     for (const p of players) {
         p.cooldown = HIT_COOLDOWN;
         p.spike = 0;
+        p.swing = 0;
     }
     b.touches = 0;
     b.lastSide = -1;
