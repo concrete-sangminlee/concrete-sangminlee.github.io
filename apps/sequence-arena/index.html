@@ -35,6 +35,7 @@
     <link rel="modulepreload" href="./client/sound-bank.js" />
     <link rel="modulepreload" href="./client/tutorial.js" />
     <link rel="modulepreload" href="./client/stats-view.js" />
+    <link rel="modulepreload" href="./client/touch-aim.js" />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Sequence Arena" />
     <meta property="og:title" content="Sequence Arena · 오프라인 솔로 시퀀스" />
@@ -515,7 +516,8 @@
               height="1000"
               role="application"
               tabindex="0"
-              aria-label="시퀀스 게임 보드. 카드를 선택한 뒤 방향키로 칸을 고르고 Enter 또는 Space로 칩을 놓으세요."
+              aria-label="시퀀스 게임 보드. 카드를 선택한 뒤 칸을 누르거나, 방향키로 칸을 고르고 Enter 또는 Space로 칩을 놓으세요."
+              data-i18n-attr="aria-label:board.aria"
               aria-describedby="board-state-summary"
             ></canvas>
             <p id="board-state-summary" class="sr-only" aria-live="polite"></p>
@@ -581,7 +583,7 @@
                 <strong data-i18n="status.spectate">관전</strong>
                 <span id="spectator-count">0명</span>
               </div>
-              <div class="pile-actions" aria-label="카드 더미">
+              <div class="pile-actions" aria-label="카드 더미" data-i18n-attr="aria-label:status.piles.aria">
                 <button id="discard-pile-btn" class="pile-button discard" type="button">
                   <span data-i18n="status.discardPile">버림 더미</span>
                   <strong id="discard-count">0장</strong>

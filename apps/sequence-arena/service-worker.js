@@ -1,4 +1,4 @@
-const CACHE_NAME = "sequence-arena-github-pages-v126";
+const CACHE_NAME = "sequence-arena-github-pages-v127";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -13,6 +13,7 @@ const APP_SHELL = [
   "./client/sound-bank.js",
   "./client/tutorial.js",
   "./client/stats-view.js",
+  "./client/touch-aim.js",
   "./shared/game-core.js",
   "./shared/bot-ai.js",
   "./shared/local-solo.js",

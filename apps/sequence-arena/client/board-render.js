@@ -15,6 +15,8 @@ import {
   drawChip,
   drawBoardTargetMarker,
   drawCardFaceDetails,
+  drawCompactCardFace,
+  drawCompactRemoveMarker,
 } from "./board-paint.js";
 
 let host = null;
@@ -182,6 +184,12 @@ export function drawBoard() {
   // Selection cannot change mid-draw, so the target-marker mode is resolved once per
   // frame here instead of per highlighted cell inside the extracted painter.
   const markerCard = selectedCard();
+  // Compact mode (app.js: displayed board < ~520 CSS px, i.e. phones): big rank+suit faces,
+  // bold borders for targets / last move, and the cells you cannot use dimmed while you
+  // choose, so the options read at a glance on 24–41 px cells. Desktop sizes are unchanged.
+  const compact = Boolean(host.isCompactBoard?.());
+  const choosing = compact && Boolean(markerCard) && clientState.legalTargets.length > 0 && isYourTurn();
+  const beat = 0.5 + 0.5 * Math.sin(targetPulse * Math.PI * 2);
   ctx.clearRect(0, 0, size, size);
 
   const palette = boardPalette();
@@ -276,7 +284,11 @@ export function drawBoard() {
       highlighted &&
       clientState.legalTargets[clientState.keyboardBoardIndex] === cell.id;
 
-    let fill = highlighted ? "rgba(240, 255, 239, 0.98)" : "rgba(255, 252, 244, 0.95)";
+    let fill = highlighted
+      ? compact
+        ? "rgba(214, 246, 224, 1)"
+        : "rgba(240, 255, 239, 0.98)"
+      : "rgba(255, 252, 244, 0.95)";
     if (cell.corner) {
       fill = "rgba(248, 226, 169, 0.94)";
     } else if (cell.chip === "A") {
@@ -290,9 +302,31 @@ export function drawBoard() {
       : highlighted
         ? "rgba(36, 122, 81, 0.98)"
         : isLastMove
-          ? "rgba(212, 162, 61, 0.88)"
+          ? compact
+            ? "rgba(226, 150, 18, 1)"
+            : "rgba(212, 162, 61, 0.88)"
           : "rgba(51, 35, 14, 0.2)";
-    const lineWidth = isKeyboardCursor ? 6 : highlighted ? 5 : isLastMove ? 4 : 1.5;
+    const lineWidth = compact
+      ? isKeyboardCursor
+        ? 11
+        : highlighted
+          ? 7 + beat * 3
+          : isLastMove
+            ? 10
+            : 2
+      : isKeyboardCursor
+        ? 6
+        : highlighted
+          ? 5
+          : isLastMove
+            ? 4
+            : 1.5;
+    // Compact + choosing: everything that is not a target is dimmed after it is painted.
+    const dimCard = () => {
+      if (choosing && !highlighted) {
+        drawRoundedRect(cardX, cardY, cardWidth, cardHeight, 10, "rgba(12, 20, 16, 0.3)");
+      }
+    };
 
     ctx.save();
     ctx.shadowColor = highlighted ? "rgba(34, 145, 83, 0.38)" : "rgba(36, 23, 9, 0.16)";
@@ -354,10 +388,15 @@ export function drawBoard() {
       ctx.textBaseline = "middle";
       ctx.fillText("★", cx, cy - cardWidth * 0.02);
       ctx.restore();
+      dimCard();
       continue;
     }
 
-    drawCardFaceDetails(cell.label, cardX, cardY, cardWidth, cardHeight);
+    if (compact) {
+      drawCompactCardFace(cell.label, cardX, cardY, cardWidth, cardHeight);
+    } else {
+      drawCardFaceDetails(cell.label, cardX, cardY, cardWidth, cardHeight);
+    }
 
     if (cell.chip) {
       const chipCenterX = cardX + cardWidth / 2;
@@ -427,12 +466,20 @@ export function drawBoard() {
         chipCenterY + offsetY,
         chipRadius * scale,
         cell.chip,
-        cell.seqCount > 0
+        cell.seqCount > 0,
+        compact
       );
       ctx.restore();
     }
+    dimCard();
 
-    if (highlighted && markerCard) {
+    if (highlighted && markerCard && compact) {
+      // Place targets are already marked by the bold pulsing border + mint fill (a centre
+      // marker would hide the big face); removable chips get the bold ring + cross.
+      if (markerCard.action === "remove") {
+        drawCompactRemoveMarker(cardX + cardWidth / 2, cardY + cardHeight / 2 + cardHeight * 0.07, inner * 0.32, targetPulse);
+      }
+    } else if (highlighted && markerCard) {
       drawBoardTargetMarker(
         cardX + cardWidth / 2,
         cardY + cardHeight / 2 + cardHeight * 0.07,

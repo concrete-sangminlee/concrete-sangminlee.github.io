@@ -112,7 +112,7 @@ export function drawRoundedRect(x, y, width, height, radius, fillStyle, strokeSt
   }
 }
 
-export function drawChip(x, y, radius, team, locked) {
+export function drawChip(x, y, radius, team, locked, compact = false) {
   const teamMeta = TEAM_META[team];
   const gradient = ctx.createRadialGradient(x - radius * 0.34, y - radius * 0.42, radius * 0.12, x, y, radius);
   gradient.addColorStop(0, "rgba(255, 255, 255, 0.86)");
@@ -172,7 +172,7 @@ export function drawChip(x, y, radius, team, locked) {
   ctx.fillStyle = "rgba(255, 250, 232, 0.94)";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  ctx.font = `900 ${Math.max(10, radius * 0.62)}px Georgia, "Times New Roman", serif`;
+  ctx.font = `900 ${compact ? radius * 0.8 : Math.max(10, radius * 0.62)}px Georgia, "Times New Roman", serif`;
   ctx.shadowColor = "rgba(0, 0, 0, 0.3)";
   ctx.shadowBlur = radius * 0.08;
   ctx.shadowOffsetY = radius * 0.05;
@@ -191,8 +191,8 @@ export function drawChip(x, y, radius, team, locked) {
 
   if (locked) {
     ctx.beginPath();
-    ctx.arc(x, y, radius + 6, 0, Math.PI * 2);
-    ctx.lineWidth = 5;
+    ctx.arc(x, y, radius + (compact ? 7 : 6), 0, Math.PI * 2);
+    ctx.lineWidth = compact ? 9 : 5;
     ctx.strokeStyle = "rgba(210, 162, 61, 0.95)";
     ctx.stroke();
   }
@@ -433,3 +433,61 @@ export function drawCardFaceDetails(label, x, y, width, height = width) {
   ctx.restore();
 }
 
+
+
+// Compact board (phones): the board is only ~240–410 CSS px wide there, so a cell is 24–41 px
+// and the corner indices above land at 5–8 CSS px — unreadable. The compact face skips the
+// paper/border/pip detail (also ~100 fewer gradients per pulse frame) and paints one large
+// rank over one large suit, ~11–19 CSS px on those boards. Lining sans-serif digits keep "10"
+// full height (Georgia's old-style figures shrink it to x-height).
+const COMPACT_RANK_FONT = 'ui-rounded, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif';
+
+export function drawCompactCardFace(label, x, y, width, height) {
+  const { rank, suit, isRed } = splitCardLabel(label);
+  const cx = x + width / 2;
+  const rankY = y + height * 0.31;
+  ctx.save();
+  if (COURT_RANKS.has(rank)) {
+    // A thin gold frame keeps Q/K reading as court cards.
+    drawRoundedRect(x + 6, y + 6, width - 12, height - 12, 6, "rgba(240, 206, 128, 0.26)", "rgba(166, 112, 38, 0.62)", 2.5);
+  }
+  ctx.fillStyle = isRed ? "#b3203b" : "#211f1c";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.font = `800 46px ${COMPACT_RANK_FONT}`;
+  const maxWidth = width * 0.9;
+  const measured = rank.length > 1 ? ctx.measureText(rank).width : 0;
+  if (measured > maxWidth) {
+    ctx.save();
+    ctx.translate(cx, rankY);
+    ctx.scale(maxWidth / measured, 1);
+    ctx.fillText(rank, 0, 0);
+    ctx.restore();
+  } else {
+    ctx.fillText(rank, cx, rankY);
+  }
+  ctx.font = '900 42px Georgia, "Times New Roman", serif';
+  ctx.fillText(suit, cx, y + height * 0.72);
+  ctx.restore();
+}
+
+// Compact board: the dashed marker is ~1 CSS px thin on a phone, so a one-eyed jack's
+// removable chip gets a bold haloed ring + cross instead (red stays readable on a ruby chip).
+export function drawCompactRemoveMarker(x, y, radius, pulse) {
+  const ring = radius * (1.06 + 0.1 * (0.5 + 0.5 * Math.sin(pulse * Math.PI * 2)));
+  const d = radius * 0.5;
+  ctx.save();
+  ctx.lineCap = "round";
+  for (const [color, width] of [["rgba(255, 250, 240, 0.95)", 13], ["rgba(190, 28, 56, 0.98)", 7]]) {
+    ctx.strokeStyle = color;
+    ctx.lineWidth = width;
+    ctx.beginPath();
+    ctx.arc(x, y, ring, 0, Math.PI * 2);
+    ctx.moveTo(x - d, y - d);
+    ctx.lineTo(x + d, y + d);
+    ctx.moveTo(x + d, y - d);
+    ctx.lineTo(x - d, y + d);
+    ctx.stroke();
+  }
+  ctx.restore();
+}

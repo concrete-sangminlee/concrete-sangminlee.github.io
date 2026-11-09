@@ -8801,3 +8801,98 @@ body[data-game-chrome="on"] #game-side-panels .log-list li {
     width: var(--pl-board);
   }
 }
+
+
+/* ==========================================================================================
+   Phone board extras (2026-10-04, mobile phase 2). The canvas side (big rank+suit faces, bold
+   target / last-move borders, non-targets dimmed while choosing) lives in board-render.js and
+   switches on the displayed board size, not on these media queries.
+   ========================================================================================== */
+
+/* Touch-aim magnifier (client/touch-aim.js); exists only while a finger aims at the board. */
+.board-loupe {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 960;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  box-shadow:
+    0 12px 30px rgba(0, 0, 0, 0.45),
+    0 0 0 1px rgba(0, 0, 0, 0.35);
+  pointer-events: none;
+}
+
+.board-loupe[hidden] {
+  display: none;
+}
+
+/* With a card selected on your turn, a finger on the board aims (touch-aim) instead of panning
+   or pinch-zooming the page. touch-action is read when the touch starts. */
+body[data-selected="true"][data-turn="yours"][data-pending-step="none"] #game-canvas {
+  touch-action: none;
+}
+
+/* Dead card (both of its board cells are taken): dimmed face and a 죽은 카드 tag on every
+   viewport — the .card-action text that used to say so is hidden during play. */
+.card-dead-tag {
+  display: none;
+}
+
+body[data-game="playing"] .card-button.dead:not(.card-flight) .card-corner,
+body[data-game="playing"] .card-button.dead:not(.card-flight) .card-face {
+  opacity: 0.38;
+  filter: grayscale(0.85);
+}
+
+body[data-game="playing"] .card-button.dead .card-targets {
+  color: #fff;
+  background: #9d2941;
+}
+
+body[data-game="playing"] .card-button.dead:not(.card-flight) .card-dead-tag {
+  position: absolute;
+  z-index: 6;
+  top: 50%;
+  left: 50%;
+  display: block;
+  max-width: 92%;
+  padding: 3px 6px;
+  overflow: hidden;
+  border-radius: 6px;
+  color: #fff;
+  background: rgba(157, 41, 65, 0.95);
+  box-shadow: 0 4px 10px rgba(60, 10, 20, 0.28);
+  font-size: 0.66rem;
+  font-weight: 900;
+  line-height: 1.15;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  transform: translate(-50%, -50%) rotate(-10deg);
+  pointer-events: none;
+}
+
+@media (max-width: 680px), (orientation: landscape) and (max-height: 500px) {
+  /* The board pills ("AI 계산 중", "루비 승리") sat over the middle / top rows, i.e. over the
+     bot's move and the final position. The HUD already shows "생각 중 N초" and the result card
+     names the winner, so phones drop them. */
+  body[data-game-chrome="on"] .board-panel::after {
+    display: none;
+  }
+
+  /* Board toast: smaller and tucked against the top rail so it covers about one row. */
+  body[data-game-chrome="on"] .game-toast:not([hidden]) {
+    top: 4px;
+    max-width: calc(100% - 20px);
+    padding: 4px 12px;
+    font-size: 0.74rem;
+    background: rgba(8, 28, 23, 0.84);
+  }
+
+  /* Jack captions (와일드 / 제거) were 0.42rem with Latin tracking — unreadable in Hangul. */
+  body[data-game-chrome="on"][data-game="playing"] .jack-frame small {
+    font-size: 0.54rem;
+    letter-spacing: 0;
+  }
+}

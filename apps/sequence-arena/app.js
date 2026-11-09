@@ -37,6 +37,7 @@ import { bindReplayControllerContext, closeReplayModal, wireReplayControllerEven
 import { HAPTIC, playSoundPattern } from "./client/sound-bank.js";
 import { createIcon, mountIcons, setIcon } from "./client/icons.js";
 import { TUTORIAL_SEED, TUTORIAL_STEPS, createTutorialMachine } from "./client/tutorial.js";
+import { createTouchAim } from "./client/touch-aim.js";
 import {
   buildDailyCalendar,
   buildStatsSummary,
@@ -146,6 +147,9 @@ bindBoardPaintContext(ctx);
 // Backing-store cap for syncBoardCanvasResolution(); declared up here (not next to it) because
 // render() calls that sync, and render() can run before the bottom of this module is reached.
 const BOARD_BACKING_MAX_PX = 2048;
+// Below this displayed width (phones) the board paints its compact, big-face variant.
+const COMPACT_BOARD_MAX_CSS_PX = 520;
+let boardIsCompact = false;
 
 const refs = {
   createForm: document.getElementById("create-form"),
@@ -831,6 +835,7 @@ bindBoardRenderContext({
   selectedCard,
   isYourTurn,
   scheduleTargetPulseFrame,
+  isCompactBoard: () => boardIsCompact,
   constants: {
     CHIP_PLACE_ANIM_MS,
     CHIP_REMOVE_ANIM_MS,
@@ -863,9 +868,14 @@ const TEAM_SIZE_LABELS = {
   3: "3대3",
 };
 
+// Getters so every read follows the active locale (EN mode used to show 루비 팀 / 코발트 팀).
 const TEAM_LABELS = {
-  A: "루비 팀",
-  B: "코발트 팀",
+  get A() {
+    return t("status.rubyTeam");
+  },
+  get B() {
+    return t("status.cobaltTeam");
+  },
 };
 
 function clearBotThinkingTimer() {
@@ -890,7 +900,7 @@ function updateBotThinkingTimer() {
   const elapsedMs = Date.now() - (clientState.botThinkingStartedAt || Date.now());
   const seconds = Math.max(0, Math.floor(elapsedMs / 1000));
   refs.turnThinkingTimer.hidden = false;
-  refs.turnThinkingTimer.textContent = `생각 중 ${seconds}초`;
+  refs.turnThinkingTimer.textContent = t("turn.thinkingSeconds", { seconds });
 }
 
 function syncBotThinkingTimer(nextSeatIndex) {
@@ -982,7 +992,7 @@ function sanitizePlayerName(value) {
 
 function normalizePlayerName(value) {
   const normalized = sanitizePlayerName(value);
-  return normalized || "플레이어";
+  return normalized || t("player.defaultName");
 }
 
 function normalizeTeamSize(value) {
@@ -1167,9 +1177,12 @@ function normalizeGameSnapshot(rawGame) {
   return {
     phase: trimText(source.phase, 20) || "lobby",
     winner: source.winner === "A" || source.winner === "B" ? source.winner : null,
-    lastPlacedCellId: Number.isFinite(Number(source.lastPlacedCellId))
-      ? Math.trunc(Number(source.lastPlacedCellId))
-      : null,
+    // `!= null` first: Number(null) is 0, which marked the top-left corner as the "last move"
+    // before anything was placed.
+    lastPlacedCellId:
+      source.lastPlacedCellId != null && Number.isFinite(Number(source.lastPlacedCellId))
+        ? Math.trunc(Number(source.lastPlacedCellId))
+        : null,
     currentPlayerIndex: Number.isFinite(Number(source.currentPlayerIndex))
       ? Math.trunc(Number(source.currentPlayerIndex))
       : null,
@@ -2196,7 +2209,7 @@ function startOfflineSolo(options = {}) {
   if (tutorialMachine.active && !tutorial) {
     tutorialMachine.finish("skipped");
   }
-  const name = normalizePlayerName(refs.createName?.value || clientState.lastName || "플레이어");
+  const name = normalizePlayerName(refs.createName?.value || clientState.lastName || "");
   if (typeof dismissWelcome === "function") {
     dismissWelcome();
   }
@@ -2238,7 +2251,7 @@ function startOfflineSolo(options = {}) {
   if (!daily && !tutorial) {
     // The daily start keeps the runtime's own system message ("같은 보드와 손패…") so the
     // mode explanation is not immediately overwritten by a generic flash.
-    setFlashMessage("오프라인 솔로를 시작했습니다.");
+    setFlashMessage(t("solo.started"));
   }
   playSound("tap");
 }
@@ -2251,7 +2264,7 @@ function startSoloContent({ difficulty = clientState.botDifficulty, seed = "", s
   if (tutorialMachine.active) {
     tutorialMachine.finish("skipped");
   }
-  const name = normalizePlayerName(refs.createName?.value || clientState.lastName || "플레이어");
+  const name = normalizePlayerName(refs.createName?.value || clientState.lastName || "");
   if (typeof dismissWelcome === "function") {
     dismissWelcome();
   }
@@ -3356,12 +3369,12 @@ function renderSeatCards() {
 
 function cardActionLabel(card) {
   if (card.action === "placeWild") {
-    return "와일드 잭";
+    return t("hand.kindWild");
   }
   if (card.action === "remove") {
-    return "제거 잭";
+    return t("hand.kindRemove");
   }
-  return "일반 카드";
+  return t("hand.kindNormal");
 }
 
 
@@ -3387,7 +3400,7 @@ function buildCardFace(card, colorClass) {
     sigil.className = "jack-sigil";
     sigil.textContent = isWild ? "★" : "✕";
     const title = document.createElement("small");
-    title.textContent = isWild ? "WILD" : "CUT";
+    title.textContent = t(isWild ? "hand.jackWildShort" : "hand.jackCutShort");
     frame.append(crown, j, sigil, title);
     face.appendChild(frame);
     return face;
@@ -3493,16 +3506,30 @@ function renderHand() {
     button.addEventListener("click", () => setSelectedCard(card.id));
 
     const targets = getLegalTargets(clientState.game, card, yourPlayer()?.team);
-    const deadBadge = card.action === "normal" && targets.length === 0 ? " · 죽은 카드" : "";
+    // A dead card (both of its cells taken) is dimmed and tagged on every viewport: the text
+    // that said so (.card-action) is hidden during play.
+    const dead = card.action === "normal" && targets.length === 0;
+    button.classList.toggle("dead", dead);
+    button.setAttribute("aria-pressed", String(clientState.selectedCardId === card.id));
+    button.setAttribute(
+      "aria-label",
+      t(dead ? "hand.aria.dead" : card.action === "placeWild" ? "hand.aria.wild" : card.action === "remove" ? "hand.aria.remove" : "hand.aria.normal", {
+        card: card.label,
+        n: targets.length,
+      })
+    );
     const colorClass = card.isRed ? "red" : "black";
     button.append(
       buildCardCorner("card-corner top", colorClass, card.rank, card.suit),
       buildCardFace(card, colorClass),
       buildCardCorner("card-corner bottom", colorClass, card.rank, card.suit),
       buildCardLabel("card-targets", String(targets.length)),
-      buildCardLabel("card-action", `${cardActionLabel(card)}${deadBadge}`),
+      buildCardLabel("card-action", dead ? `${cardActionLabel(card)} · ${t("hand.deadTag")}` : cardActionLabel(card)),
       buildCardLabel("card-note", card.note)
     );
+    if (dead) {
+      button.append(buildCardLabel("card-dead-tag", t("hand.deadTag")));
+    }
     refs.handContainer.appendChild(button);
   });
 }
@@ -4249,7 +4276,7 @@ function renderHistory() {
   const streak = getHistoryStreak(clientState.matchHistory);
   const streakLabel =
     streak.count >= 2 && streak.winner
-      ? `${TEAM_LABELS[streak.winner] || "승리 팀"} ${streak.count}연승`
+      ? t("history.streak", { team: TEAM_LABELS[streak.winner] || "승리 팀", count: streak.count })
       : "접전";
   refs.historySummary.append(
     buildHistoryStat("최근", `${total}경기`),
@@ -4269,7 +4296,7 @@ function renderHistory() {
     const head = document.createElement("div");
     head.className = "history-item-head";
     const headline = document.createElement("strong");
-    headline.textContent = `${TEAM_LABELS[record.winner] || record.winnerName || "승리 팀"} 승리`;
+    headline.textContent = t("victory.winner", { team: TEAM_LABELS[record.winner] || record.winnerName || "승리 팀" });
     const score = document.createElement("span");
     score.className = "history-score";
     score.textContent = `${record.scores?.A ?? 0} : ${record.scores?.B ?? 0}`;
@@ -4522,7 +4549,7 @@ function updateChatUi() {
 
 function renderPileActions() {
   const topCard = clientState.game?.discardTopCard;
-  refs.discardTopCard.textContent = topCard ? topCard.label : "비어 있음";
+  refs.discardTopCard.textContent = topCard ? topCard.label : t("status.empty");
   refs.discardPileBtn.classList.toggle("has-card", Boolean(topCard));
   refs.discardPileBtn.classList.toggle("red-card", Boolean(topCard?.isRed));
   refs.discardPileBtn.classList.toggle("black-card", Boolean(topCard && !topCard.isRed));
@@ -4730,7 +4757,7 @@ function renderStatus() {
       ? `${matchLabel}로 친구를 기다리거나, 방장이면 혼자 테스트 시작 버튼으로 남은 좌석을 자동 플레이 봇으로 채울 수 있습니다.`
       : `${requiredPlayers}명이 모두 들어오면 자동 시작됩니다. 접속이 끊겨도 같은 브라우저면 원래 좌석으로 복구됩니다.`
     : "방을 만들거나 코드로 입장해 좌석을 확보하세요.";
-  refs.spectatorCount.textContent = `${clientState.spectatorCount}명`;
+  refs.spectatorCount.textContent = t("status.peopleCount", { n: clientState.spectatorCount });
 
   const selectedCardHint =
     clientState.selectedCardId && clientState.legalTargets.length > 0
@@ -4774,10 +4801,10 @@ function renderStatus() {
           ? `${filledSeats}/${requiredPlayers}명이 입장했습니다. ${lobbyReadyText} 방장이면 혼자 테스트를 시작해 바로 플레이할 수 있습니다.`
           : `${filledSeats}/${requiredPlayers}명이 입장했습니다. ${lobbyReadyText}`
         : "방을 만들거나 받은 코드로 입장하세요.";
-    refs.scoreRuby.textContent = `0 / 2 시퀀스`;
-    refs.scoreCobalt.textContent = `0 / 2 시퀀스`;
-    refs.deckCount.textContent = "0장";
-    refs.discardCount.textContent = "0장";
+    refs.scoreRuby.textContent = t("status.sequences", { n: 0, required: 2 });
+    refs.scoreCobalt.textContent = t("status.sequences", { n: 0, required: 2 });
+    refs.deckCount.textContent = t("status.cardCount", { n: 0 });
+    refs.discardCount.textContent = t("status.cardCount", { n: 0 });
     refs.handCaption.textContent = t("hand.captionPregame");
     refs.selectionHint.textContent = selectedCardHint
       ? selectedCardHint
@@ -4920,8 +4947,8 @@ function renderStatus() {
     const voteCount = clientState.rematchVoteSeatIndexes.length;
     const requiredVotes = clientState.rematchRequiredVotes || 0;
     const alreadyVoted = hasVotedForRematch();
-    refs.victoryWinner.textContent = `${TEAM_LABELS[clientState.game.winner] || winnerMeta.name} 승리`;
-    refs.victoryScore.textContent = `Ruby ${clientState.game.scores.A} : ${clientState.game.scores.B} Cobalt`;
+    refs.victoryWinner.textContent = t("victory.winner", { team: TEAM_LABELS[clientState.game.winner] || winnerMeta.name });
+    refs.victoryScore.textContent = t("victory.score", { a: clientState.game.scores.A, b: clientState.game.scores.B });
   if (clientState.rematchMode === "host") {
       // Local solo has no hostSessionId in its snapshots, so isHost() is always false
       // there — the single human player is the host by construction. Without this branch
@@ -4990,10 +5017,10 @@ function renderStatus() {
     refs.statusMessage.textContent = `${player?.name || "다른 플레이어"}님의 턴입니다. 실시간으로 보드를 지켜보세요.`;
   }
 
-  refs.scoreRuby.textContent = `${clientState.game.scores.A} / 2 시퀀스`;
-  refs.scoreCobalt.textContent = `${clientState.game.scores.B} / 2 시퀀스`;
-  refs.deckCount.textContent = `${clientState.game.deckCount}장`;
-  refs.discardCount.textContent = `${clientState.game.discardCount}장`;
+  refs.scoreRuby.textContent = t("status.sequences", { n: clientState.game.scores.A, required: 2 });
+  refs.scoreCobalt.textContent = t("status.sequences", { n: clientState.game.scores.B, required: 2 });
+  refs.deckCount.textContent = t("status.cardCount", { n: clientState.game.deckCount });
+  refs.discardCount.textContent = t("status.cardCount", { n: clientState.game.discardCount });
 
   const me = yourPlayer();
   refs.handCaption.textContent = clientState.yourRole === "spectator"
@@ -5074,12 +5101,11 @@ const BASE_TITLE = "Sequence Arena · 실시간 시퀀스 팀전";
 function updatePageTitle() {
   const game = clientState.game;
   if (game?.winner) {
-    const label = game.winner === "A" ? "루비 팀" : "코발트 팀";
-    document.title = `${label} 승리 · Sequence Arena`;
+    document.title = t("title.winner", { team: TEAM_LABELS[game.winner] });
     return;
   }
   if (game?.phase === "playing" && clientState.yourRole === "player" && isYourTurn()) {
-    document.title = `🔔 당신 차례 · Sequence Arena`;
+    document.title = t("title.yourTurn");
     return;
   }
   if (document.title !== BASE_TITLE) {
@@ -5217,6 +5243,10 @@ function updateBoardSummary() {
 }
 
 function handleBoardClick(event) {
+  // The click a finished touch-aim gesture produces: that gesture already placed (or cancelled).
+  if (touchAim.consumeClick()) {
+    return;
+  }
   if (!canChooseCard()) {
     return;
   }
@@ -5241,6 +5271,15 @@ function handleBoardClick(event) {
     return;
   }
 
+  placeSelectedCardAt(targetCellId);
+}
+
+// Shared by the board click and the touch-aim release (client/touch-aim.js).
+function placeSelectedCardAt(targetCellId) {
+  const card = selectedCard();
+  if (!card || !canChooseCard() || !clientState.legalTargets.includes(targetCellId)) {
+    return;
+  }
   animateCardToPoint(card.id, pointForBoardCell(targetCellId), "board");
   if (!playJackFeedback(card)) {
     playSound("tap");
@@ -7270,7 +7309,7 @@ refs.welcomeRejoinBtn?.addEventListener("click", () => {
   }
   const fallbackName =
     sanitizePlayerName(safeLocalStorage.get(STORAGE_KEYS.name) || clientState.lastName || "") ||
-    "플레이어";
+    t("player.defaultName");
   if (refs.joinName && !refs.joinName.value) {
     refs.joinName.value = fallbackName;
   }
@@ -7471,6 +7510,20 @@ refs.rematchBtn.addEventListener("click", () => {
       render();
     }
   }, 1200);
+});
+// Phones: press-and-hold on the board shows a magnifier; release on a target to place.
+const touchAim = createTouchAim({
+  canvas,
+  boardSize: BOARD_SIZE,
+  canAim: () => canChooseCard() && Boolean(selectedCard()) && clientState.legalTargets.length > 0,
+  isLegal: (cellId) => clientState.legalTargets.includes(cellId),
+  place: placeSelectedCardAt,
+  onAim: (cellId) => {
+    if (cellId == null) return;
+    clientState.keyboardBoardIndex = clientState.legalTargets.indexOf(cellId);
+    drawBoard();
+  },
+  haptic: () => triggerHaptic([4]),
 });
 canvas.addEventListener("click", handleBoardClick);
 
@@ -8257,9 +8310,13 @@ pruneOfflineRuntimeRecoveredState();
 function syncBoardCanvasResolution() {
   const cssSize = canvas.getBoundingClientRect().width;
   if (!(cssSize > 0)) return false;
+  // The compact flag can flip without the backing size changing (it is floored at 1000px),
+  // so a flip alone also asks for a repaint.
+  const compactFlipped = boardIsCompact !== cssSize < COMPACT_BOARD_MAX_CSS_PX;
+  boardIsCompact = cssSize < COMPACT_BOARD_MAX_CSS_PX;
   const dpr = Math.min(Math.max(window.devicePixelRatio || 1, 1), 3);
   const backing = Math.max(BOARD_LOGICAL_SIZE, Math.min(BOARD_BACKING_MAX_PX, Math.round(cssSize * dpr)));
-  const changed = canvas.width !== backing || canvas.height !== backing;
+  const changed = compactFlipped || canvas.width !== backing || canvas.height !== backing;
   if (changed) {
     canvas.width = backing;
     canvas.height = backing;
