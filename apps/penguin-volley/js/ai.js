@@ -3,14 +3,14 @@
 // Difficulty changes how often it re-plans, how accurately it reads the ball,
 // how often it attacks and how well it picks a spike; it never moves faster
 // than a person can.
-import { GROUND, NET, BALL_R, HOME_X, moveBall, hitCircle, spikeVelocity, predictLanding, makeRng } from './physics.js';
+import { GROUND, NET, BALL_R, HOME_X, moveBall, hitCircle, spikeVelocity, standingHitVelocity, predictLanding, makeRng } from './physics.js';
 
 // react: frames before the CPU responds after the opponent touches the ball
 // (a person needs roughly 150-300 ms).
 const LEVELS = {
-    easy: { replan: 14, noise: 40, attack: 0.3, dive: false, pick: 0, reach: 40, react: 18, serveRead: 0.15 },
-    normal: { replan: 7, noise: 18, attack: 0.65, dive: true, pick: 0.6, reach: 52, react: 13, serveRead: 0.55 },
-    hard: { replan: 3, noise: 5, attack: 0.95, dive: true, pick: 1, reach: 62, react: 9, serveRead: 0.85 },
+    easy: { replan: 14, noise: 40, attack: 0.3, dive: false, pick: 0, reach: 40, react: 18, serveRead: 0.15, powerHit: 0.45, swingError: 3, powerAim: 0.25 },
+    normal: { replan: 7, noise: 18, attack: 0.65, dive: true, pick: 0.6, reach: 52, react: 13, serveRead: 0.55, powerHit: 0.75, swingError: 1, powerAim: 0.65 },
+    hard: { replan: 3, noise: 5, attack: 0.95, dive: true, pick: 1, reach: 62, react: 9, serveRead: 0.85, powerHit: 1, swingError: 0, powerAim: 1 },
 };
 export const AI_LEVELS = Object.keys(LEVELS);
 
@@ -20,9 +20,23 @@ const SPIKES = [
     { down: true }, {}, { up: true },
     { down: true, back: true }, { back: true }, { up: true, back: true },
 ];
+const POWER_AIMS = [{ down: true }, {}, { up: true }];
 
 export function createAI(side, level = 'normal', seed = 7) {
-    return { side, cfg: LEVELS[level] || LEVELS.normal, rng: makeRng(seed), timer: 0, plan: null, jumpArmed: true, hitArmed: true, upLast: false, hitLast: false };
+    return {
+        side,
+        cfg: LEVELS[level] || LEVELS.normal,
+        rng: makeRng(seed),
+        timer: 0,
+        plan: null,
+        jumpArmed: true,
+        hitArmed: true,
+        swingArmed: true,
+        swingKeys: null,
+        swingTouchSeq: -1,
+        upLast: false,
+        hitLast: false,
+    };
 }
 
 /**
@@ -95,6 +109,35 @@ function chooseSpike(ai, world) {
     return options[Math.floor(ai.rng() * 3)].keys; // one of the forward options
 }
 
+/** Frames until a descending ball overlaps a stationary standing player. */
+function standingContactIn(ball, player, maxSteps = 10) {
+    const b = { ...ball };
+    const h = hitCircle(player);
+    for (let t = 1; t <= maxSteps; t++) {
+        moveBall(b, noRng, null);
+        if (b.vy > 0 && Math.hypot(b.x - h.cx, b.y - h.cy) < h.r + BALL_R) return t;
+    }
+    return 0;
+}
+
+/** Pick the vertical power-hit aim that best avoids the opponent. */
+function choosePowerAim(ai, world) {
+    const b = world.ball;
+    const opp = world.players[1 - ai.side];
+    const options = POWER_AIMS.map(keys => {
+        const v = standingHitVelocity(ai.side, keys, 'perfect');
+        const land = landing({ ...b, vx: v.vx, vy: v.vy });
+        const good = land && land.side !== ai.side;
+        const score = good ? Math.abs(land.x - opp.x) - land.t : -Infinity;
+        return { keys, score };
+    });
+    if (ai.rng() < ai.cfg.powerAim) {
+        options.sort((a, c) => c.score - a.score);
+        return options[0].keys;
+    }
+    return options[Math.floor(ai.rng() * options.length)].keys;
+}
+
 export function aiInput(ai, world) {
     const p = world.players[ai.side];
     const b = world.ball;
@@ -128,19 +171,48 @@ export function aiInput(ai, world) {
     }
 
     const ballMine = ai.side === 0 ? b.x < NET.x + 20 : b.x > NET.x - 20;
-    const near = Math.abs(b.x - p.x);
+
+    if (p.swing === 0 && ai.swingKeys && (b.lastSide === ai.side || !ballMine || b.vy <= 0)) ai.swingKeys = null;
+    if (!ballMine || b.vy <= 0 || (b.touchSeq !== ai.swingTouchSeq && b.lastSide !== ai.side)) ai.swingArmed = true;
+
+    // Once a standing swing starts, hold its vertical aim without horizontal
+    // movement. In particular, never combine the fresh Hit edge with movement,
+    // because physics correctly interprets that combination as a dive.
+    if (p.state === 'ground' && p.swing > 0) {
+        input.left = false;
+        input.right = false;
+        input.up = !!ai.swingKeys?.up;
+        input.down = !!ai.swingKeys?.down;
+    }
 
     // Dive for a ball that will land out of reach.
-    if (cfg.dive && ai.plan && p.state === 'ground' && Math.abs(dx) > 110 && ai.plan.t < 16 && ai.hitArmed) {
+    if (cfg.dive && ai.plan && p.state === 'ground' && p.swing === 0 && Math.abs(dx) > 110 && ai.plan.t < 16 && ai.hitArmed) {
         input.hit = true;
         input.left = dx < 0;
         input.right = dx > 0;
         ai.hitArmed = false;
     }
 
+    // Start a standing swing near a predicted descending contact. Difficulty
+    // controls both timing spread and how often the AI selects its best aim.
+    if (!input.hit && p.state === 'ground' && p.swing === 0 && ai.plan && Math.abs(dx) <= 5 && ballMine && b.vy > 0 && ai.swingArmed) {
+        const contactIn = standingContactIn(b, p);
+        const timingError = Math.round((ai.rng() - 0.5) * 2 * cfg.swingError);
+        if (contactIn && contactIn <= 5 + timingError && ai.rng() < cfg.powerHit) {
+            ai.swingKeys = choosePowerAim(ai, world);
+            ai.swingArmed = false;
+            ai.swingTouchSeq = b.touchSeq;
+            input.left = false;
+            input.right = false;
+            input.up = !!ai.swingKeys.up;
+            input.down = !!ai.swingKeys.down;
+            input.hit = true;
+        }
+    }
+
     // Jump to attack: leave the ground when the ball will be at spike height near
     // the top of the jump (the penguin rises for about 20 frames).
-    if (p.state === 'ground' && ballMine && ai.jumpArmed) {
+    if (!input.hit && p.state === 'ground' && p.swing === 0 && ballMine && ai.jumpArmed) {
         const meet = spikeWindow(b, ai.side, p.x, cfg.reach);
         if (meet && ai.rng() < cfg.attack) {
             // A declined attack remains available while the window is open.
@@ -179,7 +251,7 @@ export function aiInput(ai, world) {
     }
 
     // Buttons must be released between presses.
-    if (input.up && ai.upLast) input.up = p.state === 'air'; // in the air "up" is a direction, not a jump
+    if (input.up && ai.upLast) input.up = p.state === 'air' || p.swing > 0;
     if (input.hit && ai.hitLast) input.hit = false;
     ai.upLast = input.up;
     ai.hitLast = input.hit;
