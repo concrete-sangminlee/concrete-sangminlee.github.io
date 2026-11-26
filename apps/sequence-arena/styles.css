@@ -516,10 +516,12 @@ label:has(input[aria-invalid="true"]) .input-hint {
 
 .skip-link {
   position: fixed;
-  top: max(8px, env(safe-area-inset-top));
+  /* Hidden relative to the viewport edge, not the safe-area inset: with a notch the old
+     inset-based offset left it on screen, over the top-bar buttons. */
+  top: 0;
   left: 50%;
   z-index: 300;
-  transform: translate(-50%, -120%);
+  transform: translate(-50%, calc(-100% - 16px));
   padding: 8px 14px;
   background: #10372e;
   color: #fff8e9;
@@ -532,7 +534,7 @@ label:has(input[aria-invalid="true"]) .input-hint {
 
 .skip-link:focus,
 .skip-link:focus-visible {
-  transform: translate(-50%, 0);
+  transform: translate(-50%, max(8px, env(safe-area-inset-top)));
   outline: 3px solid rgba(199, 152, 61, 0.8);
   outline-offset: 2px;
 }
@@ -597,7 +599,7 @@ label:has(input[aria-invalid="true"]) .input-hint {
 }
 
 .offline-text {
-  white-space: nowrap;
+  min-width: 0;
 }
 
 .offline-retry {
@@ -691,6 +693,28 @@ label:has(input[aria-invalid="true"]) .input-hint {
 }
 
 .update-text {
+  min-width: 0;
+}
+
+/* Both banners: never wider than the viewport (the nowrap pill used to push its button off
+   screen on phones), text wraps, buttons keep their size. */
+.offline-banner,
+.update-banner {
+  width: max-content;
+  max-width: min(640px, calc(100vw - 24px - env(safe-area-inset-left) - env(safe-area-inset-right)));
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  border-radius: 22px;
+}
+
+.offline-text,
+.update-text {
+  flex: 1 1 11rem;
+}
+
+.offline-banner > :not(.offline-text),
+.update-banner > :not(.update-text) {
+  flex: none;
   white-space: nowrap;
 }
 

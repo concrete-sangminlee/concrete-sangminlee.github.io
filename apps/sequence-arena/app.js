@@ -7343,22 +7343,6 @@ handleJoinCodeInput();
 
 maybeShowWelcome();
 
-// Daily deep link: ?mode=daily auto-starts today's challenge — the share text and the
-// PWA shortcut land here so a recipient reaches the same dated puzzle in one tap. The
-// parameter is consumed and stripped immediately (refresh must not force-restart a run),
-// and an explicit ?room= invite is the stronger intent, so it wins when both are present.
-(() => {
-  const bootUrl = new URL(window.location.href);
-  if (bootUrl.searchParams.get("mode") !== "daily") {
-    return;
-  }
-  bootUrl.searchParams.delete("mode");
-  window.history.replaceState({}, "", bootUrl);
-  if (normalizedUrlRoomCode) {
-    return;
-  }
-  startOfflineSolo({ daily: true });
-})();
 refs.helpModal?.addEventListener("click", (event) => {
   if (event.target instanceof HTMLElement && event.target.dataset.helpDismiss != null) {
     closeHelpModal();
@@ -7383,6 +7367,10 @@ refs.updateReloadBtn?.addEventListener("click", () => {
 
 // Browser-level network transitions should reflect in the WS layer immediately instead of waiting for backoff.
 window.addEventListener("online", () => {
+  if (clientState.localMode || isOfflineOnlyRuntime()) {
+    hideOfflineBanner();
+    return;
+  }
   if (!clientState.socketReady) {
     forceReconnectNow();
   }
@@ -7392,6 +7380,11 @@ window.addEventListener("online", () => {
 // staring at "실시간 연결됨" until the WS heartbeat (30s in production) finally catches the
 // drop. We both surface an explicit offline state and preempt the socket close event.
 window.addEventListener("offline", () => {
+  // Solo play and the static host need no network: a "check your internet" banner there
+  // could never clear (nothing reconnects) and sat over the board.
+  if (clientState.localMode || isOfflineOnlyRuntime()) {
+    return;
+  }
   clientState.reconnectPaused = false;
   clientState.reconnectDelayMs = 0;
   clearReconnectCountdownTimer();
@@ -8299,6 +8292,25 @@ bindNetClientContext({
 // session exists), which aborted boot before the net-client was bound, so sendSocket() later failed
 // and selected cards could not be placed on the board.
 pruneOfflineRuntimeRecoveredState();
+
+// Daily deep link: ?mode=daily auto-starts today's challenge — the share text and the
+// PWA shortcut land here so a recipient reaches the same dated puzzle in one tap. The
+// parameter is consumed and stripped immediately (refresh must not force-restart a run),
+// and an explicit ?room= invite is the stronger intent, so it wins when both are present.
+// Must run AFTER pruneOfflineRuntimeRecoveredState(): on the static host that prune wipes any
+// state with a roomCode, including the "SOLO" room this just started, which left a blank page.
+(() => {
+  const bootUrl = new URL(window.location.href);
+  if (bootUrl.searchParams.get("mode") !== "daily") {
+    return;
+  }
+  bootUrl.searchParams.delete("mode");
+  window.history.replaceState({}, "", bootUrl);
+  if (normalizedUrlRoomCode) {
+    return;
+  }
+  startOfflineSolo({ daily: true });
+})();
 
 // ---- Crisp board on HiDPI screens -------------------------------------------------------
 // The painters draw in a fixed BOARD_LOGICAL_SIZE (1000) space. The canvas backing store used

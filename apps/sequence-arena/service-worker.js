@@ -1,4 +1,7 @@
-const CACHE_NAME = "sequence-arena-github-pages-v127";
+const CACHE_NAME = "sequence-arena-github-pages-v128";
+// Cache Storage is shared by every app on the origin (github.io user sites host several), so
+// cleanup only ever touches caches this app created.
+const CACHE_PREFIX = "sequence-arena-";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -18,6 +21,7 @@ const APP_SHELL = [
   "./shared/bot-ai.js",
   "./shared/local-solo.js",
   "./shared/rng.js",
+  "./shared/validation.js",
   "./shared/daily.js",
   "./shared/replay.js",
   "./shared/progression.js",
@@ -34,7 +38,9 @@ self.addEventListener("install", (event) => {
   event.waitUntil(
     caches
       .open(CACHE_NAME)
-      .then((cache) => cache.addAll(APP_SHELL))
+      // cache: "reload" bypasses the HTTP cache; otherwise a new worker can precache the
+      // previous deploy's still-fresh files and serve a mixed-version app after the update.
+      .then((cache) => cache.addAll(APP_SHELL.map((url) => new Request(url, { cache: "reload" }))))
       .then(() => self.skipWaiting())
   );
 });
@@ -43,7 +49,7 @@ self.addEventListener("activate", (event) => {
   event.waitUntil(
     (async () => {
       const keys = await caches.keys();
-      await Promise.all(keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key)));
+      await Promise.all(keys.filter((key) => key.startsWith(CACHE_PREFIX) && key !== CACHE_NAME).map((key) => caches.delete(key)));
       // Navigation Preload: lets the browser kick off the network request for a navigation
       // (page load) in parallel with SW startup, instead of serialising "wait for SW boot →
       // SW issues fetch". Real-world impact: an extra ~80–250ms cut from LCP on returning
@@ -97,7 +103,10 @@ self.addEventListener("fetch", (event) => {
         const response = preload || (await fetch(request));
         if (response && response.ok && response.type !== "opaque") {
           const copy = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(request, copy)).catch(() => {});
+          // Navigations are stored under one key: keying by full URL kept a separate copy of
+          // index.html for every distinct query string (?room=, ?mode=, ?source=).
+          const cacheKey = request.mode === "navigate" ? "./index.html" : request;
+          caches.open(CACHE_NAME).then((cache) => cache.put(cacheKey, copy)).catch(() => {});
         }
         return response;
       } catch {
